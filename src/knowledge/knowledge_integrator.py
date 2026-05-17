@@ -65,7 +65,8 @@ class VectorStore:
                     'source_url': content.metadata.get('source_url', ''),
                     'source_type': content.metadata.get('source_type', ''),
                     'timestamp': content.timestamp.isoformat(),
-                    'content_length': len(content.content)
+                    'content_length': len(content.content),
+                    'access_count': 0  # Initial access count
                 }
                 metadatas.append(metadata)
                 ids.append(content.id)
@@ -102,13 +103,24 @@ class VectorStore:
                 n_results=n_results
             )
             
-            # Format results
+            # Format results and update access counts
             formatted_results = []
             for i in range(len(results['ids'][0])):
+                doc_id = results['ids'][0][i]
+                metadata = results['metadatas'][0][i]
+                
+                # Increment access count
+                current_count = metadata.get('access_count', 0)
+                metadata['access_count'] = current_count + 1
+                self.collection.update(
+                    ids=[doc_id],
+                    metadatas=[metadata]
+                )
+
                 formatted_results.append({
-                    'id': results['ids'][0][i],
+                    'id': doc_id,
                     'document': results['documents'][0][i],
-                    'metadata': results['metadatas'][0][i],
+                    'metadata': metadata,
                     'distance': results['distances'][0][i]
                 })
             
@@ -118,6 +130,40 @@ class VectorStore:
             logger.error(f"Error searching vector store: {e}")
             return []
     
+    async def prune_old_data(self, days: int = 30, min_hits: int = 1):
+        """
+        Prune documents older than 'days' with fewer than 'min_hits'.
+        Implements Fix #2: Indefinite Growth Problem.
+        """
+        if self.collection is None:
+            return
+            
+        try:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            # Retrieve all metadatas to check dates/hits
+            # Note: For very large collections, this should be paginated
+            all_data = self.collection.get()
+            
+            ids_to_delete = []
+            for i in range(len(all_data['ids'])):
+                doc_id = all_data['ids'][i]
+                metadata = all_data['metadatas'][i]
+                
+                ts_str = metadata.get('timestamp')
+                hits = metadata.get('access_count', 0)
+                
+                if ts_str:
+                    doc_date = datetime.fromisoformat(ts_str)
+                    if doc_date < cutoff_date and hits < min_hits:
+                        ids_to_delete.append(doc_id)
+            
+            if ids_to_delete:
+                self.collection.delete(ids=ids_to_delete)
+                logger.info(f"Pruned {len(ids_to_delete)} obsolete documents")
+                
+        except Exception as e:
+            logger.error(f"Error pruning vector store: {e}")
+
     async def get_stats(self) -> Dict[str, Any]:
         """Get vector store statistics"""
         try:
