@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # API Keys
     openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
     deepseek_api_key: Optional[str] = Field(default=None, env="DEEPSEEK_API_KEY")
+    gemini_api_key: Optional[str] = Field(default=None, env="GEMINI_API_KEY")
+    # gemini (free-tier friendly via Google AI Studio) | deepseek — must match get_llm_client() in web_server
+    llm_provider: str = Field(default="deepseek", env="LLM_PROVIDER")
     
     # Server
     host: str = Field(default="0.0.0.0", env="HOST")
@@ -33,6 +36,11 @@ class Settings(BaseSettings):
     # Vector Database
     chromadb_host: str = Field(default="localhost", env="CHROMADB_HOST")
     chromadb_port: int = Field(default=8001, env="CHROMADB_PORT")
+    
+    # Redis & Celery
+    redis_url: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
+    celery_broker_url: str = Field(default="redis://localhost:6379/1", env="CELERY_BROKER_URL")
+    celery_result_backend: str = Field(default="redis://localhost:6379/1", env="CELERY_RESULT_BACKEND")
     
     # Learning Configuration
     max_concurrent_crawls: int = Field(default=10, env="MAX_CONCURRENT_CRAWLS")
