@@ -18,13 +18,50 @@ from src.config.settings import get_settings
 from src.learning.continuous_learner import ContinuousLearner, LearningConfig
 from src.api.free_api_client import FreeAPIClient
 from src.llm.deepseek_client import DeepSeekClient, Message
+from src.llm.gemini_client import GeminiClient
 from src.llm.rag_service import RAGService
+
 from src.llm.conversation_manager import ConversationManager
 from src.llm_training.inference import LocalLLMClient
+from src.tasks.learning_tasks import run_learning_loop
+from src.tasks.training_tasks import run_model_training
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="SmartSelf AI", description="Intelligent Self-Learning Chatbot with LLM")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI.
+    Handles startup/shutdown and model pre-warming.
+    """
+    logger.info("Starting up SmartSelf AI...")
+    
+    # Pre-warm local model if enabled
+    global local_llm_client, use_local_llm
+    if use_local_llm:
+        logger.info("Pre-warming local LLM...")
+        try:
+            local_llm_client = LocalLLMClient(
+                model_path="./model_checkpoints",
+                base_model_path="mistralai/Mistral-7B-v0.1"
+            )
+            local_llm_client.load_model()
+            logger.info("Local LLM pre-warmed and ready.")
+        except Exception as e:
+            logger.error(f"Failed to pre-warm local LLM: {e}")
+            use_local_llm = False
+            
+    yield
+    
+    logger.info("Shutting down SmartSelf AI...")
+
+app = FastAPI(
+    title="SmartSelf AI", 
+    description="Intelligent Self-Learning Chatbot with LLM",
+    lifespan=lifespan
+)
 
 # CORS middleware
 app.add_middleware(
@@ -36,6 +73,22 @@ app.add_middleware(
 )
 
 settings = get_settings()
+
+
+def _llm_api_key_configured() -> bool:
+    """True when the active LLM_PROVIDER has a non-empty API key (no secret values returned)."""
+    provider = (settings.llm_provider or "deepseek").lower()
+    if provider == "gemini":
+        return bool(settings.gemini_api_key)
+    return bool(settings.deepseek_api_key)
+
+
+def get_llm_client():
+    """Return LLM client for LLM_PROVIDER: gemini (Google AI) or deepseek (default)."""
+    if settings.llm_provider.lower() == "gemini":
+        return GeminiClient()
+    return DeepSeekClient()
+
 
 # Initialize components
 learning_config = LearningConfig()
@@ -118,17 +171,13 @@ async def chat(request: ChatRequest):
         # Get LLM response (use local or API)
         if use_local_llm:
             if local_llm_client is None:
-                local_llm_client = LocalLLMClient(
-                    model_path="./model_checkpoints",
-                    base_model_path="mistralai/Mistral-7B-v0.1"
-                )
-                local_llm_client.load_model()
+                raise HTTPException(status_code=503, detail="Local model is not yet loaded.")
             
             # Convert Message objects to dict format
             messages_dict = [{"role": msg.role, "content": msg.content} for msg in messages]
             llm_response = local_llm_client.generate(messages_dict)
         else:
-            async with DeepSeekClient() as llm:
+            async with get_llm_client() as llm:
                 llm_response = await llm.chat(messages)
         
         # Add assistant message
@@ -225,7 +274,7 @@ async def chat_stream(request: StreamChatRequest):
                     yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
             else:
                 # Stream from DeepSeek API
-                async with DeepSeekClient() as llm:
+                async with get_llm_client() as llm:
                     async for chunk in llm.chat_stream(messages):
                         full_response += chunk
                         yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
@@ -344,13 +393,14 @@ async def get_stats():
 
 @app.post("/api/learning/start")
 async def start_learning():
-    """Start the continuous learning pipeline"""
+    """Start the continuous learning pipeline as a background task"""
     try:
-        if hasattr(learner, 'start'):
-            await learner.start()
-            return {"success": True, "message": "Learning pipeline started"}
-        else:
-            return {"success": False, "message": "Learning pipeline not available"}
+        task = run_learning_loop.delay()
+        return {
+            "success": True, 
+            "message": "Learning pipeline started in background",
+            "task_id": task.id
+        }
     except Exception as e:
         logger.error(f"Error starting learning: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -358,16 +408,36 @@ async def start_learning():
 
 @app.post("/api/learning/stop")
 async def stop_learning():
-    """Stop the continuous learning pipeline"""
+    """Stop the continuous learning pipeline by revoking the task"""
+    # In a more advanced setup, we'd use a Redis flag, but for now we'll revoke
+    return {"success": False, "message": "Manual stop via API requires task revocation logic"}
+
+
+@app.post("/api/training/start")
+async def start_training():
+    """Trigger the LoRA fine-tuning pipeline as a background task"""
     try:
-        if hasattr(learner, 'stop'):
-            await learner.stop()
-            return {"success": True, "message": "Learning pipeline stopped"}
-        else:
-            return {"success": False, "message": "Learning pipeline not available"}
+        task = run_model_training.delay()
+        return {
+            "success": True, 
+            "message": "Model training started in background",
+            "task_id": task.id
+        }
     except Exception as e:
-        logger.error(f"Error stopping learning: {e}")
+        logger.error(f"Error starting training: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/tasks/{task_id}")
+async def get_task_status(task_id: str):
+    """Get the status and result of a background task"""
+    from celery.result import AsyncResult
+    res = AsyncResult(task_id)
+    return {
+        "task_id": task_id,
+        "status": res.status,
+        "result": res.result if res.ready() else None
+    }
 
 
 @app.get("/health")
@@ -388,6 +458,9 @@ async def status():
         "app_name": settings.app_name,
         "version": settings.app_version,
         "debug": settings.debug,
+        "llm_provider": settings.llm_provider,
+        "llm_api_key_configured": _llm_api_key_configured(),
+        "embeddings": "local_sentence_transformers",
         "features": [
             "llm_integration",
             "rag_knowledge_base",
