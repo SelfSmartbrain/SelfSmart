@@ -142,8 +142,9 @@ class RAGService:
 
 Instructions:
 - Use the provided knowledge to answer the user's question
-- If the knowledge is insufficient, acknowledge this and provide general guidance
+- CRITICAL: If the provided knowledge (retrieved in real-time) contradicts your internal training data, prioritize the provided knowledge.
 - Cite sources when using specific information from the knowledge
+- If the knowledge is insufficient, acknowledge this and provide general guidance
 - Maintain natural, conversational tone
 - Be accurate and honest about what you know from the knowledge vs general knowledge
 
