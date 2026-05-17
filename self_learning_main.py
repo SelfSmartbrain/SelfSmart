@@ -22,9 +22,12 @@ if _env_path.exists():
     from dotenv import load_dotenv
     load_dotenv(_env_path)
 
-# Import simplified learning chatbot
 import sys
-sys.path.append('/Users/subh/Documents/selfsmart')
+
+_project_root = Path(__file__).resolve().parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 from simple_learning_chatbot import create_learning_chatbot, get_chatbot
 
 # Create app
