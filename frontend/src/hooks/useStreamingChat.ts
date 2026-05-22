@@ -1,7 +1,7 @@
 import { useChatStore } from "@/store/useChatStore";
 
 export const useStreamingChat = () => {
-  const { updateLastAssistantMessage, addMessage, setLoading, conversationId, setConversationId } = useChatStore();
+  const { updateLastAssistantMessage, addMessage, setLoading, conversationId, setConversationId, fetchConversations } = useChatStore();
 
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
@@ -16,11 +16,14 @@ export const useStreamingChat = () => {
     };
     addMessage(userMessage);
 
+    let isNewConversation = !conversationId;
+
     try {
       const response = await fetch('http://localhost:8000/api/chat/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
           message: content,
@@ -50,8 +53,10 @@ export const useStreamingChat = () => {
                 updateLastAssistantMessage(data.text);
               }
               
-              if (data.conversation_id && !conversationId) {
+              if (data.conversation_id && isNewConversation) {
                 setConversationId(data.conversation_id);
+                isNewConversation = false; // Prevents multiple calls
+                fetchConversations();
               }
             } catch (e) {
               // Sometimes chunks are incomplete, ignore parse errors for partial JSON
@@ -65,6 +70,8 @@ export const useStreamingChat = () => {
       updateLastAssistantMessage("\n\n*Error: Failed to connect to the assistant. Please ensure the backend is running.*");
     } finally {
       setLoading(false);
+      // Fetch conversations to update title (LLM updates it asynchronously)
+      fetchConversations();
     }
   };
 
