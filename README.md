@@ -13,7 +13,7 @@
 
 **A production-grade, continuously learning AI platform powered by RAG, LLM fine-tuning, and real-time knowledge ingestion.**
 
-[Live Demo](#) · [API Docs](http://localhost:8000/docs) · [Architecture](./ARCHITECTURE.md) · [Deployment Guide](./DEPLOYMENT.md)
+[Live Demo](#) · [ Docs](https://docs.google.com/document/d/1d4lYCTb-LstU7DcnVwFmK0RLEt8f6ntspS2FK2IdusU/edit?usp=sharing) · [Architecture](./ARCHITECTURE.md) · [Deployment Guide](./DEPLOYMENT.md)
 
 </div>
 
