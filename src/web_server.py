@@ -25,7 +25,43 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI.
+    Handles startup/shutdown and model pre-warming.
+    """
+    logger.info("starting_up", app_name=settings.app_name)
+    
+    # Pre-warm local model if enabled
+    global local_llm_client, use_local_llm
+    if use_local_llm:
+        logger.info("pre_warming_local_llm")
+        try:
+            local_llm_client = LocalLLMClient(
+                model_path="./model_checkpoints",
+                base_model_path="mistralai/Mistral-7B-v0.1"
+            )
+            local_llm_client.load_model()
+            logger.info("local_llm_ready")
+        except Exception as e:
+            logger.error("local_llm_prewarm_failed", error=str(e))
+            use_local_llm = False
+            
+    yield
+    
+    logger.info("shutting_down")
+
 limiter = Limiter(key_func=get_remote_address)
+
+app = FastAPI(
+    title="SmartSelf AI", 
+    description="Intelligent Self-Learning Chatbot with LLM",
+    lifespan=lifespan
+)
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 from src.learning.continuous_learner import ContinuousLearner, LearningConfig
@@ -74,8 +110,9 @@ from src.api.free_api_client import FreeAPIClient
 from src.llm.deepseek_client import DeepSeekClient, Message
 from src.llm.gemini_client import GeminiClient
 from src.llm.rag_service import RAGService
-
+from src.llm.agent_tools import ToolExecutor
 from src.llm.conversation_manager import ConversationManager
+
 from src.llm_training.inference import LocalLLMClient
 from src.tasks.learning_tasks import run_learning_loop
 from src.tasks.training_tasks import run_model_training
@@ -129,11 +166,6 @@ async def lifespan(app: FastAPI):
     
     logger.info("shutting_down")
 
-app = FastAPI(
-    title="SmartSelf AI", 
-    description="Intelligent Self-Learning Chatbot with LLM",
-    lifespan=lifespan
-)
 
 # Instrument with metrics
 instrument_app(app)
@@ -202,6 +234,9 @@ class FeedbackRequest(BaseModel):
     message_index: int
     is_positive: bool
     comment: Optional[str] = None
+
+class LearnRequest(BaseModel):
+    urls: List[str]
 
 @app.post("/api/feedback")
 async def save_feedback(request: FeedbackRequest):
@@ -330,23 +365,22 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
 
 
 @app.post("/api/chat/stream")
-async def chat_stream(request: StreamChatRequest):
+async def chat_stream(request: StreamChatRequest, current_user: TokenData = Depends(get_current_user)):
     """
-    Streaming chat endpoint with LLM and RAG integration.
-    Supports both DeepSeek API and local fine-tuned models.
-    Returns Server-Sent Events for real-time streaming.
+    Streaming chat endpoint with LLM, RAG and Authentication.
     """
     async def generate():
         try:
-            # Get or create conversation
+            # Get or create conversation (verified by user_id)
             if request.conversation_id:
-                conversation = await conversation_manager.get_conversation(request.conversation_id)
+                conversation = await conversation_manager.get_conversation(request.conversation_id, user_id=current_user.user_id)
                 if not conversation:
-                    conversation = await conversation_manager.create_conversation()
+                    yield f"data: {json.dumps({'type': 'error', 'error': 'Unauthorized'})}\n\n"
+                    return
             else:
-                conversation = await conversation_manager.create_conversation()
+                conversation = await conversation_manager.create_conversation(user_id=current_user.user_id)
             
-            # Send conversation ID first
+            # Send conversation ID
             yield f"data: {json.dumps({'type': 'conversation_id', 'id': conversation.id})}\n\n"
             
             # Add user message
@@ -450,12 +484,12 @@ async def list_conversations(limit: int = 50, current_user: TokenData = Depends(
 
 
 @app.get("/api/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str):
+async def get_conversation(conversation_id: str, current_user: TokenData = Depends(get_current_user)):
     """Get a specific conversation"""
     try:
-        conversation = await conversation_manager.get_conversation(conversation_id)
+        conversation = await conversation_manager.get_conversation(conversation_id, user_id=current_user.user_id)
         if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+            raise HTTPException(status_code=404, detail="Conversation not found or access denied")
         
         return {
             "id": conversation.id,
@@ -479,9 +513,12 @@ async def get_conversation(conversation_id: str):
 
 
 @app.delete("/api/conversations/{conversation_id}")
-async def delete_conversation(conversation_id: str):
+async def delete_conversation(conversation_id: str, current_user: TokenData = Depends(get_current_user)):
     """Delete a conversation"""
     try:
+        conversation = await conversation_manager.get_conversation(conversation_id, user_id=current_user.user_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found or access denied")
         success = await conversation_manager.delete_conversation(conversation_id)
         if not success:
             raise HTTPException(status_code=404, detail="Conversation not found")
@@ -536,6 +573,17 @@ async def stop_learning():
     """Stop the continuous learning pipeline by revoking the task"""
     # In a more advanced setup, we'd use a Redis flag, but for now we'll revoke
     return {"success": False, "message": "Manual stop via API requires task revocation logic"}
+
+
+@app.post("/api/learning/learn")
+async def learn_urls(request: LearnRequest, current_user: TokenData = Depends(get_current_user)):
+    """Manually crawl and integrate knowledge from specific URLs"""
+    try:
+        result = await learner.manual_learning_session(request.urls)
+        return result
+    except Exception as e:
+        logger.error(f"Error in manual learning: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/training/start")
