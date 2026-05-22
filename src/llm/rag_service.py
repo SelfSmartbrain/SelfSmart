@@ -206,6 +206,56 @@ Answer:"""
         
         return llm_response
     
+    async def critique_response(
+        self,
+        query: str,
+        response: str,
+        knowledge: List[RetrievedKnowledge],
+        llm_client: Any
+    ) -> Tuple[str, bool]:
+        """
+        Critique the LLM response against retrieved knowledge.
+        Returns (refined_response, was_changed).
+        """
+        if not knowledge:
+            return response, False
+            
+        combined_context = "\n".join([f"- {k.content}" for k in knowledge])
+        
+        critique_prompt = f"""
+        You are an accuracy reviewer. Review the following AI response against the provided facts.
+        
+        User Query: {query}
+        
+        Facts:
+        {combined_context}
+        
+        AI Response:
+        {response}
+        
+        Check for:
+        1. Hallucinations (information not in facts).
+        2. Contradictions.
+        3. Missing critical details from the facts.
+        
+        If the response is accurate and complete, return 'ACCURATE'.
+        If it needs correction, provide the fully corrected response.
+        
+        Review Outcome:"""
+        
+        try:
+            critique_result = await llm_client.chat([Message(role="user", content=critique_prompt)])
+            outcome = critique_result.content.strip()
+            
+            if outcome == "ACCURATE":
+                return response, False
+            else:
+                logger.info("self_correction_applied", query=query)
+                return outcome, True
+        except Exception as e:
+            logger.error("critique_failed", error=str(e))
+            return response, False
+
     def get_rag_stats(self) -> Dict[str, Any]:
         """Get RAG service statistics"""
         stats = {

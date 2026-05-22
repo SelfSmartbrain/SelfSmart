@@ -4,9 +4,12 @@ Production-grade FastAPI web server with LLM, RAG, and streaming support.
 """
 
 import logging
-from fastapi import FastAPI, HTTPException
+import uuid
+import structlog
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
@@ -15,7 +18,58 @@ import json
 from datetime import datetime
 
 from src.config.settings import get_settings
+from src.utils.logging import setup_logging, get_logger
+from src.utils.metrics import instrument_app
+from src.utils.auth import create_access_token, decode_access_token, verify_password, get_password_hash, Token, TokenData
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 from src.learning.continuous_learner import ContinuousLearner, LearningConfig
+...
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    full_name: Optional[str] = None
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+@app.post("/api/auth/register")
+async def register(user_data: UserCreate):
+    existing_user = await conversation_manager.get_user_by_email(user_data.email)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    hashed_password = get_password_hash(user_data.password)
+    user_id = await conversation_manager.create_user(user_data.email, hashed_password, user_data.full_name)
+    
+    access_token = create_access_token(data={"sub": user_id, "email": user_data.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/auth/login")
+async def login(credentials: UserLogin):
+    user = await conversation_manager.get_user_by_email(credentials.email)
+    if not user or not verify_password(credentials.password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    access_token = create_access_token(data={"sub": user["id"], "email": user["email"]})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
+    token_data = decode_access_token(token)
+    if token_data is None:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return token_data
 from src.api.free_api_client import FreeAPIClient
 from src.llm.deepseek_client import DeepSeekClient, Message
 from src.llm.gemini_client import GeminiClient
@@ -26,7 +80,25 @@ from src.llm_training.inference import LocalLLMClient
 from src.tasks.learning_tasks import run_learning_loop
 from src.tasks.training_tasks import run_model_training
 
-logger = logging.getLogger(__name__)
+# Initialize settings
+settings = get_settings()
+
+# Setup structured logging
+setup_logging(
+    level="DEBUG" if settings.debug else "INFO",
+    json_format=settings.json_logs
+)
+logger = get_logger(__name__)
+
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        structlog.contextvars.clear_contextvars()
+        structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
+        
+        response = await call_next(request)
+        response.headers["X-Correlation-ID"] = correlation_id
+        return response
 
 from contextlib import asynccontextmanager
 
@@ -36,26 +108,26 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for FastAPI.
     Handles startup/shutdown and model pre-warming.
     """
-    logger.info("Starting up SmartSelf AI...")
+    logger.info("starting_up", app_name=settings.app_name)
     
     # Pre-warm local model if enabled
     global local_llm_client, use_local_llm
     if use_local_llm:
-        logger.info("Pre-warming local LLM...")
+        logger.info("pre_warming_local_llm")
         try:
             local_llm_client = LocalLLMClient(
                 model_path="./model_checkpoints",
                 base_model_path="mistralai/Mistral-7B-v0.1"
             )
             local_llm_client.load_model()
-            logger.info("Local LLM pre-warmed and ready.")
+            logger.info("local_llm_ready")
         except Exception as e:
-            logger.error(f"Failed to pre-warm local LLM: {e}")
+            logger.error("local_llm_prewarm_failed", error=str(e))
             use_local_llm = False
             
     yield
     
-    logger.info("Shutting down SmartSelf AI...")
+    logger.info("shutting_down")
 
 app = FastAPI(
     title="SmartSelf AI", 
@@ -63,7 +135,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
+# Instrument with metrics
+instrument_app(app)
+
+# Middleware
+app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -71,8 +147,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-settings = get_settings()
 
 
 def _llm_api_key_configured() -> bool:
@@ -96,6 +170,7 @@ learner = ContinuousLearner(learning_config)
 free_api_client = FreeAPIClient()
 conversation_manager = ConversationManager()
 rag_service = RAGService()
+tool_executor = ToolExecutor()
 
 # LLM clients
 llm_client: Optional[DeepSeekClient] = None
@@ -122,21 +197,47 @@ class ChatResponse(BaseModel):
     learning_active: bool
     conversation_id: str
 
+class FeedbackRequest(BaseModel):
+    conversation_id: str
+    message_index: int
+    is_positive: bool
+    comment: Optional[str] = None
+
+@app.post("/api/feedback")
+async def save_feedback(request: FeedbackRequest):
+    """Save user feedback for RLHF and system improvement."""
+    feedback_path = settings.data_dir / "feedback.jsonl"
+    feedback_data = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "conversation_id": request.conversation_id,
+        "message_index": request.message_index,
+        "is_positive": request.is_positive,
+        "comment": request.comment
+    }
+    
+    try:
+        with open(feedback_path, "a") as f:
+            f.write(json.dumps(feedback_data) + "\n")
+        logger.info("feedback_saved", conversation_id=request.conversation_id)
+        return {"status": "success"}
+    except Exception as e:
+        logger.error("feedback_save_failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to save feedback")
+
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
+@limiter.limit("20/minute")
+async def chat(request: ChatRequest, request_obj: Request, current_user: TokenData = Depends(get_current_user)):
     """
-    Chat endpoint with LLM and RAG integration.
-    Supports both DeepSeek API and local fine-tuned models.
-    Non-streaming version for compatibility.
+    Chat endpoint with LLM, RAG and User Authentication.
     """
     try:
-        # Get or create conversation
+        # Get or create conversation (verified by user_id)
         if request.conversation_id:
-            conversation = await conversation_manager.get_conversation(request.conversation_id)
+            conversation = await conversation_manager.get_conversation(request.conversation_id, user_id=current_user.user_id)
             if not conversation:
-                conversation = await conversation_manager.create_conversation()
+                raise HTTPException(status_code=403, detail="Conversation not found or access denied")
         else:
-            conversation = await conversation_manager.create_conversation()
+            conversation = await conversation_manager.create_conversation(user_id=current_user.user_id)
         
         # Add user message
         await conversation_manager.add_message(
@@ -178,7 +279,31 @@ async def chat(request: ChatRequest):
             llm_response = local_llm_client.generate(messages_dict)
         else:
             async with get_llm_client() as llm:
+                # Add tool calling instructions (Phase 8)
+                messages.insert(0, Message(role="system", content="You are a helpful assistant. If you need external data (web_search, python_repl, get_datetime), reply with a JSON object: {'tool': 'name', 'args': {}}. If not, reply normally."))
                 llm_response = await llm.chat(messages)
+                
+                # Check for Tool Call
+                try:
+                    tool_call = json.loads(llm_response.content)
+                    if isinstance(tool_call, dict) and "tool" in tool_call and tool_call["tool"] != "none":
+                        logger.info("tool_call_detected", tool=tool_call["tool"])
+                        tool_result = await tool_executor.execute(tool_call["tool"], tool_call.get("args", {}))
+                        messages.append(Message(role="assistant", content=llm_response.content))
+                        messages.append(Message(role="system", content=f"Tool result: {json.dumps(tool_result)}"))
+                        llm_response = await llm.chat(messages)
+                except:
+                    pass
+                
+                # Self-Critique Step (Phase 5)
+                final_content, refined = await rag_service.critique_response(
+                    request.message,
+                    llm_response.content,
+                    retrieved_knowledge,
+                    llm
+                )
+                if refined:
+                    llm_response.content = final_content
         
         # Add assistant message
         await conversation_manager.add_message(
@@ -306,10 +431,10 @@ async def chat_stream(request: StreamChatRequest):
 
 
 @app.get("/api/conversations")
-async def list_conversations(limit: int = 50):
-    """List all conversations"""
+async def list_conversations(limit: int = 50, current_user: TokenData = Depends(get_current_user)):
+    """List all conversations for the authenticated user"""
     try:
-        conversations = await conversation_manager.list_conversations(limit=limit)
+        conversations = await conversation_manager.list_conversations(user_id=current_user.user_id, limit=limit)
         return [
             {
                 "id": conv.id,

@@ -239,11 +239,16 @@ class ContentProcessor:
             return 'en'  # Default on error
     
     async def _assess_quality(self, content: str) -> float:
-        """Assess content quality using multiple metrics"""
+        """Assess content quality using multiple metrics including noise detection"""
+        if self._is_noise(content):
+            logger.debug("Noise detected in content")
+            return 0.0
+
         quality_score = 0.0
         
         # Length score
-        word_count = len(content.split())
+        words = content.split()
+        word_count = len(words)
         if word_count > 500:
             quality_score += 0.2
         elif word_count > 200:
@@ -259,35 +264,61 @@ class ContentProcessor:
             quality_score += 0.1
         
         # Vocabulary diversity
-        words = content.lower().split()
-        unique_words = set(words)
-        if len(unique_words) / max(len(words), 1) > 0.3:
+        unique_words = set(w.lower() for w in words)
+        if len(unique_words) / max(len(words), 1) > 0.4:
             quality_score += 0.2
-        
-        # Content structure indicators
-        structure_indicators = ['however', 'therefore', 'because', 'although', 'moreover', 'furthermore', 'in conclusion']
-        if any(indicator in content.lower() for indicator in structure_indicators):
+        elif len(unique_words) / max(len(words), 1) > 0.25:
             quality_score += 0.1
         
-        # ML-based quality assessment
+        # Content structure indicators
+        structure_indicators = ['however', 'therefore', 'because', 'although', 'moreover', 'furthermore', 'in conclusion', 'consequently', 'specifically']
+        structure_hits = sum(1 for indicator in structure_indicators if indicator in content.lower())
+        quality_score += min(structure_hits * 0.05, 0.2)
+        
+        # ML-based quality assessment (proxy via sentiment confidence/extremes)
         if self.quality_classifier:
             try:
-                # Use sentiment analysis as a proxy for quality
-                result = self.quality_classifier(content[:512])  # Limit length
-                if result[0]['label'] == 'POSITIVE':
-                    quality_score += 0.2
+                result = self.quality_classifier(content[:512])
+                # Neutral/balanced content often has lower sentiment confidence
+                if result[0]['score'] < 0.9: 
+                    quality_score += 0.1
             except:
                 pass
         
-        # Penalty for repetitive content
-        if len(unique_words) / max(len(words), 1) < 0.2:
-            quality_score -= 0.2
-        
-        # Penalty for very short content
-        if word_count < 50:
-            quality_score -= 0.3
-        
         return max(0.0, min(1.0, quality_score))
+
+    def _is_noise(self, content: str) -> bool:
+        """Detect if content is likely noise (gibberish, code, or low-value boilerplate)"""
+        # 1. Excessive special characters
+        special_chars = len(re.findall(r'[^\w\s]', content))
+        if special_chars / len(content) > 0.15:
+            return True
+            
+        # 2. Too many short words (often indicates non-natural language or boilerplate)
+        words = content.split()
+        short_words = [w for w in words if len(w) <= 2]
+        if len(short_words) / len(words) > 0.4:
+            return True
+            
+        # 3. Gibberish detection (simple version: average word length extremes)
+        avg_word_len = sum(len(w) for w in words) / len(words)
+        if avg_word_len < 3 or avg_word_len > 12:
+            return True
+            
+        # 4. Common boilerplate patterns
+        boilerplate = [
+            r"all rights reserved",
+            r"click here to",
+            r"cookie policy",
+            r"privacy policy",
+            r"terms of service",
+            r"subscribe to our"
+        ]
+        hits = sum(1 for pattern in boilerplate if re.search(pattern, content, re.I))
+        if hits >= 2:
+            return True
+            
+        return False
     
     async def _extract_topics(self, content: str) -> List[str]:
         """Extract main topics from content"""

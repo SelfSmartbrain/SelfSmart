@@ -164,6 +164,33 @@ class VectorStore:
         except Exception as e:
             logger.error(f"Error pruning vector store: {e}")
 
+    async def is_duplicate(self, content: str, threshold: float = 0.95) -> bool:
+        """Check if content is a semantic duplicate of an existing document"""
+        if self.collection is None or self.embedding_model is None:
+            return False
+            
+        try:
+            # Generate embedding for checking
+            embedding = self.embedding_model.encode([content])
+            
+            # Search for very similar content
+            results = self.collection.query(
+                query_embeddings=embedding.tolist(),
+                n_results=1
+            )
+            
+            if results['distances'] and len(results['distances'][0]) > 0:
+                # distance: 0.0 is exact match, higher is less similar
+                similarity = 1.0 - results['distances'][0][0]
+                if similarity >= threshold:
+                    logger.debug(f"Semantic duplicate detected (similarity: {similarity:.2f})")
+                    return True
+                    
+            return False
+        except Exception as e:
+            logger.error(f"Error checking for semantic duplicate: {e}")
+            return False
+
     async def get_stats(self) -> Dict[str, Any]:
         """Get vector store statistics"""
         try:

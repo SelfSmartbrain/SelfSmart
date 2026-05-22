@@ -5,15 +5,17 @@ Handles LLM interactions with streaming, context management, and error recovery.
 
 import asyncio
 import aiohttp
-import logging
+import time
 from typing import AsyncGenerator, Optional, Dict, Any, List
 from datetime import datetime
 import json
 from dataclasses import dataclass, field
 
 from src.config.settings import get_settings
+from src.utils.logging import get_logger
+from src.utils.metrics import LLM_LATENCY, TOKEN_USAGE
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -197,14 +199,23 @@ class DeepSeekClient:
         }
         
         try:
+            start_time = time.time()
             response_data = await self._make_request_with_retry("/chat/completions", payload)
+            latency = time.time() - start_time
             
+            # Record metrics
+            LLM_LATENCY.labels(provider="deepseek", model=self.model).observe(latency)
+            usage = response_data.get("usage", {})
+            if usage:
+                TOKEN_USAGE.labels(provider="deepseek", model=self.model, token_type="prompt").inc(usage.get("prompt_tokens", 0))
+                TOKEN_USAGE.labels(provider="deepseek", model=self.model, token_type="completion").inc(usage.get("completion_tokens", 0))
+
             choice = response_data["choices"][0]
             
             return LLMResponse(
                 content=choice["message"]["content"],
                 finish_reason=choice.get("finish_reason", "stop"),
-                usage=response_data.get("usage", {}),
+                usage=usage,
                 model=response_data.get("model", self.model)
             )
             

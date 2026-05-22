@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     app_name: str = "SmartSelf AI"
     app_version: str = "1.0.0"
     debug: bool = Field(default=False, env="DEBUG")
+    env: str = Field(default="local", env="ENV")  # local | staging | production
+    json_logs: bool = Field(default=False, env="JSON_LOGS")
     
     # API Keys
     openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
@@ -65,6 +67,10 @@ class Settings(BaseSettings):
         # Ensure directories exist
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.logs_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def is_production(self) -> bool:
+        return self.env.lower() == "production"
 
 
 @lru_cache()

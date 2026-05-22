@@ -5,15 +5,17 @@ Handles Google Gemini API interactions with streaming and error recovery.
 
 import asyncio
 import aiohttp
-import logging
+import time
 from typing import AsyncGenerator, Optional, Dict, Any, List
 from datetime import datetime
 import json
 from dataclasses import dataclass, field
 
 from src.config.settings import get_settings
+from src.utils.logging import get_logger
+from src.utils.metrics import LLM_LATENCY, TOKEN_USAGE
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 @dataclass
 class Message:
@@ -98,20 +100,30 @@ class GeminiClient:
             }
         }
         
+        start_time = time.time()
         async with self.session.post(url, json=payload) as response:
             if response.status != 200:
                 error_text = await response.text()
                 raise Exception(f"Gemini API error {response.status}: {error_text}")
             
+            latency = time.time() - start_time
+            LLM_LATENCY.labels(provider="gemini", model=self.model).observe(latency)
+
             data = await response.json()
             try:
                 content = data['candidates'][0]['content']['parts'][0]['text']
                 finish_reason = data['candidates'][0].get('finishReason', 'STOP')
                 
+                # Gemini usage metadata
+                usage_metadata = data.get('usageMetadata', {})
+                if usage_metadata:
+                    TOKEN_USAGE.labels(provider="gemini", model=self.model, token_type="prompt").inc(usage_metadata.get("promptTokenCount", 0))
+                    TOKEN_USAGE.labels(provider="gemini", model=self.model, token_type="completion").inc(usage_metadata.get("candidatesTokenCount", 0))
+
                 return LLMResponse(
                     content=content,
                     finish_reason=finish_reason,
-                    usage={}, # Gemini API returns usage in a different structure
+                    usage=usage_metadata,
                     model=self.model
                 )
             except (KeyError, IndexError) as e:

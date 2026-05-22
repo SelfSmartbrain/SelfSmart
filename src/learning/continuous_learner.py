@@ -14,6 +14,8 @@ import time
 from pathlib import Path
 
 from src.crawler.web_crawler import WebCrawler, RSSCrawler, CrawlResult
+from src.crawler.file_crawler import FileCrawler
+from src.crawler.youtube_crawler import YouTubeCrawler
 from src.processor.content_processor import ContentProcessor, ProcessedContent
 from src.knowledge.knowledge_integrator import KnowledgeIntegrator
 from src.api.free_api_client import FreeAPIClient
@@ -42,6 +44,8 @@ class LearningConfig:
     rss_feeds: List[str] = None
     crawl_domains: List[str] = None
     api_endpoints: List[str] = None
+    file_directories: List[str] = None
+    youtube_urls: List[str] = None
     
     def __post_init__(self):
         if self.rss_feeds is None:
@@ -68,6 +72,12 @@ class LearningConfig:
                 "https://api.github.com/events",
                 "https://hacker-news.firebaseio.com/v0/newstories.json"
             ]
+
+        if self.file_directories is None:
+            self.file_directories = ["./uploads", "./data/knowledge"]
+
+        if self.youtube_urls is None:
+            self.youtube_urls = []
 
 
 @dataclass
@@ -104,6 +114,8 @@ class ContinuousLearner:
         # Initialize components
         self.web_crawler = None
         self.rss_crawler = None
+        self.file_crawler = FileCrawler()
+        self.youtube_crawler = YouTubeCrawler()
         self.content_processor = ContentProcessor()
         self.knowledge_integrator = KnowledgeIntegrator()
         self.free_api_client = FreeAPIClient()
@@ -403,16 +415,32 @@ class ContinuousLearner:
         return relevant_content
     
     async def _integrate_knowledge(self, processed_content: List[ProcessedContent]):
-        """Integrate processed content into knowledge base"""
+        """Integrate processed content into knowledge base with semantic deduplication"""
         if not processed_content:
             return
         
         try:
-            # Add to knowledge base
-            await self.knowledge_integrator.batch_integrate(processed_content)
+            # 1. Semantic Deduplication Check
+            final_content = []
+            for content in processed_content:
+                is_dup = False
+                if self.knowledge_integrator.vector_store:
+                    is_dup = await self.knowledge_integrator.vector_store.is_duplicate(content.content)
+                
+                if not is_dup:
+                    final_content.append(content)
+                else:
+                    self.stats.duplicates_found += 1
+                    logger.info(f"Skipping semantic duplicate: {content.title}")
+
+            if not final_content:
+                return
+
+            # 2. Add to knowledge base
+            await self.knowledge_integrator.batch_integrate(final_content)
             
             # Update knowledge count
-            self.stats.knowledge_added += len(processed_content)
+            self.stats.knowledge_added += len(final_content)
             
         except Exception as e:
             logger.error(f"Error integrating knowledge: {e}")

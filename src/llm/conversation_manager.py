@@ -56,18 +56,31 @@ class ConversationManager:
         logger.info(f"Conversation manager initialized with database at {db_path}")
     
     def _init_database(self):
-        """Initialize SQLite database schema"""
+        """Initialize SQLite database schema with user support"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Create conversations table
+        # Create users table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                hashed_password TEXT NOT NULL,
+                full_name TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+
+        # Create conversations table with user_id
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
                 title TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                metadata TEXT
+                metadata TEXT,
+                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             )
         """)
         
@@ -85,35 +98,50 @@ class ConversationManager:
         """)
         
         # Create indexes for performance
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_messages_conversation 
-            ON messages (conversation_id, timestamp)
-        """)
-        
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS idx_conversations_updated 
-            ON conversations (updated_at DESC)
-        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_conv_user ON conversations (user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages (conversation_id, timestamp)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations (updated_at DESC)")
         
         conn.commit()
         conn.close()
         
         logger.info("Database schema initialized")
     
+    async def create_user(self, email: str, password_hash: str, full_name: Optional[str] = None) -> str:
+        user_id = str(uuid.uuid4())
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO users (id, email, hashed_password, full_name, created_at) VALUES (?, ?, ?, ?, ?)",
+                (user_id, email, password_hash, full_name, datetime.now().isoformat())
+            )
+            conn.commit()
+            return user_id
+        finally:
+            conn.close()
+
+    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id, email, hashed_password, full_name FROM users WHERE email = ?", (email,))
+            row = cursor.fetchone()
+            if row:
+                return {"id": row[0], "email": row[1], "hashed_password": row[2], "full_name": row[3]}
+            return None
+        finally:
+            conn.close()
+
     async def create_conversation(
         self,
+        user_id: str,
         title: str = "New Conversation",
         metadata: Optional[Dict[str, Any]] = None
     ) -> Conversation:
         """
-        Create a new conversation.
-        
-        Args:
-            title: Conversation title
-            metadata: Optional metadata
-            
-        Returns:
-            Created Conversation object
+        Create a new conversation for a specific user.
         """
         conversation_id = str(uuid.uuid4())
         now = datetime.now()
@@ -124,11 +152,12 @@ class ConversationManager:
         try:
             cursor.execute(
                 """
-                INSERT INTO conversations (id, title, created_at, updated_at, metadata)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO conversations (id, user_id, title, created_at, updated_at, metadata)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     conversation_id,
+                    user_id,
                     title,
                     now.isoformat(),
                     now.isoformat(),
@@ -146,7 +175,7 @@ class ConversationManager:
                 metadata=metadata or {}
             )
             
-            logger.info(f"Created conversation {conversation_id}")
+            logger.info(f"Created conversation {conversation_id} for user {user_id}")
             return conversation
             
         except Exception as e:
@@ -229,30 +258,24 @@ class ConversationManager:
     
     async def get_conversation(
         self,
-        conversation_id: str
+        conversation_id: str,
+        user_id: Optional[str] = None
     ) -> Optional[Conversation]:
         """
-        Retrieve a conversation by ID.
-        
-        Args:
-            conversation_id: Conversation ID
-            
-        Returns:
-            Conversation object or None if not found
+        Retrieve a conversation by ID, optionally verifying ownership.
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
         try:
             # Get conversation metadata
-            cursor.execute(
-                """
-                SELECT id, title, created_at, updated_at, metadata
-                FROM conversations
-                WHERE id = ?
-                """,
-                (conversation_id,)
-            )
+            query = "SELECT id, title, created_at, updated_at, metadata FROM conversations WHERE id = ?"
+            params = [conversation_id]
+            if user_id:
+                query += " AND user_id = ?"
+                params.append(user_id)
+            
+            cursor.execute(query, tuple(params))
             
             row = cursor.fetchone()
             if not row:
@@ -349,18 +372,12 @@ class ConversationManager:
     
     async def list_conversations(
         self,
+        user_id: str,
         limit: int = 50,
         offset: int = 0
     ) -> List[Conversation]:
         """
-        List conversations ordered by update time.
-        
-        Args:
-            limit: Maximum number of conversations to return
-            offset: Offset for pagination
-            
-        Returns:
-            List of Conversation objects
+        List conversations for a specific user.
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -370,10 +387,11 @@ class ConversationManager:
                 """
                 SELECT id, title, created_at, updated_at, metadata
                 FROM conversations
+                WHERE user_id = ?
                 ORDER BY updated_at DESC
                 LIMIT ? OFFSET ?
                 """,
-                (limit, offset)
+                (user_id, limit, offset)
             )
             
             conversations = []
