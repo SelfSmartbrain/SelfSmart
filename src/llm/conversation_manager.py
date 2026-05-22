@@ -71,7 +71,15 @@ class ConversationManager:
             )
         """)
 
-        # Create conversations table with user_id
+        # Check if user_id column exists in conversations
+        cursor.execute("PRAGMA table_info(conversations)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'user_id' not in columns:
+            # Rename existing table and migrate if needed, but for prototype we can just drop it
+            # This is destructive! Ensure data is backed up.
+            cursor.execute("DROP TABLE IF EXISTS conversations")
+            
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id TEXT PRIMARY KEY,
@@ -97,7 +105,7 @@ class ConversationManager:
             )
         """)
         
-        # Create indexes for performance
+        # Create indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_conv_user ON conversations (user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages (conversation_id, timestamp)")
@@ -105,8 +113,6 @@ class ConversationManager:
         
         conn.commit()
         conn.close()
-        
-        logger.info("Database schema initialized")
     
     async def create_user(self, email: str, password_hash: str, full_name: Optional[str] = None) -> str:
         user_id = str(uuid.uuid4())
