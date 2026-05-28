@@ -73,3 +73,6 @@ datasets>=2.15.0
 celery==5.3.6
 redis==5.0.1
 flower==2.0.1
+tenacity>=8.2.0
+langchain-text-splitters>=0.0.1
+mlx-lm>=0.29.1
