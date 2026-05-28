@@ -10,13 +10,17 @@ from datetime import datetime, timedelta
 import numpy as np
 import chromadb
 from neo4j import GraphDatabase
-import elasticsearch
 from sentence_transformers import SentenceTransformer
 import hashlib
 import json
 from pathlib import Path
 
 from src.processor.content_processor import ProcessedContent
+
+try:
+    import elasticsearch  # type: ignore
+except Exception:  # pragma: no cover
+    elasticsearch = None
 
 logger = logging.getLogger(__name__)
 
@@ -354,6 +358,11 @@ class DocumentStore:
         self.index_name = "learning_chatbot"
         
         try:
+            if elasticsearch is None:
+                logger.warning("Elasticsearch client not installed; DocumentStore disabled")
+                self.client = None
+                return
+
             self.client = elasticsearch.Elasticsearch(hosts)
             
             # Test connection

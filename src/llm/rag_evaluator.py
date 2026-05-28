@@ -15,7 +15,9 @@ class EvalCase(BaseModel):
 
 class EvalResult(BaseModel):
     query: str
+    context_required: bool
     response: str
+    ground_truth: str
     retrieved_contexts: List[str]
     faithfulness_score: float  # 0 to 1
     relevance_score: float      # 0 to 1
@@ -107,7 +109,9 @@ class RAGEvaluator:
                 
                 results.append(EvalResult(
                     query=case.query,
+                    context_required=case.context_required,
                     response=llm_response.content,
+                    ground_truth=case.ground_truth,
                     retrieved_contexts=contexts,
                     faithfulness_score=faithfulness,
                     relevance_score=relevance,

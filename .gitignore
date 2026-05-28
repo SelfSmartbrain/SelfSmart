@@ -19,8 +19,8 @@ node_modules/
 frontend/node_modules/
 
 # Logs and data
-logs/
-*.log
+
+
 data/vector_store/
 
 # IDE

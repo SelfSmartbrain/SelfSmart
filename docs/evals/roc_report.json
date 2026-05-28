@@ -1,0 +1,41 @@
+{
+  "label": "context_required",
+  "n": 5,
+  "positive_rate": 0.6,
+  "metrics": {
+    "faithfulness_score": {
+      "auc": 1.0,
+      "best_threshold": 1.0,
+      "best_youden_j": 1.0,
+      "accuracy_at_best_threshold": 1.0,
+      "confusion_matrix_at_best_threshold": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "plot_path": "docs/evals/roc_faithfulness_context_required.png"
+    },
+    "relevance_score": {
+      "auc": 1.0,
+      "best_threshold": 0.9,
+      "best_youden_j": 1.0,
+      "accuracy_at_best_threshold": 1.0,
+      "confusion_matrix_at_best_threshold": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "plot_path": "docs/evals/roc_relevance_context_required.png"
+    }
+  }
+}

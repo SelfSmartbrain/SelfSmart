@@ -1,0 +1,59 @@
+{
+  "summary": {
+    "avg_faithfulness": 0.8400000000000001,
+    "avg_relevance": 0.8200000000000001,
+    "avg_latency": 2.6226043701171875e-06
+  },
+  "details": [
+    {
+      "query": "What are the current trends in organic milk pricing?",
+      "context_required": true,
+      "ground_truth": "Organic milk prices are seeing a 5% increase due to supply chain constraints.",
+      "response": "Organic milk prices are seeing a 5% increase due to supply chain constraints.",
+      "retrieved_contexts": [],
+      "faithfulness_score": 1.0,
+      "relevance_score": 0.9,
+      "latency": 1.0013580322265625e-05
+    },
+    {
+      "query": "How should I handle stockouts for electronics?",
+      "context_required": true,
+      "ground_truth": "Increase safety stock by 20% and set up automated reorder alerts.",
+      "response": "Increase safety stock by 20% and set up automated reorder alerts.",
+      "retrieved_contexts": [],
+      "faithfulness_score": 1.0,
+      "relevance_score": 0.9,
+      "latency": 0.0
+    },
+    {
+      "query": "Who is the founder of SmartSelf AI?",
+      "context_required": true,
+      "ground_truth": "The project mentions it was founder-built but doesn't name a specific individual other than the GitHub handle genius-0963.",
+      "response": "The project mentions it was founder-built but doesn't name a specific individual other than the GitHub handle genius-0963.",
+      "retrieved_contexts": [],
+      "faithfulness_score": 1.0,
+      "relevance_score": 0.9,
+      "latency": 1.1920928955078125e-06
+    },
+    {
+      "query": "What is 2 + 2?",
+      "context_required": false,
+      "ground_truth": "4",
+      "response": "4",
+      "retrieved_contexts": [],
+      "faithfulness_score": 0.6,
+      "relevance_score": 0.7,
+      "latency": 9.5367431640625e-07
+    },
+    {
+      "query": "What is the capital of France?",
+      "context_required": false,
+      "ground_truth": "Paris",
+      "response": "Paris",
+      "retrieved_contexts": [],
+      "faithfulness_score": 0.6,
+      "relevance_score": 0.7,
+      "latency": 9.5367431640625e-07
+    }
+  ]
+}
