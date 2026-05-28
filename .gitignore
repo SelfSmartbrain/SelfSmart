@@ -18,10 +18,15 @@ build/
 node_modules/
 frontend/node_modules/
 
-# Logs and data
-
-
-data/vector_store/
+logs/
+data/
+training_data/
+processed_data/
+vector_store/
+model_checkpoints/
+models/
+fine_tuned_model.zip
+*.log
 
 # IDE
 .idea/
