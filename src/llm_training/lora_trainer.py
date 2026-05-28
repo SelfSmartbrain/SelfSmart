@@ -5,7 +5,7 @@ Production-grade LoRA training implementation for LLM fine-tuning.
 
 import torch
 from transformers import Trainer, TrainingArguments
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 from peft import LoraConfig, get_peft_model
 from datasets import Dataset
 import logging
@@ -157,7 +157,7 @@ class LoRATrainer:
         save_steps: int = 500,
         eval_steps: int = 500,
         save_total_limit: int = 3
-    ) -> TrainingArguments:
+    ) -> SFTConfig:
         """
         Get training arguments.
         
@@ -173,9 +173,11 @@ class LoRATrainer:
             save_total_limit: Max checkpoints to keep
             
         Returns:
-            TrainingArguments instance
+            SFTConfig instance
         """
-        return TrainingArguments(
+        return SFTConfig(
+            dataset_text_field="text",
+            max_length=self.max_seq_length,
             output_dir=str(self.output_dir),
             num_train_epochs=num_train_epochs,
             per_device_train_batch_size=per_device_train_batch_size,
@@ -185,13 +187,14 @@ class LoRATrainer:
             logging_steps=logging_steps,
             save_steps=save_steps,
             eval_steps=eval_steps,
-            evaluation_strategy="steps",
+            eval_strategy="steps",
             save_strategy="steps",
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             greater_is_better=False,
-            fp16=True,
-            optim="paged_adamw_32bit",
+            fp16=True if not torch.backends.mps.is_available() else False,
+            bf16=False,
+            optim="paged_adamw_32bit" if torch.cuda.is_available() else "adamw_torch",
             report_to=["tensorboard"],
             logging_dir=f"{self.output_dir}/logs",
             save_total_limit=save_total_limit,
@@ -243,8 +246,6 @@ class LoRATrainer:
             model=self.model,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            dataset_text_field="text",
-            max_seq_length=self.max_seq_length,
             tokenizer=self.tokenizer,
             args=training_args
         )
