@@ -3,7 +3,7 @@ import time
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from src.llm.rag_service import RAGService
-from src.llm.deepseek_client import DeepSeekClient, Message
+from src.llm.gemini_client import GeminiClient, Message
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -27,7 +27,7 @@ class RAGEvaluator:
     """
     Evaluates the RAG pipeline for quality and safety.
     """
-    def __init__(self, rag_service: RAGService, llm_client: DeepSeekClient):
+    def __init__(self, rag_service: RAGService, llm_client: GeminiClient):
         self.rag_service = rag_service
         self.llm_client = llm_client
 
@@ -96,7 +96,7 @@ class RAGEvaluator:
                 start_time = time.time()
                 
                 # 1. RAG Step
-                enhanced_query, knowledge = await self.rag_service.enhance_query(case.query)
+                enhanced_query, knowledge = await self.rag_service.enhance_query(case.query, llm_client=self.llm_client)
                 contexts = [k.content for k in knowledge]
                 
                 # 2. Generation Step
