@@ -10,6 +10,7 @@ from typing import AsyncGenerator, Optional, Dict, Any, List
 from datetime import datetime
 import json
 from dataclasses import dataclass, field
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from src.config.settings import get_settings
 from src.utils.logging import get_logger
@@ -50,7 +51,10 @@ class GeminiClient:
             raise ValueError("Gemini API key is required")
         
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
-        self.model = "gemini-1.5-flash"
+        # Allow overriding the model name via env/config.
+        # The model must match the IDs returned by ModelService.ListModels (minus the "models/" prefix).
+        # Examples: gemini-flash-latest, gemini-pro-latest, gemini-2.0-flash
+        self.model = getattr(settings, "gemini_model", None) or "gemini-flash-latest"
         self.session: Optional[aiohttp.ClientSession] = None
         self.timeout = 60.0
         
@@ -79,6 +83,24 @@ class GeminiClient:
             })
         return formatted
 
+    async def list_models(self) -> Dict[str, Any]:
+        """List models available for this API key."""
+        if not self.session:
+            raise RuntimeError("Client not initialized. Use async context manager.")
+
+        url = f"{self.base_url}?key={self.api_key}"
+        async with self.session.get(url) as response:
+            text = await response.text()
+            if response.status != 200:
+                raise Exception(f"Gemini ListModels error {response.status}: {text}")
+            return json.loads(text)
+
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        retry=retry_if_exception_type(Exception),
+        reraise=True
+    )
     async def chat(
         self,
         messages: List[Message],
@@ -130,6 +152,12 @@ class GeminiClient:
                 logger.error(f"Failed to parse Gemini response: {e}")
                 raise Exception("Unexpected response format from Gemini API")
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        retry=retry_if_exception_type(Exception),
+        reraise=True
+    )
     async def chat_stream(
         self,
         messages: List[Message],
