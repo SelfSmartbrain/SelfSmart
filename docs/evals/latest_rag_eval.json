@@ -2,7 +2,7 @@
   "summary": {
     "avg_faithfulness": 0.8400000000000001,
     "avg_relevance": 0.8200000000000001,
-    "avg_latency": 2.6226043701171875e-06
+    "avg_latency": 1.6117095947265624e-05
   },
   "details": [
     {
@@ -13,7 +13,7 @@
       "retrieved_contexts": [],
       "faithfulness_score": 1.0,
       "relevance_score": 0.9,
-      "latency": 1.0013580322265625e-05
+      "latency": 6.389617919921875e-05
     },
     {
       "query": "How should I handle stockouts for electronics?",
@@ -23,7 +23,7 @@
       "retrieved_contexts": [],
       "faithfulness_score": 1.0,
       "relevance_score": 0.9,
-      "latency": 0.0
+      "latency": 1.9073486328125e-06
     },
     {
       "query": "Who is the founder of SmartSelf AI?",
@@ -33,7 +33,7 @@
       "retrieved_contexts": [],
       "faithfulness_score": 1.0,
       "relevance_score": 0.9,
-      "latency": 1.1920928955078125e-06
+      "latency": 1.2636184692382812e-05
     },
     {
       "query": "What is 2 + 2?",
@@ -43,7 +43,7 @@
       "retrieved_contexts": [],
       "faithfulness_score": 0.6,
       "relevance_score": 0.7,
-      "latency": 9.5367431640625e-07
+      "latency": 1.1920928955078125e-06
     },
     {
       "query": "What is the capital of France?",
