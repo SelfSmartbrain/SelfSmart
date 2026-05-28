@@ -10,7 +10,7 @@ import json
 import os
 import time
 from src.llm.rag_service import RAGService
-from src.llm.deepseek_client import DeepSeekClient
+from src.llm.gemini_client import GeminiClient
 from src.llm.rag_evaluator import RAGEvaluator, EvalCase
 from src.utils.logging import setup_logging, get_logger
 
@@ -56,9 +56,9 @@ def offline_eval(cases):
 
 async def main():
     # 1. Initialize services
-    # Note: Assumes DEEPSEEK_API_KEY is in env
+    # Note: Assumes GEMINI_API_KEY is in env
     try:
-        llm_client = DeepSeekClient()
+        llm_client = GeminiClient()
         rag_service = RAGService()
         evaluator = RAGEvaluator(rag_service, llm_client)
     except Exception as e:
