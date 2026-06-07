@@ -179,6 +179,28 @@ graph LR
 | Automation | **asyncio** | Concurrent web crawling and dataset synthesis |
 | Synthesis | **Gemini API** | Generates missing preference pairs for DPO datasets |
 
+## 📊 ROC / AUC Evaluation
+
+A tiny utility script is provided to quickly generate ROC curves and compute the AUC for any binary‑classification model.
+
+### Usage
+
+```bash
+python src/evaluation/roc_auc.py data/predictions.csv
+```
+
+- `predictions.csv` must contain at least two columns: **`label`** (0 = negative, 1 = positive) and **`score`** (model confidence for the positive class).  
+- The script saves `predictions_roc.png` next to the CSV and prints the AUC value.
+
+### How it works
+
+1. **Load data** with **pandas**.  
+2. Compute **FPR**, **TPR**, and **AUC** using **scikit‑learn**.  
+3. Plot the ROC curve with **matplotlib**, applying a dark‑mode style to match the project aesthetics.  
+4. Save the PNG and log the resulting AUC.
+
+You can integrate this script into any training loop (e.g., after LoRA or DPO fine‑tuning) to monitor how well the model separates positive from negative examples. Feel free to adapt the column names or add additional metrics (precision‑recall, confusion matrix) as needed.
+
 ---
 
 ## 🗂️ Project Structure
