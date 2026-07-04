@@ -178,8 +178,8 @@ class MemoryFabric:
             for result in backend_results:
                 if isinstance(result, Exception):
                     logger.error(f"Error querying backend: {result}")
-                else:
-                    results.extend(result)
+                elif isinstance(result, list):
+                    results.extend([r for r in result if isinstance(r, MemoryEntry)])
         
         # Sort by importance and timestamp
         results.sort(
@@ -275,14 +275,35 @@ class MemoryFabric:
         query: str,
         limit: int,
     ) -> List[MemoryEntry]:
-        """Query working memory (Redis)"""
+        """Query working memory without blocking Redis with KEYS."""
         try:
-            # Check if backend has search method
+            if hasattr(backend, "scan"):
+                pattern = f"*{query}*"
+                entries = []
+                cursor = 0
+                while True:
+                    cursor, keys = await backend.scan(cursor, match=pattern, count=100)
+                    for key in keys:
+                        if len(entries) >= limit:
+                            break
+                        value = await backend.get(key)
+                        if value:
+                            import json
+                            data = json.loads(value)
+                            entries.append(MemoryEntry(
+                                content=data.get("content", ""),
+                                memory_type=MemoryType.WORKING,
+                                metadata=data.get("metadata", {}),
+                                importance=data.get("importance", 0.5),
+                                timestamp=data.get("timestamp", 0),
+                            ))
+                    if cursor == 0 or len(entries) >= limit:
+                        break
+                return entries
             if hasattr(backend, 'keys'):
-                # Search for keys matching query pattern
                 pattern = f"*{query}*"
                 keys = await backend.keys(pattern)
-                
+
                 entries = []
                 for key in keys[:limit]:
                     value = await backend.get(key)
@@ -295,6 +316,23 @@ class MemoryFabric:
                             metadata=data.get("metadata", {}),
                             importance=data.get("importance", 0.5),
                             timestamp=data.get("timestamp", 0),
+                        ))
+                return entries
+            if hasattr(backend, "_store"):
+                entries = []
+                lowered = query.lower()
+                for key, entry in list(getattr(backend, "_store", {}).items()):
+                    if len(entries) >= limit:
+                        break
+                    value = entry.get("value") if isinstance(entry, dict) else entry
+                    content = value.get("content", "") if isinstance(value, dict) else str(value)
+                    if lowered in str(key).lower() or lowered in content.lower():
+                        entries.append(MemoryEntry(
+                            content=content,
+                            memory_type=MemoryType.WORKING,
+                            metadata=value.get("metadata", {}) if isinstance(value, dict) else {},
+                            importance=value.get("importance", 0.5) if isinstance(value, dict) else 0.5,
+                            timestamp=entry.get("ts", 0) if isinstance(entry, dict) else 0,
                         ))
                 return entries
             return []
