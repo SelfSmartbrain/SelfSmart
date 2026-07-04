@@ -125,7 +125,7 @@ class ArxivSearchTool(AgentTool):
             results.sort(key=lambda r: r["relevance_score"], reverse=True)
             return results
 
-        results = await asyncio.get_event_loop().run_in_executor(None, _sync_search)
+        results = await asyncio.to_thread(_sync_search)
 
         log.info("arxiv.search.complete", result_count=len(results))
         return results
