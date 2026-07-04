@@ -297,3 +297,6 @@ class APICallerTool(AgentTool):
                     tool_name="api_caller",
                     message=f"Blocked private/internal IP: {addr}.",
                 )
+
+
+ApiCallerTool = APICallerTool
