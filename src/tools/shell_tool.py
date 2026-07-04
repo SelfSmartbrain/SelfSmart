@@ -9,11 +9,13 @@ Executes shell commands in a controlled environment with:
 
 from __future__ import annotations
 
+import re
+import shlex
 import os
 import subprocess
 import signal
 import asyncio
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -70,8 +72,21 @@ class ShellTool(AgentTool):
     max_retries: int = 0
     timeout_seconds: float = 60.0
 
-    # Blocked dangerous commands
-    _blocked_commands = {"rm -rf", "sudo", "chmod 777", "dd", "mkfs", "fdisk"}
+    # Blocked dangerous commands, matched against shell tokens rather than raw substrings.
+    _blocked_patterns: ClassVar[list[re.Pattern[str]]] = [
+        re.compile(r"^sudo$", re.IGNORECASE),
+        re.compile(r"^su$", re.IGNORECASE),
+        re.compile(r"^chmod$", re.IGNORECASE),
+        re.compile(r"^chown$", re.IGNORECASE),
+        re.compile(r"^dd$", re.IGNORECASE),
+        re.compile(r"^mkfs", re.IGNORECASE),
+        re.compile(r"^fdisk$", re.IGNORECASE),
+        re.compile(r"^mount$", re.IGNORECASE),
+        re.compile(r"^umount$", re.IGNORECASE),
+    ]
+    _blocked_arg_combos: ClassVar[list[tuple[re.Pattern[str], re.Pattern[str]]]] = [
+        (re.compile(r"^rm$", re.IGNORECASE), re.compile(r"-.*r.*f|--force|--recursive")),
+    ]
 
     # ------------------------------------------------------------------
     # Core execution
@@ -85,12 +100,38 @@ class ShellTool(AgentTool):
 
         log = logger.bind(tool=self.name, command=command, timeout=timeout)
 
-        # Check blocked commands
-        for blocked in self._blocked_commands:
-            if blocked in command:
+        try:
+            tokens = shlex.split(command)
+        except ValueError as exc:
+            raise ToolExecutionError(
+                tool_name=self.name,
+                message="Invalid command syntax (unmatched quotes or escape characters)",
+                cause=exc,
+            ) from exc
+
+        for token in tokens:
+            for pattern in self._blocked_patterns:
+                if pattern.match(token):
+                    raise ToolExecutionError(
+                        tool_name=self.name,
+                        message=f"Blocked command: {token}",
+                    )
+
+        if len(tokens) >= 2:
+            for cmd_pattern, arg_pattern in self._blocked_arg_combos:
+                if cmd_pattern.match(tokens[0]) and any(
+                    arg_pattern.match(arg) for arg in tokens[1:]
+                ):
+                    raise ToolExecutionError(
+                        tool_name=self.name,
+                        message=f"Blocked dangerous command: {command}",
+                    )
+
+        for token in tokens:
+            if token.lower() in {"bash", "sh", "zsh"} and len(tokens) > 2 and tokens[1] == "-c":
                 raise ToolExecutionError(
                     tool_name=self.name,
-                    message=f"Blocked command pattern: {blocked}",
+                    message=f"Blocked shell trampoline: {token} -c",
                 )
 
         # Resolve working directory
@@ -100,16 +141,14 @@ class ShellTool(AgentTool):
             work_dir = os.getcwd()
 
         try:
-            result = await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: subprocess.run(
-                    command,
-                    shell=True,
-                    cwd=work_dir,
-                    capture_output=True,
-                    text=True,
-                    timeout=timeout,
-                )
+            result = await asyncio.to_thread(
+                subprocess.run,
+                command,
+                shell=True,
+                cwd=work_dir,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
             )
 
             return {
