@@ -74,3 +74,15 @@ async def project_completion(state: Dict[str, Any]) -> Dict[str, Any]:
     if project:
         project["status"] = "completed"
     return {"project": project, "final_status": "completed"}
+
+
+environment_analysis_node = environment_analysis
+opportunity_detection_node = opportunity_detection
+project_creation_node = project_creation
+task_decomposition_node = task_decomposition
+resource_allocation_node = resource_allocation
+execution_node = execution
+checkpointing_node = checkpointing
+failure_recovery_node = failure_recovery
+impact_analysis_node = impact_analysis
+project_completion_node = project_completion
