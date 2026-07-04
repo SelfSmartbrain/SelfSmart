@@ -366,3 +366,6 @@ class PythonExecutorTool(AgentTool):
 
         keep = {"PATH", "HOME", "LANG", "LC_ALL", "PYTHONPATH", "VIRTUAL_ENV"}
         return {k: v for k, v in os.environ.items() if k in keep}
+
+
+PythonExecutor = PythonExecutorTool
