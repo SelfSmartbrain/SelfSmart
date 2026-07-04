@@ -176,7 +176,9 @@ async def self_improvement_node(state: AgentStateDict) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Phase 13: Cognitive Operating System Nodes
+# Phase 13: Cognitive Operating System Nodes (NOT YET WIRED - future phase)
+# These nodes exist as forward-looking implementations but are not currently
+# connected to the orchestrator graph. Wire them when Phase 13 is ready.
 # ---------------------------------------------------------------------------
 
 
