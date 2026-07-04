@@ -139,15 +139,14 @@ ignore = [
     "E501",  # line too long (handled by black)
     "B008",  # do not perform function calls in argument defaults
 ]
-per-file-ignores = {
-    "tests/*": ["S101"],  # allow assert in tests
-}
-
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "lf"
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["S101"]  # allow assert in tests
 
 [tool.mypy]
 python_version = "3.10"
@@ -162,7 +161,7 @@ show_error_codes = true
 namespace_packages = true
 explicit_package_bases = true
 
-[tool.mypy.modelx_voice.*]
+[tool.mypy."modelx_voice.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -214,5 +213,7 @@ tag = true
 message = "chore: release v{new_version}"
 
 [tool.bumpversion.file_patterns]
-- "pyproject.toml"
-- "modelx_voice/__init__.py"
+files = [
+    "pyproject.toml",
+    "modelx_voice/__init__.py",
+]
