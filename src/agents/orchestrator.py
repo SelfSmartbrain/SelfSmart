@@ -383,8 +383,16 @@ class OrchestratorAgent:
         graph.add_edge("reflect", "extract_learnings")
         graph.add_edge("extract_learnings", "update_strategies")
         
+        # Phase 6: Autonomous Research Pipeline
+        graph.add_edge("update_strategies", "knowledge_gap_detection")
+        graph.add_edge("knowledge_gap_detection", "goal_generation")
+        graph.add_edge("goal_generation", "curiosity_evaluation")
+        graph.add_edge("curiosity_evaluation", "research_director")
+        graph.add_edge("research_director", "research_portfolio")
+        graph.add_edge("research_portfolio", "knowledge_graph_update")
+
         # Phase 7: Post-execution cognition pipeline
-        graph.add_edge("update_strategies", "cognition_reflection")
+        graph.add_edge("knowledge_graph_update", "cognition_reflection")
         graph.add_edge("cognition_reflection", "failure_analysis")
         graph.add_edge("failure_analysis", "meta_learning")
         graph.add_edge("meta_learning", "strategy_optimization")
@@ -1033,36 +1041,181 @@ class OrchestratorAgent:
     # ---------------------------------------------------------------------------
 
     async def _knowledge_gap_detection(self, state: AgentStateDict) -> dict[str, Any]:
-        """Detect knowledge gaps across the system."""
+        """Detect knowledge gaps by analyzing task results and errors."""
         logger.info("Detecting knowledge gaps")
-        return {"knowledge_gaps": []}
+
+        task_results = state.get("task_results", {})
+        errors = state.get("errors", [])
+        gaps: list[dict[str, Any]] = []
+
+        for task_id, result in task_results.items():
+            if result.get("status") == "failed":
+                gaps.append(
+                    {
+                        "source": task_id,
+                        "gap_description": result.get("error") or "Task failed without a recorded error",
+                        "severity": "high",
+                        "domain": result.get("agent_type", "execution"),
+                    }
+                )
+
+        for error in errors:
+            gaps.append(
+                {
+                    "source": error.get("task_id", "system"),
+                    "gap_description": error.get("message", ""),
+                    "severity": "medium" if error.get("recoverable", True) else "high",
+                    "domain": error.get("agent_type", "unknown"),
+                }
+            )
+
+        if not gaps and state.get("reflection"):
+            reflection = state.get("reflection") or {}
+            for item in reflection.get("improvements", []):
+                gaps.append(
+                    {
+                        "source": "reflection",
+                        "gap_description": str(item),
+                        "severity": "low",
+                        "domain": "learning",
+                    }
+                )
+
+        try:
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(
+                        content=(
+                            "You detect knowledge gaps in autonomous agent runs. "
+                            "Return only a JSON array of gap objects with source, "
+                            "gap_description, severity, and domain."
+                        )
+                    ),
+                    HumanMessage(
+                        content=(
+                            "Analyze this run state for additional knowledge gaps:\n"
+                            f"{json.dumps({'goal': state.get('goal'), 'task_results': task_results, 'errors': errors}, default=str)[:4000]}"
+                        )
+                    ),
+                ]
+            )
+            llm_gaps = json.loads(str(response.content))
+            if isinstance(llm_gaps, list):
+                gaps.extend(g for g in llm_gaps if isinstance(g, dict))
+        except Exception as e:
+            logger.warning("Knowledge gap LLM analysis failed", error=str(e))
+
+        return {"knowledge_gaps": gaps}
 
     async def _goal_generation(self, state: AgentStateDict) -> dict[str, Any]:
-        """Generate goals based on gaps."""
+        """Generate autonomous research goals from knowledge gaps."""
         logger.info("Generating autonomous goals")
-        return {"generated_goals": []}
+        gaps = state.get("knowledge_gaps", [])
+        goals: list[dict[str, Any]] = []
+
+        for index, gap in enumerate(gaps, start=1):
+            description = gap.get("gap_description", "Investigate unresolved gap")
+            goals.append(
+                {
+                    "id": f"goal_{index}",
+                    "title": f"Resolve {gap.get('domain', 'system')} gap",
+                    "description": f"Investigate and address: {description}",
+                    "source_gap": gap,
+                    "priority": 1 if gap.get("severity") == "high" else 3,
+                }
+            )
+
+        if gaps:
+            try:
+                response = await self.llm.ainvoke(
+                    [
+                        SystemMessage(
+                            content=(
+                                "You generate concise autonomous research goals. "
+                                "Return only a JSON array of goal objects with id, title, "
+                                "description, and priority."
+                            )
+                        ),
+                        HumanMessage(
+                            content=f"Knowledge gaps:\n{json.dumps(gaps, default=str)[:4000]}"
+                        ),
+                    ]
+                )
+                llm_goals = json.loads(str(response.content))
+                if isinstance(llm_goals, list) and llm_goals:
+                    goals = [g for g in llm_goals if isinstance(g, dict)]
+            except Exception as e:
+                logger.warning("Goal generation LLM call failed", error=str(e))
+
+        return {"generated_goals": goals}
 
     async def _curiosity_evaluation(self, state: AgentStateDict) -> dict[str, Any]:
         """Evaluate curiosity scores for goals."""
         logger.info("Evaluating curiosity for goals")
-        return {}
+        goals = []
+        for goal in state.get("generated_goals", []):
+            priority = float(goal.get("priority", 3))
+            novelty = 1.0 if goal.get("source_gap", {}).get("domain") not in {"execution", "unknown"} else 0.6
+            severity_bonus = 0.3 if goal.get("source_gap", {}).get("severity") == "high" else 0.0
+            curiosity_score = min(1.0, max(0.0, (6 - priority) / 5 * 0.6 + novelty * 0.3 + severity_bonus))
+            goals.append({**goal, "curiosity_score": round(curiosity_score, 3)})
+
+        goals.sort(key=lambda item: item.get("curiosity_score", 0.0), reverse=True)
+        return {"generated_goals": goals}
 
     async def _research_director(self, state: AgentStateDict) -> dict[str, Any]:
         """Manage research tracks and allocate tasks."""
         logger.info("Director reviewing goals and tracks")
-        return {"research_tracks": []}
+        tracks = []
+        for goal in state.get("generated_goals", [])[:5]:
+            tracks.append(
+                {
+                    "track_id": f"track_{goal.get('id', len(tracks) + 1)}",
+                    "goal_id": goal.get("id"),
+                    "title": goal.get("title", "Autonomous research track"),
+                    "status": "planned",
+                    "priority": goal.get("priority", 3),
+                    "curiosity_score": goal.get("curiosity_score", 0.0),
+                    "tasks": [
+                        "collect evidence",
+                        "evaluate candidate solutions",
+                        "record reusable learning",
+                    ],
+                }
+            )
+        return {"research_tracks": tracks}
 
     async def _research_portfolio(self, state: AgentStateDict) -> dict[str, Any]:
         """Update research portfolios."""
         logger.info("Updating research portfolios")
-        return {"portfolio_summary": {}}
+        tracks = state.get("research_tracks", [])
+        portfolio_summary = {
+            "track_count": len(tracks),
+            "planned": sum(1 for track in tracks if track.get("status") == "planned"),
+            "average_curiosity": (
+                sum(float(track.get("curiosity_score", 0.0)) for track in tracks) / len(tracks)
+                if tracks
+                else 0.0
+            ),
+            "high_priority_tracks": [
+                track.get("track_id") for track in tracks if int(track.get("priority", 3)) <= 2
+            ],
+        }
+        return {"portfolio_summary": portfolio_summary}
 
     async def _knowledge_graph_update(self, state: AgentStateDict) -> dict[str, Any]:
         """Update the knowledge graph with new findings."""
         logger.info("Updating knowledge graph")
         # This would integrate with a knowledge graph backend (Neo4j)
         # For now, we just track that the update was triggered
-        return {"knowledge_graph_updated": True}
+        return {
+            "knowledge_graph_updated": True,
+            "knowledge_graph_update_summary": {
+                "gaps": len(state.get("knowledge_gaps", [])),
+                "goals": len(state.get("generated_goals", [])),
+                "tracks": len(state.get("research_tracks", [])),
+            },
+        }
 
     async def _generate_report(self, state: AgentStateDict) -> dict[str, Any]:
         """Generate a summary report of the goal execution."""
@@ -1115,6 +1268,7 @@ class OrchestratorAgent:
             session_id = str(uuid.uuid4())
 
         initial_state: AgentStateDict = {
+            # Phase 1-4: Core
             "goal": goal,
             "goal_analysis": {"context": context} if context else None,
             "task_plan": [],
@@ -1131,12 +1285,42 @@ class OrchestratorAgent:
             "max_iterations": max_iterations,
             "status": "planning",
             "next_agent": None,
+            # Phase 5: Meta-Learning
             "task_classification": None,
             "selected_strategy": None,
             "strategy_executions": {},
             "experience_context": None,
             "learnings": [],
             "replan_count": 0,
+            # Phase 6: Autonomous Research
+            "knowledge_gaps": [],
+            "generated_goals": [],
+            "research_tracks": [],
+            "portfolio_summary": None,
+            # Phase 7: Self-Improving Intelligence
+            "cognition_reflections": [],
+            "failure_patterns": [],
+            "research_strategies": [],
+            "cognitive_skills": [],
+            "cognitive_metrics": [],
+            "autonomy_score": 0.0,
+            "learning_velocity": 0.0,
+            "best_strategy": None,
+            "optimization_recommendations": [],
+            # Phase 9: World Model
+            "hypotheses": [],
+            "beliefs": [],
+            "experiment_results": [],
+            "patterns": [],
+            "causal_links": [],
+            "experiments": [],
+            # Phase 10G: Evolution
+            "genome_data": {},
+            # Phase 12: Project
+            "project": None,
+            "opportunities": [],
+            "tasks": [],
+            # Output
             "final_report": None,
         }
 
