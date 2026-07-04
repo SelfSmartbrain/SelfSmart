@@ -208,6 +208,9 @@ class AgentStateDict(TypedDict, total=False):
     final_report: str | None
 
 
+AgentState = AgentStateDict  # type: ignore[misc]
+
+
 def create_initial_state(
     goal: str,
     user_id: str,
