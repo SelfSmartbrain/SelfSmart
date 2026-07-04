@@ -168,15 +168,14 @@ class ContextCompressor:
             # Try to use the LLM's embedding capability
             if hasattr(self.llm, 'embed_text'):
                 return await self.llm.embed_text(text)
-            # Fallback: use a simple hash-based embedding (deterministic)
-            # This is a last resort - in production, always use a real embedding model
+            # Fallback: deterministic multi-hash embedding with broad dimensional coverage.
+            # This is a last resort; production should use a real embedding model.
             import hashlib
-            hash_bytes = hashlib.sha256(text.encode()).digest()
-            # Convert to float array
-            embedding = [(b / 255.0) for b in hash_bytes]
-            # Pad or truncate to 1536 dimensions
-            if len(embedding) < 1536:
-                embedding.extend([0.0] * (1536 - len(embedding)))
+            embedding = []
+            for i in range(48):
+                hash_input = f"{text}__dim_{i}".encode()
+                hash_bytes = hashlib.sha256(hash_input).digest()
+                embedding.extend([(b / 255.0 - 0.5) * 2 for b in hash_bytes])
             return embedding[:1536]
         except Exception as e:
             logger.error(f"Embedding generation failed: {e}")
