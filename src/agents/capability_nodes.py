@@ -1,10 +1,53 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Dict
 
 from src.config.logging import get_logger
+from src.core.service_registry import get_registry
 
 logger = get_logger(__name__)
+
+
+def _parse_json_response(content: Any, fallback: Any) -> Any:
+    text = str(content)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        start_obj = text.find("{")
+        end_obj = text.rfind("}") + 1
+        start_arr = text.find("[")
+        end_arr = text.rfind("]") + 1
+        candidates = []
+        if start_obj >= 0 and end_obj > start_obj:
+            candidates.append(text[start_obj:end_obj])
+        if start_arr >= 0 and end_arr > start_arr:
+            candidates.append(text[start_arr:end_arr])
+        for candidate in candidates:
+            try:
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                continue
+    return fallback
+
+
+async def _llm_json(system: str, prompt: str, fallback: Any) -> Any:
+    try:
+        registry = await get_registry()
+        llm = registry.get("llm")
+        if llm:
+            from langchain_core.messages import HumanMessage, SystemMessage
+
+            response = await llm.ainvoke(
+                [
+                    SystemMessage(content=system),
+                    HumanMessage(content=prompt),
+                ]
+            )
+            return _parse_json_response(response.content, fallback)
+    except Exception as e:
+        logger.warning("Capability node LLM call failed", error=str(e))
+    return fallback
 
 async def capability_evaluation(state: Dict[str, Any]) -> Dict[str, Any]:
     """Evaluate raw capabilities."""
@@ -57,32 +100,135 @@ async def capability_reporting(state: Dict[str, Any]) -> Dict[str, Any]:
 
 async def capability_gap_detection_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Executing capability_gap_detection_node.")
-    return {"capability_gaps": []}
+    failures = state.get("failure_patterns", [])
+    errors = state.get("errors", [])
+    fallback = [
+        {
+            "capability": item.get("pattern_name", "unknown"),
+            "description": item.get("description", ""),
+            "severity": item.get("severity", "medium"),
+        }
+        for item in failures
+        if isinstance(item, dict)
+    ]
+    if not fallback:
+        fallback = [
+            {
+                "capability": error.get("agent_type", "execution"),
+                "description": error.get("message", ""),
+                "severity": "medium",
+            }
+            for error in errors
+            if isinstance(error, dict)
+        ]
+    gaps = await _llm_json(
+        "You identify missing agent capabilities. Return only a JSON array.",
+        f"Detect capability gaps from state:\n{json.dumps(state, default=str)[:4000]}",
+        fallback,
+    )
+    return {"capability_gaps": gaps if isinstance(gaps, list) else fallback}
 
 
 async def tool_specification_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Executing tool_specification_node.")
-    return {"tool_specifications": []}
+    gaps = state.get("capability_gaps", [])
+    fallback = [
+        {
+            "name": f"{gap.get('capability', 'capability')}_tool",
+            "purpose": gap.get("description", "Address capability gap"),
+            "inputs": ["context"],
+            "outputs": ["result"],
+        }
+        for gap in gaps
+        if isinstance(gap, dict)
+    ]
+    specs = await _llm_json(
+        "You write safe tool specifications. Return only a JSON array.",
+        f"Create tool specifications for gaps:\n{json.dumps(gaps, default=str)[:4000]}",
+        fallback,
+    )
+    return {"tool_specifications": specs if isinstance(specs, list) else fallback}
 
 
 async def tool_generation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Executing tool_generation_node.")
-    return {"generated_tools": []}
+    specs = state.get("tool_specifications", [])
+    fallback = [
+        {
+            "name": spec.get("name", "generated_tool"),
+            "status": "spec_only",
+            "specification": spec,
+        }
+        for spec in specs
+        if isinstance(spec, dict)
+    ]
+    tools = await _llm_json(
+        "You design implementation plans for tools. Return only a JSON array.",
+        f"Generate safe tool plans from specs:\n{json.dumps(specs, default=str)[:4000]}",
+        fallback,
+    )
+    return {"generated_tools": tools if isinstance(tools, list) else fallback}
 
 
 async def tool_validation_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Executing tool_validation_node.")
-    return {"tool_validation_results": []}
+    tools = state.get("generated_tools", [])
+    fallback = [
+        {
+            "name": tool.get("name", "generated_tool"),
+            "valid": bool(tool.get("name")),
+            "issues": [] if tool.get("name") else ["missing name"],
+        }
+        for tool in tools
+        if isinstance(tool, dict)
+    ]
+    results = await _llm_json(
+        "You validate generated tool plans for safety and usefulness. Return only a JSON array.",
+        f"Validate generated tools:\n{json.dumps(tools, default=str)[:4000]}",
+        fallback,
+    )
+    return {"tool_validation_results": results if isinstance(results, list) else fallback}
 
 
 async def tool_registration_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Executing tool_registration_node.")
-    return {"registered_tools": []}
+    tools = state.get("generated_tools", [])
+    validations = state.get("tool_validation_results", [])
+    valid_names = {
+        item.get("name")
+        for item in validations
+        if isinstance(item, dict) and item.get("valid", False)
+    }
+    registered = [
+        {**tool, "registered": True}
+        for tool in tools
+        if isinstance(tool, dict) and tool.get("name") in valid_names
+    ]
+    return {"registered_tools": registered}
 
 
 async def tool_evolution_node(state: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("Executing tool_evolution_node.")
-    return {"tool_evolution_results": []}
+    registered = state.get("registered_tools", [])
+    fallback = [
+        {
+            "name": tool.get("name", "registered_tool"),
+            "next_action": "benchmark",
+            "status": "ready",
+        }
+        for tool in registered
+        if isinstance(tool, dict)
+    ]
+    evolution_results = await _llm_json(
+        "You recommend next evolution steps for registered tools. Return only a JSON array.",
+        f"Recommend tool evolution steps:\n{json.dumps(registered, default=str)[:4000]}",
+        fallback,
+    )
+    return {
+        "tool_evolution_results": evolution_results
+        if isinstance(evolution_results, list)
+        else fallback
+    }
 
 
 capability_evaluation_node = capability_evaluation
