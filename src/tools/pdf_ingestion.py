@@ -198,7 +198,7 @@ class PDFIngestionTool(AgentTool):
 
             return result
 
-        result = await asyncio.get_event_loop().run_in_executor(None, _sync_pdf_read)
+        result = await asyncio.to_thread(_sync_pdf_read)
 
         log.info(
             "pdf_ingestion.complete",
@@ -207,3 +207,6 @@ class PDFIngestionTool(AgentTool):
         )
 
         return result
+
+
+PdfIngestionTool = PDFIngestionTool
