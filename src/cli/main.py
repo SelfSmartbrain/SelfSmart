@@ -1182,6 +1182,23 @@ def branches(ctx):
 
 
 # ---------------------------------------------------------------------------
+# TUI Command
+# ---------------------------------------------------------------------------
+
+
+@cli.command()
+@click.option("--api-url", envvar="MODELX_API_URL", default="http://localhost:8000", help="ModelX API URL")
+@click.option("--api-key", envvar="MODELX_API_KEY", help="ModelX API key")
+@click.pass_context
+def tui(ctx, api_url, api_key):
+    """Launch the Terminal User Interface."""
+    from src.cli.tui.app import ModelXTUI
+    
+    app = ModelXTUI(api_url=api_url, api_key=api_key)
+    app.run()
+
+
+# ---------------------------------------------------------------------------
 # Main Entry Point
 # ---------------------------------------------------------------------------
 
