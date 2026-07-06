@@ -8,7 +8,10 @@ from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
 from src.cognition.cognitive_bus import (
-    CognitiveBus, CognitiveEventType, get_cognitive_bus, initialize_cognitive_bus
+    CognitiveBus,
+    CognitiveEventType,
+    get_cognitive_bus,
+    initialize_cognitive_bus,
 )
 from src.reasoning.planner import Planner
 from src.reasoning.drift_detector import EnvironmentalDriftDetector
@@ -39,6 +42,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class VoiceAssistantContext:
     """Context passed between voice assistant and cognitive modules"""
+
     user_id: str = "voice_user"
     session_id: str = ""
     conversation_history: List[Dict[str, str]] = None
@@ -119,37 +123,30 @@ class VoiceAssistantIntegration:
 
     def _register_handlers(self):
         """Register cognitive bus event handlers"""
+        self._cognitive_bus.subscribe(CognitiveEventType.USER_SPEECH, self._handle_user_speech)
         self._cognitive_bus.subscribe(
-            CognitiveEventType.USER_SPEECH,
-            self._handle_user_speech
+            CognitiveEventType.PLAN_COMPLETED, self._handle_plan_completed
         )
         self._cognitive_bus.subscribe(
-            CognitiveEventType.PLAN_COMPLETED,
-            self._handle_plan_completed
+            CognitiveEventType.DRIFT_DETECTED, self._handle_drift_detected
         )
         self._cognitive_bus.subscribe(
-            CognitiveEventType.DRIFT_DETECTED,
-            self._handle_drift_detected
+            CognitiveEventType.MEMORY_COMPRESSED, self._handle_memory_compressed
         )
-        self._cognitive_bus.subscribe(
-            CognitiveEventType.MEMORY_COMPRESSED,
-            self._handle_memory_compressed
-        )
-        
+
         # Register validation event handlers
         self._cognitive_bus.subscribe(
-            CognitiveEventType.VALIDATION_REQUESTED,
-            self._handle_validation_requested
+            CognitiveEventType.VALIDATION_REQUESTED, self._handle_validation_requested
         )
         self._cognitive_bus.subscribe(
-            CognitiveEventType.VALIDATION_COMPLETED,
-            self._handle_validation_completed
+            CognitiveEventType.VALIDATION_COMPLETED, self._handle_validation_completed
         )
 
     def _init_validation(self):
         """Initialize validation framework for voice commands"""
         try:
             from pathlib import Path
+
             self._validation_framework = ValidationFramework(output_dir=Path("validation_results"))
             self._validation_runner = ValidationRunner(output_dir=Path("validation_results"))
             logger.info("Validation framework initialized")
@@ -170,15 +167,13 @@ class VoiceAssistantIntegration:
         await self._memory_fabric.initialize()
 
         # Working memory for current session
-        self._working_memory = WorkingMemory(
-            ttl=300
-        )
+        self._working_memory = WorkingMemory(ttl=300)
 
         # Context compressor for long conversations
         self._context_compressor = ContextCompressor(
             llm_client=self._get_llm_client(),
             vector_store=self._memory_fabric.qdrant_client,
-            memory_fabric=self._memory_fabric
+            memory_fabric=self._memory_fabric,
         )
 
     async def _init_reasoning(self):
@@ -193,22 +188,20 @@ class VoiceAssistantIntegration:
 
         # Agent registry with Neo4j
         self._agent_registry = HierarchicalAgentRegistry(
-            neo4j_client=self._get_neo4j_client(),
-            embedding_model=self._get_embedding_model()
+            neo4j_client=self._get_neo4j_client(), embedding_model=self._get_embedding_model()
         )
         await self._agent_registry.initialize()
 
         # Delegation protocol
         self._delegation_protocol = DelegationProtocol(
-            agent_registry=self._agent_registry,
-            message_broker=self._get_message_broker()
+            agent_registry=self._agent_registry, message_broker=self._get_message_broker()
         )
 
         # Create default swarm
         self._swarm = await create_default_swarm(
             agent_registry=self._agent_registry,
             delegation_protocol=self._delegation_protocol,
-            cognitive_bus=self._cognitive_bus
+            cognitive_bus=self._cognitive_bus,
         )
 
     async def _init_tools(self):
@@ -220,7 +213,7 @@ class VoiceAssistantIntegration:
         self._mcp_client = MCPClient()
 
         # Connect to configured MCP servers (if any)
-        mcp_servers = getattr(self.settings, 'mcp_servers', [])
+        mcp_servers = getattr(self.settings, "mcp_servers", [])
         for server_config in mcp_servers:
             await self._mcp_client.connect_server(server_config)
 
@@ -228,14 +221,11 @@ class VoiceAssistantIntegration:
         mcp_tools = await discover_mcp_capabilities(self._mcp_client)
         for tool_schema in mcp_tools:
             mcp_tool = self._mcp_client.get_tool_schema(
-                tool_schema.metadata["server"],
-                tool_schema.metadata["original_name"]
+                tool_schema.metadata["server"], tool_schema.metadata["original_name"]
             )
             if mcp_tool:
                 wrapper = MCPTool.create_from_mcp(
-                    self._mcp_client,
-                    tool_schema.metadata["server"],
-                    mcp_tool
+                    self._mcp_client, tool_schema.metadata["server"], mcp_tool
                 )
                 self._tools[wrapper.name] = wrapper
 
@@ -252,7 +242,7 @@ class VoiceAssistantIntegration:
                 repo_root=".",
                 test_runner=self._run_tests,
                 approval_callback=self._request_approval,
-                auto_apply_safe=self.settings.agi_auto_apply_safe
+                auto_apply_safe=self.settings.agi_auto_apply_safe,
             )
             await self._architecture_evolver.initialize()
 
@@ -268,132 +258,148 @@ class VoiceAssistantIntegration:
     async def _handle_validation_command(self, command: str) -> str:
         """Process validation-related voice commands"""
         command = command.lower().strip()
-        
+
         if not self._validation_runner:
             return "Validation framework is not available. Please check the installation."
-        
+
         # Quick validation run
         if "quick" in command and "validat" in command:
             return await self._run_quick_validation()
-        
+
         # Full validation suite
         if "full" in command and "validat" in command:
             return await self._run_full_validation()
-        
+
         # Memory ablation
         if "memory ablation" in command or "ablation memory" in command:
             return await self._run_memory_ablation()
-        
+
         # Concept ablation
         if "concept ablation" in command or "ablation concept" in command:
             return await self._run_concept_ablation()
-        
+
         # World model ablation
         if "world model ablation" in command or "ablation world model" in command:
             return await self._run_world_model_ablation()
-        
+
         # Governance ablation
         if "governance ablation" in command or "ablation governance" in command:
             return await self._run_governance_ablation()
-        
+
         # Coding benchmark
         if "coding benchmark" in command or "benchmark coding" in command:
             return await self._run_coding_benchmark()
-        
+
         # Cost analysis
         if "cost analysis" in command or "analyze cost" in command:
             return await self._run_cost_analysis()
-        
+
         # Long horizon test
         if "long horizon" in command or "long horizon test" in command:
             return await self._run_long_horizon_test()
-        
+
         # Report validation results
         if "validation report" in command or "show validation" in command:
             return await self._get_validation_report()
-        
+
         return "I didn't understand that validation command. Try: 'run quick validation', 'run memory ablation', 'run coding benchmark', 'run cost analysis', or 'show validation report'."
 
     async def _run_quick_validation(self) -> str:
         """Run quick validation suite"""
         try:
             # Emit started event
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.VALIDATION_STARTED,
-                source="voice_assistant",
-                payload={"type": "quick"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.VALIDATION_STARTED,
+                    source="voice_assistant",
+                    payload={"type": "quick"},
+                )
+            )
+
             # Run quick validation (fewer trials)
             summary = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_all_validations()
             )
-            
+
             # Emit completed event
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.VALIDATION_COMPLETED,
-                source="voice_assistant",
-                payload={"type": "quick", "summary": summary.get("key_findings", [])}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.VALIDATION_COMPLETED,
+                    source="voice_assistant",
+                    payload={"type": "quick", "summary": summary.get("key_findings", [])},
+                )
+            )
+
             return self._format_validation_summary(summary)
         except Exception as e:
             logger.error(f"Quick validation failed: {e}")
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.VALIDATION_FAILED,
-                source="voice_assistant",
-                payload={"type": "quick", "error": str(e)}
-            ))
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.VALIDATION_FAILED,
+                    source="voice_assistant",
+                    payload={"type": "quick", "error": str(e)},
+                )
+            )
             return f"Quick validation failed: {str(e)}"
 
     async def _run_full_validation(self) -> str:
         """Run full validation suite"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.VALIDATION_STARTED,
-                source="voice_assistant",
-                payload={"type": "full"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.VALIDATION_STARTED,
+                    source="voice_assistant",
+                    payload={"type": "full"},
+                )
+            )
+
             summary = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_all_validations()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.VALIDATION_COMPLETED,
-                source="voice_assistant",
-                payload={"type": "full", "summary": summary.get("key_findings", [])}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.VALIDATION_COMPLETED,
+                    source="voice_assistant",
+                    payload={"type": "full", "summary": summary.get("key_findings", [])},
+                )
+            )
+
             return self._format_validation_summary(summary)
         except Exception as e:
             logger.error(f"Full validation failed: {e}")
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.VALIDATION_FAILED,
-                source="voice_assistant",
-                payload={"type": "full", "error": str(e)}
-            ))
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.VALIDATION_FAILED,
+                    source="voice_assistant",
+                    payload={"type": "full", "error": str(e)},
+                )
+            )
             return f"Full validation failed: {str(e)}"
 
     async def _run_memory_ablation(self) -> str:
         """Run memory ablation study"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_STARTED,
-                source="voice_assistant",
-                payload={"component": "memory"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_STARTED,
+                    source="voice_assistant",
+                    payload={"component": "memory"},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_memory_ablation()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_COMPLETED,
-                source="voice_assistant",
-                payload={"component": "memory", "result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_COMPLETED,
+                    source="voice_assistant",
+                    payload={"component": "memory", "result": result},
+                )
+            )
+
             impact = result.get("impact_percent", 0)
             return f"Memory ablation complete. Impact: {impact:.1f}% {'improvement' if impact > 0 else 'degradation'} when memory is enabled."
         except Exception as e:
@@ -403,22 +409,26 @@ class VoiceAssistantIntegration:
     async def _run_concept_ablation(self) -> str:
         """Run concept system ablation study"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_STARTED,
-                source="voice_assistant",
-                payload={"component": "concepts"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_STARTED,
+                    source="voice_assistant",
+                    payload={"component": "concepts"},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_concept_ablation()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_COMPLETED,
-                source="voice_assistant",
-                payload={"component": "concepts", "result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_COMPLETED,
+                    source="voice_assistant",
+                    payload={"component": "concepts", "result": result},
+                )
+            )
+
             impact = result.get("impact_percent", 0)
             return f"Concept ablation complete. Impact: {impact:.1f}% {'improvement' if impact > 0 else 'degradation'} when concepts are enabled."
         except Exception as e:
@@ -428,22 +438,26 @@ class VoiceAssistantIntegration:
     async def _run_world_model_ablation(self) -> str:
         """Run world model ablation study"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_STARTED,
-                source="voice_assistant",
-                payload={"component": "world_model"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_STARTED,
+                    source="voice_assistant",
+                    payload={"component": "world_model"},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_world_model_ablation()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_COMPLETED,
-                source="voice_assistant",
-                payload={"component": "world_model", "result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_COMPLETED,
+                    source="voice_assistant",
+                    payload={"component": "world_model", "result": result},
+                )
+            )
+
             impact = result.get("impact_percent", 0)
             return f"World model ablation complete. Impact: {impact:.1f}% {'improvement' if impact > 0 else 'degradation'} when world model is enabled."
         except Exception as e:
@@ -453,22 +467,26 @@ class VoiceAssistantIntegration:
     async def _run_governance_ablation(self) -> str:
         """Run governance ablation study"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_STARTED,
-                source="voice_assistant",
-                payload={"component": "governance"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_STARTED,
+                    source="voice_assistant",
+                    payload={"component": "governance"},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_governance_ablation()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.ABLATION_COMPLETED,
-                source="voice_assistant",
-                payload={"component": "governance", "result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.ABLATION_COMPLETED,
+                    source="voice_assistant",
+                    payload={"component": "governance", "result": result},
+                )
+            )
+
             impact = result.get("impact_percent", 0)
             return f"Governance ablation complete. Impact: {impact:.1f}% {'improvement' if impact > 0 else 'degradation'} when governance is enabled."
         except Exception as e:
@@ -478,22 +496,26 @@ class VoiceAssistantIntegration:
     async def _run_coding_benchmark(self) -> str:
         """Run coding capability benchmark"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.BENCHMARK_STARTED,
-                source="voice_assistant",
-                payload={"benchmark": "coding"}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.BENCHMARK_STARTED,
+                    source="voice_assistant",
+                    payload={"benchmark": "coding"},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_coding_benchmark()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.BENCHMARK_COMPLETED,
-                source="voice_assistant",
-                payload={"benchmark": "coding", "result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.BENCHMARK_COMPLETED,
+                    source="voice_assistant",
+                    payload={"benchmark": "coding", "result": result},
+                )
+            )
+
             success_rate = result.get("success_rate", 0)
             avg_time = result.get("average_time_seconds", 0)
             return f"Coding benchmark complete. Success rate: {success_rate:.1%}, Average time: {avg_time:.1f} seconds per task."
@@ -504,22 +526,26 @@ class VoiceAssistantIntegration:
     async def _run_cost_analysis(self) -> str:
         """Run cost analysis across subsystems"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.COST_ANALYSIS_STARTED,
-                source="voice_assistant",
-                payload={}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.COST_ANALYSIS_STARTED,
+                    source="voice_assistant",
+                    payload={},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_cost_analysis()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.COST_ANALYSIS_COMPLETED,
-                source="voice_assistant",
-                payload={"result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.COST_ANALYSIS_COMPLETED,
+                    source="voice_assistant",
+                    payload={"result": result},
+                )
+            )
+
             comparison = result.get("comparison", {})
             total_cost = comparison.get("total_cost_usd", 0)
             bottlenecks = result.get("bottlenecks", [])
@@ -532,25 +558,31 @@ class VoiceAssistantIntegration:
     async def _run_long_horizon_test(self) -> str:
         """Run long-horizon autonomy test"""
         try:
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.LONG_HORIZON_STARTED,
-                source="voice_assistant",
-                payload={}
-            ))
-            
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.LONG_HORIZON_STARTED,
+                    source="voice_assistant",
+                    payload={},
+                )
+            )
+
             result = await asyncio.get_event_loop().run_in_executor(
                 None, lambda: self._validation_runner.run_long_horizon_test()
             )
-            
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.LONG_HORIZON_COMPLETED,
-                source="voice_assistant",
-                payload={"result": result}
-            ))
-            
+
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.LONG_HORIZON_COMPLETED,
+                    source="voice_assistant",
+                    payload={"result": result},
+                )
+            )
+
             stability = result.get("stability_score", 0)
             tasks = result.get("total_tasks_completed", 0)
-            return f"Long-horizon test complete. Stability: {stability:.1%}, Tasks completed: {tasks}"
+            return (
+                f"Long-horizon test complete. Stability: {stability:.1%}, Tasks completed: {tasks}"
+            )
         except Exception as e:
             logger.error(f"Long-horizon test failed: {e}")
             return f"Long-horizon test failed: {str(e)}"
@@ -560,14 +592,14 @@ class VoiceAssistantIntegration:
         try:
             import json
             from pathlib import Path
-            
+
             report_path = Path("validation_results/validation_report.md")
             if not report_path.exists():
                 return "No validation report found. Run a validation first."
-            
+
             with open(report_path, "r") as f:
                 content = f.read()
-            
+
             # Return first 500 chars for voice
             return content[:500] + ("..." if len(content) > 500 else "")
         except Exception as e:
@@ -589,30 +621,38 @@ class VoiceAssistantIntegration:
         """Generate response using appropriate cognitive module"""
 
         # Check if this is a validation command
-        if await self._is_validation_command(user_input):
-            return await self._handle_validation_command(user_input)
+        if await self._is_validation_command(text):
+            return await self._handle_validation_command(text)
 
         # Check if this is a task requiring planning
-        if await self._is_planning_task(user_input):
-            return await self._handle_planning_task(user_input)
+        if await self._is_planning_task(text):
+            return await self._handle_planning_task(text)
 
         # Check if this requires delegation to agents
-        if await self._is_delegation_task(user_input):
-            return await self._handle_delegation_task(user_input)
+        if await self._is_delegation_task(text):
+            return await self._handle_delegation_task(text)
 
         # Check if this is a tool use request
-        if await self._is_tool_task(user_input):
-            return await self._handle_tool_task(user_input)
+        if await self._is_tool_task(text):
+            return await self._handle_tool_task(text)
 
         # Default: conversational response with context
-        return await self._handle_conversation(user_input)
+        return await self._handle_conversation(text)
 
     async def _is_validation_command(self, text: str) -> bool:
         """Determine if input is a validation command"""
         validation_keywords = [
-            "validation", "ablation", "benchmark", "cost analysis", 
-            "long horizon", "validate", "run validation", "run ablation",
-            "run benchmark", "run cost", "run long horizon"
+            "validation",
+            "ablation",
+            "benchmark",
+            "cost analysis",
+            "long horizon",
+            "validate",
+            "run validation",
+            "run ablation",
+            "run benchmark",
+            "run cost",
+            "run long horizon",
         ]
         text_lower = text.lower()
         return any(kw in text_lower for kw in validation_keywords)
@@ -620,8 +660,15 @@ class VoiceAssistantIntegration:
     async def _is_planning_task(self, text: str) -> bool:
         """Determine if input requires planning"""
         planning_keywords = [
-            "plan", "schedule", "organize", "steps", "how to",
-            "create a plan", "roadmap", "timeline", "milestones"
+            "plan",
+            "schedule",
+            "organize",
+            "steps",
+            "how to",
+            "create a plan",
+            "roadmap",
+            "timeline",
+            "milestones",
         ]
         text_lower = text.lower()
         return any(kw in text_lower for kw in planning_keywords)
@@ -631,7 +678,10 @@ class VoiceAssistantIntegration:
         # Create plan
         plan = await self._planner.create_plan(
             goal=text,
-            context={"user_id": self.context.user_id, "conversation": self.context.conversation_history[-5:]}
+            context={
+                "user_id": self.context.user_id,
+                "conversation": self.context.conversation_history[-5:],
+            },
         )
 
         self.context.active_plan_id = plan.plan_id
@@ -644,9 +694,7 @@ class VoiceAssistantIntegration:
             return {"goal": text, "user_id": self.context.user_id}
 
         success = await self._planner.execute_plan(
-            plan.plan_id,
-            get_state_func=state_getter,
-            get_context_func=context_getter
+            plan.plan_id, get_state_func=state_getter, get_context_func=context_getter
         )
 
         if success:
@@ -657,8 +705,13 @@ class VoiceAssistantIntegration:
     async def _is_delegation_task(self, text: str) -> bool:
         """Determine if input requires agent delegation"""
         delegation_keywords = [
-            "delegate", "assign", "have someone", "get an agent",
-            "team", "specialist", "expert"
+            "delegate",
+            "assign",
+            "have someone",
+            "get an agent",
+            "team",
+            "specialist",
+            "expert",
         ]
         text_lower = text.lower()
         return any(kw in text_lower for kw in delegation_keywords)
@@ -666,8 +719,7 @@ class VoiceAssistantIntegration:
     async def _handle_delegation_task(self, text: str) -> str:
         """Handle multi-agent delegation"""
         result = await self._swarm.execute_hierarchical_task(
-            goal=text,
-            required_capabilities=["general_reasoning", "task_execution"]
+            goal=text, required_capabilities=["general_reasoning", "task_execution"]
         )
         return f"Task delegated and completed: {result}"
 
@@ -703,15 +755,12 @@ class VoiceAssistantIntegration:
         prompt = self._build_conversation_prompt(text, context)
 
         response = await llm.ainvoke(prompt)
-        return response.content if hasattr(response, 'content') else str(response)
+        return response.content if hasattr(response, "content") else str(response)
 
     async def _build_rich_context(self, current_input: str) -> Dict:
         """Build context from all memory systems"""
         # Get relevant memories
-        memories = await self._memory_fabric.retrieve(
-            query=current_input,
-            limit=5
-        )
+        memories = await self._memory_fabric.retrieve(query=current_input, limit=5)
 
         # Get working memory
         wm = await self._working_memory.get_recent(10)
@@ -725,7 +774,7 @@ class VoiceAssistantIntegration:
                     "plan_id": plan.plan_id,
                     "goal": plan.goal,
                     "status": plan.status.value,
-                    "progress": f"{len([a for a in plan.actions if a.status == 'completed'])}/{len(plan.actions)}"
+                    "progress": f"{len([a for a in plan.actions if a.status == 'completed'])}/{len(plan.actions)}",
                 }
 
         return {
@@ -734,7 +783,7 @@ class VoiceAssistantIntegration:
             "active_plan": plan_status,
             "conversation_history": self.context.conversation_history[-10:],
             "available_tools": list(self._tools.keys()),
-            "available_agents": await self._agent_registry.list_agents()
+            "available_agents": await self._agent_registry.list_agents(),
         }
 
     def _build_conversation_prompt(self, user_input: str, context: Dict) -> str:
@@ -746,10 +795,9 @@ class VoiceAssistantIntegration:
             p = context["active_plan"]
             plan_str = f"\nActive Plan: {p['goal']} ({p['progress']} steps done)"
 
-        history = "\n".join([
-            f"{msg['role']}: {msg['content']}"
-            for msg in context.get("conversation_history", [])
-        ])
+        history = "\n".join(
+            [f"{msg['role']}: {msg['content']}" for msg in context.get("conversation_history", [])]
+        )
 
         return f"""You are a helpful AI assistant with access to planning, tools, and a team of agents.
 
@@ -783,6 +831,7 @@ User: {text}
 Return JSON with parameters:"""
         response = await llm.ainvoke(prompt)
         import json
+
         try:
             return json.loads(response.content)
         except:
@@ -794,7 +843,7 @@ Return JSON with parameters:"""
             "executed": [],
             "current_step": 0,
             "resources": {},
-            "timestamp": asyncio.get_event_loop().time()
+            "timestamp": asyncio.get_event_loop().time(),
         }
 
     async def _maybe_compress_context(self):
@@ -802,14 +851,15 @@ Return JSON with parameters:"""
         stats = await self._working_memory.get_stats()
         if stats["token_usage"] / stats["max_tokens"] > 0.8:
             await self._context_compressor.compress(
-                agent_id=self.context.user_id,
-                working_memories=await self._working_memory.get_all()
+                agent_id=self.context.user_id, working_memories=await self._working_memory.get_all()
             )
-            await self._cognitive_bus.emit(self._cognitive_bus.create_event(
-                event_type=CognitiveEventType.MEMORY_COMPRESSED,
-                source="voice_assistant",
-                payload={"agent_id": self.context.user_id}
-            ))
+            await self._cognitive_bus.emit(
+                self._cognitive_bus.create_event(
+                    event_type=CognitiveEventType.MEMORY_COMPRESSED,
+                    source="voice_assistant",
+                    payload={"agent_id": self.context.user_id},
+                )
+            )
 
     # Event handlers
     async def _handle_user_speech(self, event):
@@ -834,36 +884,41 @@ Return JSON with parameters:"""
     def _get_llm_client(self):
         """Get LLM client - integrate with your LLM setup"""
         from langchain_anthropic import ChatAnthropic
+
         return ChatAnthropic(
             model=self.settings.anthropic_model,
             api_key=self.settings.anthropic_api_key.get_secret_value(),
-            max_tokens=4096
+            max_tokens=4096,
         )
 
     def _get_embedding_model(self):
         """Get embedding model"""
         from langchain_openai import OpenAIEmbeddings
+
         return OpenAIEmbeddings(
             model=self.settings.embedding_model,
-            api_key=self.settings.openai_api_key.get_secret_value()
+            api_key=self.settings.openai_api_key.get_secret_value(),
         )
 
     def _get_neo4j_client(self):
         """Get Neo4j client"""
         from neo4j import AsyncGraphDatabase
+
         return AsyncGraphDatabase.driver(
             self.settings.neo4j_uri,
-            auth=(self.settings.neo4j_user, self.settings.neo4j_password.get_secret_value())
+            auth=(self.settings.neo4j_user, self.settings.neo4j_password.get_secret_value()),
         )
 
     def _get_qdrant_client(self):
         """Get Qdrant client"""
         from qdrant_client import AsyncQdrantClient
+
         return AsyncQdrantClient(url=self.settings.qdrant_url)
 
     def _get_message_broker(self):
         """Get message broker (Redis/RabbitMQ)"""
         import redis.asyncio as redis
+
         return redis.from_url(self.settings.redis_url)
 
     async def _register_builtin_tools(self):
@@ -873,7 +928,7 @@ Return JSON with parameters:"""
         from src.tools.python_executor import PythonExecutorTool
         from src.tools.web_search import WebSearchTool
         from src.tools.base import AgentTool
-        
+
         # Import validation tools
         from src.tools.validation_tools import (
             RunValidationTool,
@@ -903,15 +958,11 @@ Return JSON with parameters:"""
     async def _run_tests(self, patch_id: str) -> Dict:
         """Test runner for architecture evolver"""
         import subprocess
+
         result = subprocess.run(
-            ["pytest", "tests/", "-v", "--tb=short"],
-            capture_output=True, text=True, timeout=300
+            ["pytest", "tests/", "-v", "--tb=short"], capture_output=True, text=True, timeout=300
         )
-        return {
-            "passed": result.returncode == 0,
-            "output": result.stdout,
-            "errors": result.stderr
-        }
+        return {"passed": result.returncode == 0, "output": result.stdout, "errors": result.stderr}
 
     async def _request_approval(self, patch) -> bool:
         """Request human approval for patches"""
