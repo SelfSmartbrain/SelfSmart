@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
+import random
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
-import random
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.config.logging import get_logger
 from src.db.enums import ObjectiveStatus
 from src.db.models import Objective as ObjectiveModel
-from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,6 +31,21 @@ class Objective:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
     db_id: Any = None
+    _await_hook: Callable[[], Awaitable[None]] | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
+
+    def __await__(self):
+        async def resolve() -> Objective:
+            if self._await_hook is not None:
+                hook = self._await_hook
+                self._await_hook = None
+                await hook()
+            return self
+
+        return resolve().__await__()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -143,7 +159,7 @@ class ObjectiveManager:
             return None
         return max(self.active_objectives, key=lambda objective: objective.priority)
 
-    async def set_objective(
+    def set_objective(
         self,
         objective: str | Objective,
         priority: float = 0.5,
@@ -164,7 +180,11 @@ class ObjectiveManager:
         self.active_objectives.append(next_objective)
 
         if self.session:
-            await self.save_objective(next_objective, self.session)
+
+            async def persist() -> None:
+                await self.save_objective(next_objective, self.session)
+
+            next_objective._await_hook = persist
 
         return next_objective
 
@@ -247,28 +267,28 @@ class ObjectiveManager:
         context: dict[str, Any] | None = None,
     ) -> Objective | None:
         """Suggest a follow-up objective using templated patterns.
-        
+
         This is a templated suggestion system, not autonomous LLM-based generation.
         It generates follow-up objectives based on:
         - Completed objectives in the same domain
         - System context (available resources, time constraints, etc.)
         - Priority heuristics
         - Predefined pattern templates
-        
+
         The method name explicitly indicates this is a template-based suggestion,
         not autonomous reasoning. For true autonomous generation, an LLM-based
         implementation would be required.
         """
         context = context or {}
-        
+
         # A template suggestion needs a completed objective to build on.
         if not self.completed_objectives:
             logger.info("No completed objectives available for a follow-up suggestion")
             return None
-        
+
         # Get the most recently completed objective
         last_completed = max(self.completed_objectives, key=lambda obj: obj.updated_at)
-        
+
         # Generate follow-up objective based on patterns
         follow_up_patterns = [
             f"Refine and optimize: {last_completed.description}",
@@ -277,18 +297,20 @@ class ObjectiveManager:
             f"Scale and deploy: {last_completed.description}",
             f"Monitor and maintain: {last_completed.description}",
         ]
-        
+
         # Select pattern based on context or random
-        pattern_index = context.get("follow_up_pattern", random.randint(0, len(follow_up_patterns) - 1))
+        pattern_index = context.get(
+            "follow_up_pattern", random.randint(0, len(follow_up_patterns) - 1)
+        )
         pattern_index = min(pattern_index, len(follow_up_patterns) - 1)
-        
+
         new_description = follow_up_patterns[pattern_index]
-        
+
         # Adjust priority based on context
         base_priority = last_completed.priority
         context_priority = context.get("priority_adjustment", 0.0)
         new_priority = max(0.1, min(1.0, base_priority + context_priority))
-        
+
         # Create metadata tracking the source
         new_metadata = {
             "autonomous": False,  # This is templated, not autonomous
@@ -296,23 +318,25 @@ class ObjectiveManager:
             "generation_method": "template_based",
             "generated_at": datetime.utcnow().isoformat(),
         }
-        
+
         new_objective = Objective(
             description=new_description,
             priority=new_priority,
             metadata=new_metadata,
         )
-        
-        logger.info(f"Suggested template-based objective: {new_description} (priority={new_priority})")
-        
+
+        logger.info(
+            f"Suggested template-based objective: {new_description} (priority={new_priority})"
+        )
+
         # Add to active objectives and persist if session available
         new_objective.status = "active"
         new_objective.updated_at = datetime.utcnow()
         self.active_objectives.append(new_objective)
-        
+
         if session:
             await self.save_objective(new_objective, session)
-        
+
         return new_objective
 
     async def should_suggest_followup_template(
@@ -320,28 +344,28 @@ class ObjectiveManager:
         context: dict[str, Any] | None = None,
     ) -> bool:
         """Determine whether a templated follow-up should be suggested.
-        
+
         Returns True if:
         - There are completed objectives to build on
         - There are no active objectives (idle state)
         - Context allows a follow-up suggestion
         """
         context = context or {}
-        
+
         # Don't generate if we have active objectives
         if self.active_objectives:
             return False
-        
+
         # Don't generate if we have no completed objectives
         if not self.completed_objectives:
             return False
-        
+
         # Check context override
         if context.get("force_followup_suggestion") is True:
             return True
-        
+
         if context.get("disable_followup_suggestion") is True:
             return False
-        
+
         # Default: generate when idle with history
         return True
