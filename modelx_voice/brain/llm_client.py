@@ -1,7 +1,11 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import List, AsyncGenerator, Optional
 import os
+from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
+from dataclasses import dataclass
+from inspect import isawaitable
+
+from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 
 
 @dataclass
@@ -13,7 +17,7 @@ class Message:
 @dataclass
 class LLMResponse:
     content: str
-    usage: Optional[dict] = None
+    usage: dict | None = None
     model: str = ""
     finish_reason: str = ""
 
@@ -22,53 +26,52 @@ class LLMProvider(ABC):
     @abstractmethod
     async def chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> LLMResponse:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def stream_chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     async def close(self):
-        pass
+        raise NotImplementedError
 
 
 class AnthropicProvider(LLMProvider):
-    def __init__(self, api_key: str = None, base_url: str = None):
-        from anthropic import AsyncAnthropic
-        self.client = AsyncAnthropic(
+    def __init__(self, api_key: str | None = None, base_url: str | None = None):
+        self._client = AsyncAnthropic(
             api_key=api_key or os.getenv("ANTHROPIC_API_KEY"),
             base_url=base_url,
         )
 
     async def chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> LLMResponse:
         system_msg = ""
         filtered_messages = []
-        
+
         for msg in messages:
             if msg.role == "system":
                 system_msg = msg.content
             else:
                 filtered_messages.append({"role": msg.role, "content": msg.content})
 
-        response = await self.client.messages.create(
+        response = await self._client.messages.create(
             model=model,
             max_tokens=max_tokens,
             temperature=temperature,
@@ -88,53 +91,55 @@ class AnthropicProvider(LLMProvider):
 
     async def stream_chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
         system_msg = ""
         filtered_messages = []
-        
+
         for msg in messages:
             if msg.role == "system":
                 system_msg = msg.content
             else:
                 filtered_messages.append({"role": msg.role, "content": msg.content})
 
-        stream = await self.client.messages.create(
+        stream_context = self._client.messages.stream(
             model=model,
             max_tokens=max_tokens,
             temperature=temperature,
             system=system_msg,
             messages=filtered_messages,
-            stream=True,
         )
-
-        async for chunk in stream:
-            if chunk.type == "content_block_delta":
-                yield chunk.delta.text
+        if isawaitable(stream_context):
+            stream_context = await stream_context
+        async with stream_context as stream:
+            text_stream = stream.text_stream
+            if callable(text_stream):
+                text_stream = text_stream()
+            async for text in text_stream:
+                yield text
 
     async def close(self):
-        await self.client.close()
+        await self._client.close()
 
 
 class OpenAIProvider(LLMProvider):
-    def __init__(self, api_key: str = None, base_url: str = None):
-        from openai import AsyncOpenAI
-        self.client = AsyncOpenAI(
+    def __init__(self, api_key: str | None = None, base_url: str | None = None):
+        self._client = AsyncOpenAI(
             api_key=api_key or os.getenv("OPENAI_API_KEY"),
             base_url=base_url,
         )
 
     async def chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> LLMResponse:
-        response = await self.client.chat.completions.create(
+        response = await self._client.chat.completions.create(
             model=model,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             max_tokens=max_tokens,
@@ -153,12 +158,12 @@ class OpenAIProvider(LLMProvider):
 
     async def stream_chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
-        stream = await self.client.chat.completions.create(
+        stream = await self._client.chat.completions.create(
             model=model,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             max_tokens=max_tokens,
@@ -171,25 +176,24 @@ class OpenAIProvider(LLMProvider):
                 yield chunk.choices[0].delta.content
 
     async def close(self):
-        await self.client.close()
+        await self._client.close()
 
 
 class OpenRouterProvider(LLMProvider):
-    def __init__(self, api_key: str = None, base_url: str = None):
-        from openai import AsyncOpenAI
-        self.client = AsyncOpenAI(
+    def __init__(self, api_key: str | None = None, base_url: str | None = None):
+        self._client = AsyncOpenAI(
             api_key=api_key or os.getenv("OPENROUTER_API_KEY"),
             base_url=base_url or "https://openrouter.ai/api/v1",
         )
 
     async def chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> LLMResponse:
-        response = await self.client.chat.completions.create(
+        response = await self._client.chat.completions.create(
             model=model,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             max_tokens=max_tokens,
@@ -212,12 +216,12 @@ class OpenRouterProvider(LLMProvider):
 
     async def stream_chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
-        stream = await self.client.chat.completions.create(
+        stream = await self._client.chat.completions.create(
             model=model,
             messages=[{"role": m.role, "content": m.content} for m in messages],
             max_tokens=max_tokens,
@@ -234,23 +238,24 @@ class OpenRouterProvider(LLMProvider):
                 yield chunk.choices[0].delta.content
 
     async def close(self):
-        await self.client.close()
+        await self._client.close()
 
 
 class OllamaProvider(LLMProvider):
-    def __init__(self, api_key: str = None, base_url: str = None):
+    def __init__(self, api_key: str | None = None, base_url: str | None = None):
         import httpx
+
         self.base_url = base_url or "http://localhost:11434"
-        self.client = httpx.AsyncClient(base_url=self.base_url, timeout=120.0)
+        self._client = httpx.AsyncClient(base_url=self.base_url, timeout=120.0)
 
     async def chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> LLMResponse:
-        response = await self.client.post(
+        response = await self._client.post(
             "/api/chat",
             json={
                 "model": model,
@@ -277,12 +282,12 @@ class OllamaProvider(LLMProvider):
 
     async def stream_chat_completion(
         self,
-        messages: List[Message],
+        messages: list[Message],
         model: str,
         max_tokens: int = 1000,
         temperature: float = 0.7,
     ) -> AsyncGenerator[str, None]:
-        async with self.client.stream(
+        stream_context = self._client.stream(
             "POST",
             "/api/chat",
             json={
@@ -295,16 +300,20 @@ class OllamaProvider(LLMProvider):
                 "stream": True,
             },
             timeout=120.0,
-        ) as response:
+        )
+        if isawaitable(stream_context):
+            stream_context = await stream_context
+        async with stream_context as response:
             async for line in response.aiter_lines():
                 if line:
                     import json
+
                     data = json.loads(line)
                     if "message" in data and "content" in data["message"]:
                         yield data["message"]["content"]
 
     async def close(self):
-        await self.client.aclose()
+        await self._client.aclose()
 
 
 _PROVIDERS = {
@@ -322,7 +331,11 @@ _DEFAULT_MODELS = {
 }
 
 
-def get_provider(name: str, api_key: str = None, base_url: str = None) -> LLMProvider:
+def get_provider(
+    name: str,
+    api_key: str | None = None,
+    base_url: str | None = None,
+) -> LLMProvider:
     if name not in _PROVIDERS:
         raise ValueError(f"Unknown provider: {name}. Available: {list(_PROVIDERS.keys())}")
     return _PROVIDERS[name](api_key, base_url)
@@ -332,5 +345,5 @@ def get_default_model(provider: str) -> str:
     return _DEFAULT_MODELS.get(provider, "claude-sonnet-4-20250514")
 
 
-def list_providers() -> List[str]:
-    return list(_PROVIDERS.keys())
+def list_providers() -> list[str]:
+    return list(_PROVIDERS)
