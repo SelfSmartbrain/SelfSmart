@@ -24,13 +24,14 @@ logger = logging.getLogger(__name__)
 # Global instances
 voice_assistant: VoiceAssistant = None
 integration = None
+audio_manager: AudioManager | None = None
 connected_clients: Set[WebSocket] = set()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown"""
-    global voice_assistant, integration, connected_clients
+    global voice_assistant, integration, audio_manager, connected_clients
 
     settings = get_settings()
 
@@ -39,26 +40,18 @@ async def lifespan(app: FastAPI):
     integration = await create_voice_assistant_integration(settings)
 
     # Initialize STT using Python whisper package (no binary needed)
-    stt = EngineFactory.create_stt("whisper", model_size="base")
+    stt = EngineFactory.create_stt("faster-whisper", model_size="base")
 
     # Initialize TTS using edge-tts (no binary needed, high quality female voices)
     tts = EngineFactory.create_tts("edge-tts", voice="en-US-AriaNeural")
 
     # Initialize Audio Manager
-    audio_config = AudioConfig(
-        sample_rate=16000,
-        channels=1,
-        chunk_size=1024
-    )
+    audio_config = AudioConfig(sample_rate=16000, channels=1, chunk_size=1024)
     audio_manager = AudioManager(audio_config)
 
     # Initialize Voice Assistant
     voice_config = VoiceConfig(
-        sample_rate=16000,
-        channels=1,
-        chunk_size=1024,
-        vad_threshold=0.01,
-        silence_duration=1.5
+        sample_rate=16000, channels=1, chunk_size=1024, vad_threshold=0.01, silence_duration=1.5
     )
 
     cognitive_bus = get_cognitive_bus()
@@ -69,7 +62,7 @@ async def lifespan(app: FastAPI):
         stt_engine=stt,
         tts_engine=tts,
         cognitive_bus=cognitive_bus,
-        llm_client=llm_client
+        llm_client=llm_client,
     )
 
     # Set up callbacks for UI updates
@@ -132,10 +125,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         # Send initial state
-        await websocket.send_json({
-            "type": "init",
-            "state": voice_assistant.state.value if voice_assistant else "initializing"
-        })
+        await websocket.send_json(
+            {
+                "type": "init",
+                "state": voice_assistant.state.value if voice_assistant else "initializing",
+            }
+        )
 
         while True:
             data = await websocket.receive()
@@ -171,15 +166,18 @@ async def handle_text_message(msg: dict, websocket: WebSocket):
             await websocket.send_json({"type": "response", "text": response})
 
     elif msg_type == "get_status":
-        await websocket.send_json({
-            "type": "status",
-            "state": voice_assistant.state.value,
-            "tools": list(integration._tools.keys()),
-            "active_plan": integration.context.active_plan_id
-        })
+        await websocket.send_json(
+            {
+                "type": "status",
+                "state": voice_assistant.state.value,
+                "tools": list(integration._tools.keys()),
+                "active_plan": integration.context.active_plan_id,
+            }
+        )
 
     elif msg_type == "list_devices":
-        audio_manager.list_devices()
+        devices = audio_manager.list_devices() if audio_manager else []
+        await websocket.send_json({"type": "devices", "devices": devices})
 
 
 @app.get("/")
@@ -190,7 +188,10 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "assistant_state": voice_assistant.state.value if voice_assistant else "not_ready"}
+    return {
+        "status": "ok",
+        "assistant_state": voice_assistant.state.value if voice_assistant else "not_ready",
+    }
 
 
 # Audio streaming endpoint for direct HTTP streaming
@@ -226,4 +227,5 @@ async def stt_endpoint(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
