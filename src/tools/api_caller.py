@@ -300,3 +300,4 @@ class APICallerTool(AgentTool):
 
 
 ApiCallerTool = APICallerTool
+ApiCaller = APICallerTool
