@@ -301,11 +301,14 @@ class MemoryFabric:
                         break
                 return entries
             if hasattr(backend, 'keys'):
+                # Fallback: KEYS is O(N) and blocks Redis on large keyspaces.
+                # Prefer backends that support SCAN (all modern redis-py versions do).
+                logger.warning("Redis backend lacks 'scan'; falling back to KEYS (O(N) — upgrade redis client)")
                 pattern = f"*{query}*"
                 keys = await backend.keys(pattern)
 
                 entries = []
-                for key in keys[:limit]:
+                for key in keys[:min(limit, 100)]:  # hard cap to prevent runaway
                     value = await backend.get(key)
                     if value:
                         import json
