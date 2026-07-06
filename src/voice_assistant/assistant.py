@@ -38,10 +38,10 @@ class VoiceAssistant:
     def __init__(
         self,
         config: VoiceConfig,
-        stt_engine: Any,           # Must have: transcribe(audio_bytes) -> str
-        tts_engine: Any,           # Must have: synthesize(text) -> audio_bytes
-        cognitive_bus: Any,        # Must have: emit(event), subscribe(type, handler)
-        llm_client: Any,           # Must have: ainvoke(prompt) -> response
+        stt_engine: Any,  # Must have: transcribe(audio_bytes) -> str
+        tts_engine: Any,  # Must have: synthesize(text) -> audio_bytes
+        cognitive_bus: Any,  # Must have: emit(event), subscribe(type, handler)
+        llm_client: Any,  # Must have: ainvoke(prompt) -> response
         wake_word_detector: Optional[Any] = None,
     ):
         self.config = config
@@ -83,7 +83,9 @@ class VoiceAssistant:
             if self.state == AssistantState.IDLE:
                 await self._set_state(AssistantState.LISTENING)
         else:
-            self._silence_chunks_needed = int(
+            self._silence_chunks += 1
+
+        silence_chunks_needed = int(
             self.config.silence_duration * self.config.sample_rate / self.config.chunk_size
         )
 
@@ -97,11 +99,12 @@ class VoiceAssistant:
     def _calculate_energy(self, chunk: bytes) -> float:
         """Calculate RMS energy of audio chunk"""
         import numpy as np
+
         # Ensure chunk size is multiple of 2 bytes (int16)
         if len(chunk) % 2 != 0:
             chunk = chunk[:-1]
         audio = np.frombuffer(chunk, dtype=np.int16).astype(np.float32)
-        return np.sqrt(np.mean(audio ** 2)) / 32768.0
+        return np.sqrt(np.mean(audio**2)) / 32768.0
 
     async def _process_utterance(self):
         """Process complete utterance"""
@@ -122,11 +125,16 @@ class VoiceAssistant:
                 await self.on_transcript(transcript)
 
             # Emit to cognitive bus
-            await self.bus.emit(self.bus.create_event(
-                event_type="user.speech",
-                source="voice_assistant",
-                payload={"text": transcript, "audio_duration": len(audio_data) / self.config.sample_rate}
-            ))
+            await self.bus.emit(
+                self.bus.create_event(
+                    event_type="user.speech",
+                    source="voice_assistant",
+                    payload={
+                        "text": transcript,
+                        "audio_duration": len(audio_data) / self.config.sample_rate,
+                    },
+                )
+            )
 
             # Get LLM response
             response = await self._get_llm_response(transcript)
@@ -159,7 +167,7 @@ Assistant:"""
 
         try:
             response = await self.llm.ainvoke(prompt)
-            return response.content if hasattr(response, 'content') else str(response)
+            return response.content if hasattr(response, "content") else str(response)
         except Exception as e:
             logger.error(f"LLM error: {e}")
             return "I'm having trouble thinking right now."
@@ -190,11 +198,11 @@ Assistant:"""
                 await self._play_audio(audio)
 
             # Emit completion event
-            await self.bus.emit(self.bus.create_event(
-                event_type="assistant.speech",
-                source="voice_assistant",
-                payload={"text": text}
-            ))
+            await self.bus.emit(
+                self.bus.create_event(
+                    event_type="assistant.speech", source="voice_assistant", payload={"text": text}
+                )
+            )
 
         except Exception as e:
             logger.error(f"TTS error: {e}")
@@ -230,47 +238,40 @@ Assistant:"""
 # Factory for creating engines (implement based on your choices)
 class EngineFactory:
     @staticmethod
-    def create_stt(engine: str = "whisper", **kwargs):
-        """Create STT engine: whisper, faster-whisper, vosk, etc."""
-        if engine == "faster-whisper":
+    def create_stt(engine: str = "faster-whisper", **kwargs):
+        """Create a local speech-to-text engine."""
+        if engine in {"whisper", "faster-whisper"}:
             from faster_whisper import WhisperModel
-            model = WhisperModel(kwargs.get("model_size", "base.en"), device="cpu")
+
+            model = WhisperModel(
+                kwargs.get("model_size", "base.en"),
+                device=kwargs.get("device", "cpu"),
+                compute_type=kwargs.get("compute_type", "int8"),
+            )
 
             class FasterWhisperSTT:
                 async def transcribe(self, audio_bytes: bytes) -> str:
+                    import asyncio
+                    import os
                     import tempfile
+                    import wave
+
                     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-                        f.write(audio_bytes)
                         temp_path = f.name
 
                     try:
-                        segments, _ = model.transcribe(temp_path)
+                        with wave.open(temp_path, "wb") as wav_file:
+                            wav_file.setnchannels(kwargs.get("channels", 1))
+                            wav_file.setsampwidth(2)
+                            wav_file.setframerate(kwargs.get("sample_rate", 16000))
+                            wav_file.writeframes(audio_bytes)
+
+                        segments, _ = await asyncio.to_thread(model.transcribe, temp_path)
                         return " ".join(s.text for s in segments)
                     finally:
-                        import os
                         os.unlink(temp_path)
 
             return FasterWhisperSTT()
-
-        elif engine == "whisper":
-            import whisper
-            model = whisper.load_model(kwargs.get("model_size", "base"))
-
-            class WhisperSTT:
-                async def transcribe(self, audio_bytes: bytes) -> str:
-                    import tempfile
-                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-                        f.write(audio_bytes)
-                        temp_path = f.name
-
-                    try:
-                        result = model.transcribe(temp_path)
-                        return result["text"]
-                    finally:
-                        import os
-                        os.unlink(temp_path)
-
-            return WhisperSTT()
 
         raise ValueError(f"Unknown STT engine: {engine}")
 
@@ -292,7 +293,11 @@ class EngineFactory:
 
                     try:
                         proc = await asyncio.create_subprocess_exec(
-                            "piper", "--model", self.voice, "--output_file", output,
+                            "piper",
+                            "--model",
+                            self.voice,
+                            "--output_file",
+                            output,
                             stdin=asyncio.subprocess.PIPE,
                             stdout=asyncio.subprocess.PIPE,
                             stderr=asyncio.subprocess.PIPE,
@@ -303,6 +308,7 @@ class EngineFactory:
                             return f.read()
                     finally:
                         import os
+
                         if os.path.exists(output):
                             os.unlink(output)
 
@@ -328,6 +334,7 @@ class EngineFactory:
                             return f.read()
                     finally:
                         import os
+
                         if os.path.exists(output):
                             os.unlink(output)
 
