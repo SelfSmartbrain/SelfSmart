@@ -1,13 +1,13 @@
 import json
+import logging
 import time
+from collections import deque
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, asdict
-from collections import deque
-import logging
+from typing import Any
 
-from .llm_client import Message, LLMProvider, get_provider, get_default_model
+from .llm_client import LLMProvider, Message, get_default_model, get_provider
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class ConversationExchange:
     user: str
     assistant: str
     timestamp: float
-    tokens_used: Optional[Dict[str, int]] = None
+    tokens_used: dict[str, int] | None = None
 
 
 class ConversationMemory:
@@ -25,7 +25,7 @@ class ConversationMemory:
         self,
         max_turns: int = 20,
         max_tokens: int = 8000,
-        persistence_file: Optional[Path] = None,
+        persistence_file: Path | None = None,
     ):
         self.max_turns = max_turns
         self.max_tokens = max_tokens
@@ -40,7 +40,7 @@ class ConversationMemory:
         self,
         user_input: str,
         ai_response: str,
-        tokens_used: Optional[Dict[str, int]] = None,
+        tokens_used: dict[str, int] | None = None,
     ):
         exchange = ConversationExchange(
             user=user_input,
@@ -51,7 +51,9 @@ class ConversationMemory:
         self.history.append(exchange)
 
         if tokens_used:
-            self._total_tokens += tokens_used.get("input_tokens", 0) + tokens_used.get("output_tokens", 0)
+            self._total_tokens += tokens_used.get("input_tokens", 0) + tokens_used.get(
+                "output_tokens", 0
+            )
 
         self._prune_by_tokens()
 
@@ -62,9 +64,17 @@ class ConversationMemory:
         while self._total_tokens > self.max_tokens and len(self.history) > 1:
             removed = self.history.popleft()
             if removed.tokens_used:
-                self._total_tokens -= removed.tokens_used.get("input_tokens", 0) + removed.tokens_used.get("output_tokens", 0)
+                self._total_tokens -= removed.tokens_used.get(
+                    "input_tokens", 0
+                ) + removed.tokens_used.get("output_tokens", 0)
 
-    def get_context(self, recent_turns: int = 5) -> List[Message]:
+        if self._total_tokens > self.max_tokens and self.history:
+            removed = self.history.popleft()
+            if removed.tokens_used:
+                self._total_tokens -= removed.tokens_used.get("input_tokens", 0)
+                self._total_tokens -= removed.tokens_used.get("output_tokens", 0)
+
+    def get_context(self, recent_turns: int = 5) -> list[Message]:
         recent = list(self.history)[-recent_turns:]
         messages = []
         for exchange in recent:
@@ -72,7 +82,7 @@ class ConversationMemory:
             messages.append(Message(role="assistant", content=exchange.assistant))
         return messages
 
-    def get_full_history(self) -> List[ConversationExchange]:
+    def get_full_history(self) -> list[ConversationExchange]:
         return list(self.history)
 
     def save(self):
@@ -87,7 +97,7 @@ class ConversationMemory:
 
     def load(self):
         if self.persistence_file and self.persistence_file.exists():
-            with open(self.persistence_file, "r") as f:
+            with open(self.persistence_file) as f:
                 data = json.load(f)
             self.history = deque(
                 [ConversationExchange(**ex) for ex in data.get("history", [])],
@@ -101,8 +111,24 @@ class ConversationMemory:
         if self.persistence_file and self.persistence_file.exists():
             self.persistence_file.unlink()
 
+    def export_conversation(self, export_path: Path) -> None:
+        """Export the current conversation without exposing configuration secrets."""
+        export_path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "exported_at": datetime.utcnow().isoformat() + "Z",
+            "exchanges": [asdict(exchange) for exchange in self.history],
+            "total_tokens": self._total_tokens,
+        }
+        with open(export_path, "w", encoding="utf-8") as file:
+            json.dump(data, file, indent=2)
+
     @property
     def total_tokens(self) -> int:
+        return self._total_tokens
+
+    @property
+    def estimated_tokens(self) -> int:
+        """Backward-compatible name for the tracked provider token total."""
         return self._total_tokens
 
     @property
@@ -130,7 +156,7 @@ class ModelXBrain:
         self._initialized = False
 
     def _default_system_prompt(self) -> str:
-        return """You are ModelX, a helpful voice assistant. 
+        return """You are ModelX, a helpful voice assistant.
 Keep responses conversational, concise, and natural for voice interaction.
 Avoid markdown formatting, bullet points, or code blocks unless explicitly asked.
 Speak naturally as if having a conversation."""
@@ -142,7 +168,7 @@ Speak naturally as if having a conversation."""
 
     async def process_input(self, user_text: str) -> str:
         provider = self._get_provider()
-        
+
         messages = [Message(role="system", content=self.system_prompt)]
         messages.extend(self.memory.get_context(recent_turns=10))
         messages.append(Message(role="user", content=user_text))
@@ -164,7 +190,7 @@ Speak naturally as if having a conversation."""
 
     async def stream_response(self, user_text: str):
         provider = self._get_provider()
-        
+
         messages = [Message(role="system", content=self.system_prompt)]
         messages.extend(self.memory.get_context(recent_turns=10))
         messages.append(Message(role="user", content=user_text))
@@ -190,7 +216,7 @@ Speak naturally as if having a conversation."""
     def clear_memory(self):
         self.memory.clear()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         return {
             "provider": self.provider_name,
             "model": self.model,
