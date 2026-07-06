@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from .client import Neo4jClient
 
@@ -25,9 +26,9 @@ class KnowledgeGraphReasoner:
         """
         if domain:
             query += " WHERE a.domain = $domain OR b.domain = $domain"
-            
+
         query += " RETURN a.name AS concept_a, b.name AS concept_b, r.reason AS reason"
-        
+
         return await self.client.execute_query(query, {"domain": domain})
 
     async def find_missing_prerequisites(self) -> list[dict[str, Any]]:
@@ -36,7 +37,7 @@ class KnowledgeGraphReasoner:
         or are marked as incomplete.
         This represents a knowledge gap.
         """
-        # A simple heuristic: if a node has very few incoming relationships 
+        # A simple heuristic: if a node has very few incoming relationships
         # or properties, it might be a shallow stub.
         query = """
         MATCH (a:Concept)-[:REQUIRES]->(stub:Concept)
