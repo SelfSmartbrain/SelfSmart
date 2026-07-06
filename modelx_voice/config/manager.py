@@ -96,8 +96,8 @@ class ConfigManager:
         }
 
         provider = config.api.provider
+        self.save_api_key(provider, config.api.api_key)
         if config.api.api_key:
-            self.save_api_key(provider, config.api.api_key)
             data["api"]["api_key"] = "***KEYRING***"
         else:
             data["api"]["api_key"] = ""
@@ -113,6 +113,9 @@ class ConfigManager:
             return None
 
     def save_api_key(self, provider: str, api_key: str):
+        if not api_key:
+            self.delete_api_key(provider)
+            return
         try:
             keyring.set_password(self.KEYRING_SERVICE, provider, api_key)
         except Exception as e:
