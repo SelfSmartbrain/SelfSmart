@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -20,6 +21,21 @@ class ProgressRecord:
     result: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
     db_id: Any = None
+    _await_hook: Callable[[], Awaitable[None]] | None = field(
+        default=None,
+        repr=False,
+        compare=False,
+    )
+
+    def __await__(self):
+        async def resolve() -> ProgressRecord:
+            if self._await_hook is not None:
+                hook = self._await_hook
+                self._await_hook = None
+                await hook()
+            return self
+
+        return resolve().__await__()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -56,7 +72,7 @@ class ProgressTracker:
         query = select(ObjectiveProgressModel)
         if objective_id:
             query = query.where(ObjectiveProgressModel.objective_id == objective_id)
-        
+
         result = await session.execute(query)
         db_records = result.scalars().all()
 
@@ -77,7 +93,7 @@ class ProgressTracker:
         await session.commit()
         return record
 
-    async def track_progress(
+    def track_progress(
         self,
         objective: Any,
         status: str = "in_progress",
@@ -94,7 +110,11 @@ class ProgressTracker:
         self.records.append(record)
 
         if self.session:
-            await self.save_record(record, self.session)
+
+            async def persist() -> None:
+                await self.save_record(record, self.session)
+
+            record._await_hook = persist
 
         return record
 
