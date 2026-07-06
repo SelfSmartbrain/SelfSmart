@@ -1,7 +1,7 @@
 import re
-from typing import Optional, Callable, Dict, Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class CommandType(Enum):
@@ -19,7 +19,7 @@ class CommandType(Enum):
 @dataclass
 class VoiceCommand:
     type: CommandType
-    args: Dict[str, Any] = None
+    args: dict[str, Any] = None
     raw_text: str = ""
 
     def __post_init__(self):
@@ -77,18 +77,18 @@ class CommandProcessor:
 
     def process(self, text: str) -> VoiceCommand:
         text_clean = text.lower().strip()
-        text_clean = re.sub(r'[.!?]+$', '', text_clean)
-        
+        text_clean = re.sub(r"[.!?]+$", "", text_clean)
+
         for cmd_type, patterns in self._commands.items():
             for pattern in patterns:
                 match = re.match(pattern, text_clean, re.IGNORECASE)
                 if match:
                     args = {}
                     if cmd_type == CommandType.SWITCH_VOICE and match.groups():
-                        voice_name = match.group(1).lower()
+                        voice_name = match.group(match.lastindex or 1).lower()
                         args["voice"] = VOICE_ALIASES.get(voice_name, voice_name)
                     return VoiceCommand(type=cmd_type, args=args, raw_text=text)
-        
+
         return VoiceCommand(type=CommandType.NONE, raw_text=text)
 
     def is_command(self, text: str) -> bool:
