@@ -13,8 +13,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy project manifest
-COPY pyproject.toml ./
+# Copy package metadata and source before building the wheel.
+COPY pyproject.toml README.md LICENSE ./
+COPY src/ ./src/
+COPY modelx_voice/ ./modelx_voice/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --prefix=/install .
@@ -37,6 +39,7 @@ COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY src/ ./src/
+COPY modelx_voice/ ./modelx_voice/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./
 
