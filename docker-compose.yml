@@ -41,22 +41,6 @@ services:
       start_period: 15s
 
   # ---------------------------------------------------------------------------
-  # Frontend Web Application
-  # ---------------------------------------------------------------------------
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: agent-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-    depends_on:
-      - api
-    restart: unless-stopped
-
-  # ---------------------------------------------------------------------------
   # PostgreSQL Database
   # ---------------------------------------------------------------------------
   postgres:
