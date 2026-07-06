@@ -10,23 +10,46 @@ from sqlalchemy import select
 from src.config.logging import get_logger
 from src.db.session import get_session
 
-# Assuming models are available in src.db.models.world_model
-# If the module is not created yet, this will fail on import, but matches standard ORM patterns.
-from src.db.models.world_model import (
-    WorldModel, CausalRelationship, Hypothesis, Experiment,
-    ExperimentRun, Evidence, BeliefState, Prediction, PredictionResult
+from src.db.models import (
+    WorldModel,
+    CausalRelationship,
+    Hypothesis,
+    Experiment,
+    ExperimentRun,
+    Evidence,
+    BeliefState,
+    Prediction,
+    PredictionResult,
 )
 
 from src.api.schemas.world_model import (
-    WorldModelCreate, WorldModelResponse, WorldModelUpdate,
-    CausalRelationshipCreate, CausalRelationshipResponse, CausalRelationshipUpdate,
-    HypothesisCreate, HypothesisResponse, HypothesisUpdate,
-    ExperimentCreate, ExperimentResponse, ExperimentUpdate,
-    ExperimentRunCreate, ExperimentRunResponse, ExperimentRunUpdate,
-    EvidenceCreate, EvidenceResponse, EvidenceUpdate,
-    BeliefStateCreate, BeliefStateResponse, BeliefStateUpdate,
-    PredictionCreate, PredictionResponse, PredictionUpdate,
-    PredictionResultCreate, PredictionResultResponse, PredictionResultUpdate
+    WorldModelCreate,
+    WorldModelResponse,
+    WorldModelUpdate,
+    CausalRelationshipCreate,
+    CausalRelationshipResponse,
+    CausalRelationshipUpdate,
+    HypothesisCreate,
+    HypothesisResponse,
+    HypothesisUpdate,
+    ExperimentCreate,
+    ExperimentResponse,
+    ExperimentUpdate,
+    ExperimentRunCreate,
+    ExperimentRunResponse,
+    ExperimentRunUpdate,
+    EvidenceCreate,
+    EvidenceResponse,
+    EvidenceUpdate,
+    BeliefStateCreate,
+    BeliefStateResponse,
+    BeliefStateUpdate,
+    PredictionCreate,
+    PredictionResponse,
+    PredictionUpdate,
+    PredictionResultCreate,
+    PredictionResultResponse,
+    PredictionResultUpdate,
 )
 
 logger = get_logger(__name__)
@@ -51,18 +74,23 @@ async def create_world_model(data: WorldModelCreate, session: AsyncSession = Dep
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/", response_model=List[WorldModelResponse])
 async def list_world_models(session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(WorldModel).order_by(WorldModel.created_at.desc()))
     return result.scalars().all()
+
 
 @router.get("/{model_id}", response_model=WorldModelResponse)
 async def get_world_model(model_id: UUID, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(WorldModel).where(WorldModel.id == model_id))
     return get_or_404(result.scalar_one_or_none(), "WorldModel")
 
+
 @router.patch("/{model_id}", response_model=WorldModelResponse)
-async def update_world_model(model_id: UUID, data: WorldModelUpdate, session: AsyncSession = Depends(get_session)):
+async def update_world_model(
+    model_id: UUID, data: WorldModelUpdate, session: AsyncSession = Depends(get_session)
+):
     result = await session.execute(select(WorldModel).where(WorldModel.id == model_id))
     db_obj = get_or_404(result.scalar_one_or_none(), "WorldModel")
     for key, value in data.model_dump(exclude_unset=True).items():
@@ -70,6 +98,7 @@ async def update_world_model(model_id: UUID, data: WorldModelUpdate, session: As
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
+
 
 @router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_world_model(model_id: UUID, session: AsyncSession = Depends(get_session)):
@@ -82,22 +111,36 @@ async def delete_world_model(model_id: UUID, session: AsyncSession = Depends(get
 # -----------------------------------------------------------------------------
 # Causal Relationships
 # -----------------------------------------------------------------------------
-@router.post("/causal-relationships", response_model=CausalRelationshipResponse, status_code=status.HTTP_201_CREATED)
-async def create_causal_relationship(data: CausalRelationshipCreate, session: AsyncSession = Depends(get_session)):
+@router.post(
+    "/causal-relationships",
+    response_model=CausalRelationshipResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_causal_relationship(
+    data: CausalRelationshipCreate, session: AsyncSession = Depends(get_session)
+):
     db_obj = CausalRelationship(**data.model_dump())
     session.add(db_obj)
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/causal-relationships/{rel_id}", response_model=CausalRelationshipResponse)
 async def get_causal_relationship(rel_id: UUID, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(CausalRelationship).where(CausalRelationship.id == rel_id))
+    result = await session.execute(
+        select(CausalRelationship).where(CausalRelationship.id == rel_id)
+    )
     return get_or_404(result.scalar_one_or_none(), "CausalRelationship")
 
+
 @router.patch("/causal-relationships/{rel_id}", response_model=CausalRelationshipResponse)
-async def update_causal_relationship(rel_id: UUID, data: CausalRelationshipUpdate, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(CausalRelationship).where(CausalRelationship.id == rel_id))
+async def update_causal_relationship(
+    rel_id: UUID, data: CausalRelationshipUpdate, session: AsyncSession = Depends(get_session)
+):
+    result = await session.execute(
+        select(CausalRelationship).where(CausalRelationship.id == rel_id)
+    )
     db_obj = get_or_404(result.scalar_one_or_none(), "CausalRelationship")
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(db_obj, key, value)
@@ -105,9 +148,12 @@ async def update_causal_relationship(rel_id: UUID, data: CausalRelationshipUpdat
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.delete("/causal-relationships/{rel_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_causal_relationship(rel_id: UUID, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(CausalRelationship).where(CausalRelationship.id == rel_id))
+    result = await session.execute(
+        select(CausalRelationship).where(CausalRelationship.id == rel_id)
+    )
     db_obj = get_or_404(result.scalar_one_or_none(), "CausalRelationship")
     await session.delete(db_obj)
     await session.commit()
@@ -124,13 +170,17 @@ async def create_hypothesis(data: HypothesisCreate, session: AsyncSession = Depe
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/hypotheses/{hyp_id}", response_model=HypothesisResponse)
 async def get_hypothesis(hyp_id: UUID, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Hypothesis).where(Hypothesis.id == hyp_id))
     return get_or_404(result.scalar_one_or_none(), "Hypothesis")
 
+
 @router.patch("/hypotheses/{hyp_id}", response_model=HypothesisResponse)
-async def update_hypothesis(hyp_id: UUID, data: HypothesisUpdate, session: AsyncSession = Depends(get_session)):
+async def update_hypothesis(
+    hyp_id: UUID, data: HypothesisUpdate, session: AsyncSession = Depends(get_session)
+):
     result = await session.execute(select(Hypothesis).where(Hypothesis.id == hyp_id))
     db_obj = get_or_404(result.scalar_one_or_none(), "Hypothesis")
     for key, value in data.model_dump(exclude_unset=True).items():
@@ -138,6 +188,7 @@ async def update_hypothesis(hyp_id: UUID, data: HypothesisUpdate, session: Async
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
+
 
 @router.delete("/hypotheses/{hyp_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_hypothesis(hyp_id: UUID, session: AsyncSession = Depends(get_session)):
@@ -158,13 +209,17 @@ async def create_experiment(data: ExperimentCreate, session: AsyncSession = Depe
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/experiments/{exp_id}", response_model=ExperimentResponse)
 async def get_experiment(exp_id: UUID, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Experiment).where(Experiment.id == exp_id))
     return get_or_404(result.scalar_one_or_none(), "Experiment")
 
+
 @router.patch("/experiments/{exp_id}", response_model=ExperimentResponse)
-async def update_experiment(exp_id: UUID, data: ExperimentUpdate, session: AsyncSession = Depends(get_session)):
+async def update_experiment(
+    exp_id: UUID, data: ExperimentUpdate, session: AsyncSession = Depends(get_session)
+):
     result = await session.execute(select(Experiment).where(Experiment.id == exp_id))
     db_obj = get_or_404(result.scalar_one_or_none(), "Experiment")
     for key, value in data.model_dump(exclude_unset=True).items():
@@ -172,6 +227,7 @@ async def update_experiment(exp_id: UUID, data: ExperimentUpdate, session: Async
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
+
 
 @router.delete("/experiments/{exp_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_experiment(exp_id: UUID, session: AsyncSession = Depends(get_session)):
@@ -184,21 +240,29 @@ async def delete_experiment(exp_id: UUID, session: AsyncSession = Depends(get_se
 # -----------------------------------------------------------------------------
 # Experiment Runs
 # -----------------------------------------------------------------------------
-@router.post("/experiment-runs", response_model=ExperimentRunResponse, status_code=status.HTTP_201_CREATED)
-async def create_experiment_run(data: ExperimentRunCreate, session: AsyncSession = Depends(get_session)):
+@router.post(
+    "/experiment-runs", response_model=ExperimentRunResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_experiment_run(
+    data: ExperimentRunCreate, session: AsyncSession = Depends(get_session)
+):
     db_obj = ExperimentRun(**data.model_dump())
     session.add(db_obj)
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/experiment-runs/{run_id}", response_model=ExperimentRunResponse)
 async def get_experiment_run(run_id: UUID, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(ExperimentRun).where(ExperimentRun.id == run_id))
     return get_or_404(result.scalar_one_or_none(), "ExperimentRun")
 
+
 @router.patch("/experiment-runs/{run_id}", response_model=ExperimentRunResponse)
-async def update_experiment_run(run_id: UUID, data: ExperimentRunUpdate, session: AsyncSession = Depends(get_session)):
+async def update_experiment_run(
+    run_id: UUID, data: ExperimentRunUpdate, session: AsyncSession = Depends(get_session)
+):
     result = await session.execute(select(ExperimentRun).where(ExperimentRun.id == run_id))
     db_obj = get_or_404(result.scalar_one_or_none(), "ExperimentRun")
     for key, value in data.model_dump(exclude_unset=True).items():
@@ -219,6 +283,7 @@ async def create_evidence(data: EvidenceCreate, session: AsyncSession = Depends(
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/evidence/{evidence_id}", response_model=EvidenceResponse)
 async def get_evidence(evidence_id: UUID, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Evidence).where(Evidence.id == evidence_id))
@@ -228,13 +293,18 @@ async def get_evidence(evidence_id: UUID, session: AsyncSession = Depends(get_se
 # -----------------------------------------------------------------------------
 # Belief States
 # -----------------------------------------------------------------------------
-@router.post("/belief-states", response_model=BeliefStateResponse, status_code=status.HTTP_201_CREATED)
-async def create_belief_state(data: BeliefStateCreate, session: AsyncSession = Depends(get_session)):
+@router.post(
+    "/belief-states", response_model=BeliefStateResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_belief_state(
+    data: BeliefStateCreate, session: AsyncSession = Depends(get_session)
+):
     db_obj = BeliefState(**data.model_dump())
     session.add(db_obj)
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
+
 
 @router.get("/belief-states/{state_id}", response_model=BeliefStateResponse)
 async def get_belief_state(state_id: UUID, session: AsyncSession = Depends(get_session)):
@@ -253,6 +323,7 @@ async def create_prediction(data: PredictionCreate, session: AsyncSession = Depe
     await session.refresh(db_obj)
     return db_obj
 
+
 @router.get("/predictions/{pred_id}", response_model=PredictionResponse)
 async def get_prediction(pred_id: UUID, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Prediction).where(Prediction.id == pred_id))
@@ -262,13 +333,20 @@ async def get_prediction(pred_id: UUID, session: AsyncSession = Depends(get_sess
 # -----------------------------------------------------------------------------
 # Prediction Results
 # -----------------------------------------------------------------------------
-@router.post("/prediction-results", response_model=PredictionResultResponse, status_code=status.HTTP_201_CREATED)
-async def create_prediction_result(data: PredictionResultCreate, session: AsyncSession = Depends(get_session)):
+@router.post(
+    "/prediction-results",
+    response_model=PredictionResultResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_prediction_result(
+    data: PredictionResultCreate, session: AsyncSession = Depends(get_session)
+):
     db_obj = PredictionResult(**data.model_dump())
     session.add(db_obj)
     await session.commit()
     await session.refresh(db_obj)
     return db_obj
+
 
 @router.get("/prediction-results/{result_id}", response_model=PredictionResultResponse)
 async def get_prediction_result(result_id: UUID, session: AsyncSession = Depends(get_session)):
