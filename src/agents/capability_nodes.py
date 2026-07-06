@@ -50,51 +50,196 @@ async def _llm_json(system: str, prompt: str, fallback: Any) -> Any:
     return fallback
 
 async def capability_evaluation(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Evaluate raw capabilities."""
+    """Evaluate system capabilities based on task results and skill inventory."""
     logger.info("Executing capability_evaluation node.")
-    eval_results = {"status": "evaluated", "metrics": {}}
-    return {"capability_evaluation_results": eval_results}
+    task_results = state.get("task_results", {})
+    cognitive_skills = state.get("cognitive_skills", [])
+
+    total = len(task_results)
+    successes = sum(1 for r in task_results.values() if r.get("status") == "completed")
+    success_rate = successes / max(total, 1)
+
+    metrics = {
+        "task_success_rate": success_rate,
+        "total_tasks_evaluated": total,
+        "skill_count": len(cognitive_skills),
+        "capability_score": min(success_rate + len(cognitive_skills) * 0.05, 1.0),
+    }
+
+    llm_eval = await _llm_json(
+        system="You are a capability evaluator. Assess the system capabilities given these metrics. Return JSON.",
+        prompt=f"Metrics: {json.dumps(metrics)}\nSkills: {json.dumps(cognitive_skills[:5], default=str)}",
+        fallback=None,
+    )
+    if isinstance(llm_eval, dict):
+        metrics.update(llm_eval)
+
+    return {"capability_evaluation_results": {"status": "evaluated", "metrics": metrics}}
+
 
 async def benchmark_execution(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Execute capability benchmarks."""
+    """Execute capability benchmarks by scoring recent task performance."""
     logger.info("Executing benchmark_execution node.")
-    benchmark_results = {"status": "executed", "score": 0.0}
+    task_results = state.get("task_results", {})
+
+    total = len(task_results)
+    successes = sum(1 for r in task_results.values() if r.get("status") == "completed")
+    avg_duration = 0.0
+    durations = [r.get("duration_ms", 0) for r in task_results.values() if r.get("duration_ms")]
+    if durations:
+        avg_duration = sum(durations) / len(durations)
+
+    benchmark_results = {
+        "status": "executed",
+        "score": successes / max(total, 1),
+        "avg_duration_ms": avg_duration,
+        "tasks_benchmarked": total,
+    }
     return {"benchmark_results": benchmark_results}
 
+
 async def transfer_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Analyze knowledge transferability."""
+    """Analyze knowledge transferability across domains."""
     logger.info("Executing transfer_analysis node.")
-    transfer_results = {"transfer_score": 0.85}
+    learnings = state.get("learnings", [])
+    cognitive_skills = state.get("cognitive_skills", [])
+
+    # Estimate transfer potential from skill diversity
+    unique_domains = set()
+    for skill in cognitive_skills:
+        unique_domains.add(skill.get("skill_type", "general"))
+
+    transfer_score = min(len(unique_domains) * 0.2 + len(learnings) * 0.05, 1.0)
+
+    transfer_results = {
+        "transfer_score": transfer_score,
+        "unique_domains": list(unique_domains),
+        "learning_count": len(learnings),
+    }
     return {"transfer_analysis_results": transfer_results}
 
+
 async def discovery_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Analyze newly discovered capabilities."""
+    """Analyze newly discovered capabilities from recent executions."""
     logger.info("Executing discovery_analysis node.")
-    discovery_results = {"new_skills": []}
+    cognitive_skills = state.get("cognitive_skills", [])
+    task_results = state.get("task_results", {})
+
+    new_skills = []
+    for skill in cognitive_skills:
+        if skill.get("usage_count", 0) <= 1:
+            new_skills.append({
+                "name": skill.get("name", "unknown"),
+                "type": skill.get("skill_type", "unknown"),
+                "potential": skill.get("success_rate", 0.0),
+            })
+
+    discovery_results = {
+        "new_skills": new_skills,
+        "discovery_count": len(new_skills),
+        "total_capabilities": len(cognitive_skills),
+    }
     return {"discovery_results": discovery_results}
 
+
 async def peer_review(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Review capabilities against peer models."""
+    """Review capabilities by comparing current vs historical performance."""
     logger.info("Executing peer_review node.")
-    review_results = {"peer_comparison": "average"}
+    autonomy_score = state.get("autonomy_score", 0.0)
+    cognition_reflections = state.get("cognition_reflections", [])
+
+    if cognition_reflections:
+        avg_quality = sum(r.get("quality_score", 0) for r in cognition_reflections) / len(cognition_reflections)
+    else:
+        avg_quality = 0.0
+
+    if avg_quality >= 0.8:
+        comparison = "above_average"
+    elif avg_quality >= 0.5:
+        comparison = "average"
+    else:
+        comparison = "below_average"
+
+    review_results = {
+        "peer_comparison": comparison,
+        "autonomy_score": autonomy_score,
+        "avg_quality_score": avg_quality,
+        "reflections_reviewed": len(cognition_reflections),
+    }
     return {"peer_review_results": review_results}
 
+
 async def regression_detection(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Detect any capability regressions."""
+    """Detect any capability regressions by comparing error patterns."""
     logger.info("Executing regression_detection node.")
-    regression_results = {"regressions_found": False}
+    failure_patterns = state.get("failure_patterns", [])
+    errors = state.get("errors", [])
+
+    regressions = []
+    for pattern in failure_patterns:
+        if pattern.get("frequency", 0) > 2 and pattern.get("severity") == "high":
+            regressions.append({
+                "pattern": pattern.get("pattern_name", "unknown"),
+                "frequency": pattern.get("frequency", 0),
+                "recommendation": pattern.get("recommended_fix", "Investigate recurring failure"),
+            })
+
+    regression_results = {
+        "regressions_found": len(regressions) > 0,
+        "regression_count": len(regressions),
+        "regressions": regressions,
+        "total_error_count": len(errors),
+    }
     return {"regression_results": regression_results}
 
+
 async def program_evaluation(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Evaluate training program effectiveness."""
+    """Evaluate overall program effectiveness from accumulated metrics."""
     logger.info("Executing program_evaluation node.")
-    program_results = {"effectiveness": "high"}
+    cognitive_metrics = state.get("cognitive_metrics", [])
+    optimization_recommendations = state.get("optimization_recommendations", [])
+
+    metric_summary = {}
+    for metric in cognitive_metrics:
+        name = metric.get("metric_name", "unknown")
+        value = metric.get("metric_value", 0.0)
+        metric_summary[name] = value
+
+    effectiveness = "high" if metric_summary.get("autonomy_score", 0) >= 0.7 else \
+                    "medium" if metric_summary.get("autonomy_score", 0) >= 0.4 else "low"
+
+    program_results = {
+        "effectiveness": effectiveness,
+        "metrics": metric_summary,
+        "pending_recommendations": len(optimization_recommendations),
+    }
     return {"program_evaluation_results": program_results}
 
+
 async def capability_reporting(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Generate capability report."""
+    """Generate a comprehensive capability report from all evaluation data."""
     logger.info("Executing capability_reporting node.")
-    report = {"report_id": "rep-123", "status": "generated"}
+
+    report = {
+        "status": "generated",
+        "evaluation": state.get("capability_evaluation_results", {}),
+        "benchmarks": state.get("benchmark_results", {}),
+        "transfer": state.get("transfer_analysis_results", {}),
+        "discoveries": state.get("discovery_results", {}),
+        "peer_review": state.get("peer_review_results", {}),
+        "regressions": state.get("regression_results", {}),
+        "program": state.get("program_evaluation_results", {}),
+    }
+
+    # Try LLM summary
+    summary = await _llm_json(
+        system="Summarize this capability report into a concise JSON with 'summary', 'strengths', 'weaknesses', and 'recommendations' keys.",
+        prompt=json.dumps(report, default=str)[:4000],
+        fallback=None,
+    )
+    if isinstance(summary, dict):
+        report["llm_summary"] = summary
+
     return {"capability_report": report}
 
 
