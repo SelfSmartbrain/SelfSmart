@@ -5,6 +5,7 @@ import pytest
 from datetime import datetime
 from uuid import uuid4
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.autonomy.objective_manager import Objective, ObjectiveManager
