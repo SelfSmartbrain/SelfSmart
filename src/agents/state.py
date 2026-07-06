@@ -99,31 +99,12 @@ class ReflectionOutput:
 # ---------------------------------------------------------------------------
 
 
-class AgentState:
+class _AgentStatePlaceholder:
     """
-    Shared state for the multi-agent LangGraph workflow.
+    Legacy placeholder — see AgentStateDict below for the real state schema.
 
-    This is defined as a TypedDict for LangGraph compatibility.
-    Using annotations to define reducer functions where needed.
-
-    Attributes:
-        goal: The high-level user goal.
-        goal_analysis: Structured analysis of the goal from the orchestrator.
-        task_plan: Ordered list of decomposed tasks.
-        current_task_index: Index of the currently executing task.
-        messages: Conversation messages (uses add_messages reducer).
-        task_results: Map of task_id -> TaskResult.
-        errors: List of errors encountered during execution.
-        retrieved_memories: Memories recalled for the current context.
-        retrieved_knowledge: Knowledge chunks retrieved via RAG.
-        reflection: Output from the reflection agent.
-        session_id: Database session identifier.
-        user_id: User identifier.
-        iteration_count: Current iteration number.
-        max_iterations: Maximum allowed iterations.
-        status: Current workflow status.
-        next_agent: Which agent should execute next.
-        final_report: Generated summary report.
+    This class existed as documentation-only. The actual AgentState alias
+    is created after AgentStateDict is defined (end of this module).
     """
 
     pass
@@ -281,3 +262,10 @@ def create_initial_state(
         # Output
         final_report=None,
     )
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible alias: AgentState → AgentStateDict
+# Existing code that imports AgentState now gets the real TypedDict schema.
+# ---------------------------------------------------------------------------
+AgentState = AgentStateDict  # type: ignore[misc]
