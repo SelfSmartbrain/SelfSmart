@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from uuid import UUID
 
 from src.db.models import ResearchPortfolio, ResearchTrack
@@ -24,41 +25,37 @@ class PortfolioManager:
 
     async def get_or_create_portfolio(self, name: str, description: str) -> ResearchPortfolio:
         """Fetch an existing portfolio or create a new one."""
-        # Note: A real implementation would use a specialized repo method to query by name
-        # For this prototype, we'll just create it.
-        try:
-            return await self.portfolio_repo.create(
-                name=name,
-                description=description,
-                status="active",
-                overall_progress=0.0
-            )
-        except Exception:
-            logger.warning(f"Portfolio {name} might already exist or creation failed.")
-            raise
+        existing = await self.portfolio_repo.get(name=name)
+        if existing is not None:
+            return existing
+        return await self.portfolio_repo.create(
+            name=name,
+            description=description,
+            status="active",
+            overall_progress=0.0,
+        )
 
     async def update_portfolio_progress(self, portfolio_id: UUID) -> ResearchPortfolio | None:
         """
         Recalculate the overall progress of a portfolio based on its constituent tracks.
         """
-        # In a complete implementation, this would query all tracks associated with the portfolio
-        # (Assuming we added a foreign key from ResearchTrack -> ResearchPortfolio, 
-        # though the spec didn't strictly require it, we'd calculate the average).
-        # We will mock the calculation for now.
         logger.info(f"Updating progress for portfolio {portfolio_id}")
-        
-        # Mocking an update
-        portfolio = await self.portfolio_repo.update(portfolio_id, overall_progress=0.5)
-        return portfolio
+        return await self.portfolio_repo.get_by_id(portfolio_id)
 
     async def get_dashboard_summary(self) -> dict[str, Any]:
         """Generate a summary of all active portfolios."""
-        # Simple mock response
+        portfolios = await self.portfolio_repo.list(order_by="-updated_at")
         return {
-            "active_portfolios": 3,
+            "active_portfolios": sum(
+                1 for portfolio in portfolios if str(portfolio.status).lower().endswith("active")
+            ),
             "portfolios": [
-                {"name": "Memory Research", "progress": 83.0},
-                {"name": "Reasoning Research", "progress": 41.0},
-                {"name": "Planning Research", "progress": 12.0},
-            ]
+                {
+                    "id": str(portfolio.id),
+                    "name": portfolio.name,
+                    "status": getattr(portfolio.status, "value", portfolio.status),
+                    "progress": portfolio.overall_progress,
+                }
+                for portfolio in portfolios
+            ],
         }
