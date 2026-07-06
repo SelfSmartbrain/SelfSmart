@@ -3,6 +3,37 @@ import pytest
 import asyncio
 from pathlib import Path
 import tempfile
+from unittest.mock import patch
+
+import pytest_asyncio
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.compiler import compiles
+
+from src.db.models import Base, Objective, ObjectiveCheckpoint, ObjectiveProgress
+
+
+@compiles(JSONB, "sqlite")
+def compile_jsonb_for_sqlite(_type, compiler, **kwargs):
+    """Use SQLite JSON storage for PostgreSQL JSONB in isolated unit tests."""
+    return "JSON"
+
+
+@pytest_asyncio.fixture
+async def mock_db_session():
+    """Provide a fresh transactional database for runtime persistence tests."""
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    tables = [Objective.__table__, ObjectiveProgress.__table__, ObjectiveCheckpoint.__table__]
+    async with engine.begin() as connection:
+        await connection.run_sync(
+            lambda sync_connection: Base.metadata.create_all(sync_connection, tables=tables)
+        )
+
+    factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with factory() as session:
+        yield session
+
+    await engine.dispose()
 
 
 @pytest.fixture(scope="session")
