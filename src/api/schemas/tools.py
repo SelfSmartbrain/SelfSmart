@@ -1,32 +1,45 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, List, Dict, Any
 from uuid import UUID
 
 from pydantic import BaseModel
 
+from src.db.enums import Priority
+
+
 class CapabilityGapBase(BaseModel):
-    goal: str
-    identified_gap: str
-    status: str
+    description: str
+    context: str | None = None
+    priority: Priority = Priority.NORMAL
+    impact: int = 1
+    difficulty: int = 1
+    estimated_value: float = 0.0
+    status: str = "detected"
+
 
 class CapabilityGapCreate(CapabilityGapBase):
     pass
 
+
 class CapabilityGapResponse(CapabilityGapBase):
     id: UUID
     created_at: datetime
-    updated_at: datetime
+    resolved_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
+
 class ToolBase(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str
+    author: str = "system"
+    is_active: bool = True
+
 
 class ToolCreate(ToolBase):
     pass
+
 
 class ToolResponse(ToolBase):
     id: UUID
@@ -35,14 +48,18 @@ class ToolResponse(ToolBase):
 
     model_config = {"from_attributes": True}
 
+
 class ToolVersionBase(BaseModel):
     tool_id: UUID
-    version_number: str
-    code: str
-    status: str
+    version_string: str
+    source_code: str
+    dependencies: list[str] | None = None
+    status: str = "testing"
+
 
 class ToolVersionCreate(ToolVersionBase):
     pass
+
 
 class ToolVersionResponse(ToolVersionBase):
     id: UUID
@@ -50,31 +67,20 @@ class ToolVersionResponse(ToolVersionBase):
 
     model_config = {"from_attributes": True}
 
-class ToolExecutionBase(BaseModel):
-    tool_version_id: UUID
-    input_data: Optional[Dict[str, Any]] = None
-    output_data: Optional[Dict[str, Any]] = None
-    success: bool
-    error_message: Optional[str] = None
-    execution_time_ms: Optional[int] = None
-
-class ToolExecutionCreate(ToolExecutionBase):
-    pass
-
-class ToolExecutionResponse(ToolExecutionBase):
-    id: UUID
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
 
 class ToolBenchmarkBase(BaseModel):
     tool_version_id: UUID
-    benchmark_name: str
-    score: float
-    details: Optional[Dict[str, Any]] = None
+    latency_ms: float
+    memory_mb: float
+    cpu_percent: float
+    success_rate: float
+    error_rate: float
+    output_quality: float
+
 
 class ToolBenchmarkCreate(ToolBenchmarkBase):
     pass
+
 
 class ToolBenchmarkResponse(ToolBenchmarkBase):
     id: UUID
