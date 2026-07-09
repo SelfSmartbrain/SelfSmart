@@ -70,7 +70,45 @@ class EvolutionEngine:
             
         await asyncio.gather(*tasks)
 
-    async def _benchmark_worker(self, worker_id: int) -> None:
-        logger.info(f"Benchmark worker {worker_id} starting...")
-        await asyncio.sleep(1) # simulate work
-        logger.info(f"Benchmark worker {worker_id} finished.")
+    async def _benchmark_worker(self, worker_id: int) -> dict[str, Any]:
+        """Benchmark genome candidates using the real evaluator and registry.
+
+        NOTE: GenomeRegistry is DB-backed and requires a session.  When the
+        runtime has no DB session available (e.g. integration tests) the worker
+        logs a warning and returns an empty result rather than crashing.
+        """
+        from src.evolution.candidate_evaluator import CandidateEvaluator
+        from src.evolution.genome_registry import GenomeRegistry
+
+        try:
+            from src.db.session import AsyncSessionLocal
+        except ImportError:
+            logger.warning(f"Benchmark worker {worker_id}: DB session unavailable, skipping")
+            return {"worker_id": worker_id, "evaluated": []}
+
+        results: list[dict[str, Any]] = []
+        try:
+            async with AsyncSessionLocal() as session:
+                registry = GenomeRegistry(session=session)
+                evaluator = CandidateEvaluator()
+
+                candidates = await registry.list_active_genomes(limit=5)
+                for candidate in candidates:
+                    # Build a metrics dict from available genome data
+                    genome_data = candidate.genome_data or {}
+                    metrics = {
+                        "throughput": genome_data.get("throughput", 0.5),
+                        "accuracy": genome_data.get("accuracy", 0.5),
+                        "error_rate": genome_data.get("error_rate", 0.1),
+                    }
+                    evaluation = await evaluator.evaluate_candidate(candidate.id, metrics)
+                    await registry.update_fitness(candidate.id, evaluation.fitness_score)
+                    results.append(
+                        {"id": str(candidate.id), "fitness": evaluation.fitness_score}
+                    )
+
+            logger.info(f"Benchmark worker {worker_id} evaluated {len(results)} candidates")
+        except Exception as exc:
+            logger.error(f"Benchmark worker {worker_id} failed: {exc}")
+
+        return {"worker_id": worker_id, "evaluated": results}
