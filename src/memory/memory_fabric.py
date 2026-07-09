@@ -102,6 +102,19 @@ class MemoryFabric:
         # Simple in-memory cache for frequently accessed memories
         self._cache: Dict[str, MemoryEntry] = {}
         self._cache_ttl = 300  # 5 minutes
+
+        # Memory consolidation engine
+        from src.memory.memory_consolidation import MemoryConsolidation
+        self._consolidation: Optional[MemoryConsolidation] = None
+
+    def attach_consolidation(
+        self,
+        db_session,
+        memory_repo,
+        embedding_service,
+    ) -> None:
+        """Wire in a real consolidation engine after initialization."""
+        self._consolidation = MemoryConsolidation(db_session, memory_repo, embedding_service)
     
     async def initialize(self) -> None:
         """Initialize memory fabric and connect to backends"""
@@ -612,22 +625,20 @@ class MemoryFabric:
         source_type: MemoryType,
         target_type: MemoryType,
         importance_threshold: float = 0.7,
+        user_id: Optional[str] = None,
     ) -> int:
         """
         Consolidate memories from one type to another.
-        
-        Args:
-            source_type: Source memory type
-            target_type: Target memory type
-            importance_threshold: Minimum importance to consolidate
-            
-        Returns:
-            Number of memories consolidated
+        Delegates to MemoryConsolidation if available.
         """
-        # Placeholder for memory consolidation
-        # In full implementation, would move important memories
-        # from working to long-term storage
-        return 0
+        if self._consolidation is None:
+            logger.warning("No consolidation engine attached; skipping consolidation")
+            return 0
+
+        import uuid
+        uid = uuid.UUID(user_id) if user_id else uuid.UUID(int=0)
+        stats = await self._consolidation.run(uid)
+        return stats.get("consolidated", 0) + stats.get("abstracted", 0)
     
     def get_metrics(self) -> Dict[str, Any]:
         """Get memory fabric metrics"""
