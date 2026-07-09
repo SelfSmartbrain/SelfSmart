@@ -2,7 +2,7 @@
 Goal management endpoints.
 
 Provides CRUD operations for goals and triggers goal execution
-through the orchestrator agent pipeline.
+through the runtime execution loop.
 """
 
 from __future__ import annotations
@@ -13,8 +13,7 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 
 from src.api.dependencies import CurrentUser, DB_SessionRepo, DB_TaskRepo
-from src.api.schemas.goals import GoalCreate, GoalExecute, GoalResponse, GoalSummary, GoalListResponse
-from src.agents.orchestrator import OrchestratorAgent
+from src.api.schemas.goals import GoalCreate, GoalExecute, GoalListResponse, GoalResponse, GoalSummary
 from src.config.logging import get_logger
 
 logger = get_logger(__name__)
@@ -166,18 +165,33 @@ async def execute_goal(
     await session_repo.update_status(goal_id, SessionStatus.ACTIVE)
 
     async def _run_goal() -> None:
-        """Background task to execute the goal."""
+        """Background task: push the goal into the runtime ObjectiveManager."""
         try:
-            orchestrator = OrchestratorAgent()
-            await orchestrator.execute_goal(
-                goal=session.goal,
-                user_id=str(user.id),
-                session_id=str(goal_id),
-                max_iterations=body.override_max_iterations or 20,
+            from src.runtime.runtime_singleton import get_runtime
+            runtime = get_runtime()
+            priority = float(
+                (body.context or {}).get("priority", 0.5)
+                if hasattr(body, "context")
+                else 0.5
             )
-            await session_repo.update_status(goal_id, SessionStatus.COMPLETED)
-        except Exception as e:
-            logger.error("Goal execution failed", goal_id=str(goal_id), error=str(e))
+            obj = runtime.objective_manager.set_objective(
+                session.goal,
+                priority=priority,
+                metadata={"session_id": str(goal_id), "user_id": str(user.id)},
+            )
+            logger.info("Objective pushed to runtime", objective_id=obj.objective_id)
+        except RuntimeError as exc:
+            # Runtime not yet initialized (very early startup race)
+            logger.error(
+                "Runtime not available for goal execution",
+                goal_id=str(goal_id),
+                error=str(exc),
+            )
+            from src.db.enums import SessionStatus
+            await session_repo.update_status(goal_id, SessionStatus.FAILED)
+        except Exception as exc:
+            logger.error("Goal execution failed", goal_id=str(goal_id), error=str(exc))
+            from src.db.enums import SessionStatus
             await session_repo.update_status(goal_id, SessionStatus.FAILED)
 
     background_tasks.add_task(_run_goal)
