@@ -1,6 +1,7 @@
 """Sub-Orchestrator for Swarm Orchestration (Phase 8).
 
-Worker agent that executes sub-tasks assigned by the Director.
+Worker agent that executes sub-tasks assigned by the Director,
+routing every task through TaskRuntime for safety validation.
 """
 
 from __future__ import annotations
@@ -42,7 +43,12 @@ class SubOrchestrator:
         self._task_queue: asyncio.Queue = asyncio.Queue()
         self._running = False
         self._worker_task: Optional[asyncio.Task] = None
-        
+
+        # Add TaskRuntime for safety and execution
+        from src.runtime.task_runtime import TaskRuntime
+        from src.safety.action_validator import ActionValidator
+        self.task_runtime = TaskRuntime(action_validator=ActionValidator())
+
         logger.info(f"SubOrchestrator {id} initialized")
     
     async def initialize(self) -> None:
@@ -105,38 +111,34 @@ class SubOrchestrator:
         logger.info(f"SubOrchestrator {self.id} worker loop ended")
     
     async def _execute_task(self, assignment: Any) -> None:
-        """Execute a single task."""
+        """Execute a single task through the safety-validated TaskRuntime."""
         logger.info(f"SubOrchestrator {self.id} executing task: {assignment.task_description}")
-        
         self.state.status = "executing"
-        
+        self.state.progress = 0.0
+
         try:
-            # Simulate task execution with progress updates
-            steps = 10
-            for i in range(steps):
-                if not self._running:
-                    break
-                
-                # Simulate work
-                await asyncio.sleep(0.5)
-                
-                # Update progress
-                self.state.progress = (i + 1) / steps * 100
-                logger.debug(f"SubOrchestrator {self.id} progress: {self.state.progress}%")
-            
-            # Task completed successfully
-            if self._running:
-                self.state.status = "completed"
-                self.state.progress = 100.0
-                self.state.completed_at = datetime.now(timezone.utc)
-                logger.info(f"SubOrchestrator {self.id} task completed successfully")
-            
-        except Exception as e:
-            logger.error(f"SubOrchestrator {self.id} task failed: {e}")
+            # Route through TaskRuntime for ActionValidator safety check
+            task_dict = {
+                "type": "execute_task",
+                "task_id": str(self.id),
+                "description": assignment.task_description,
+                "metadata": getattr(assignment, "metadata", {}),
+            }
+            validated_result = await self.task_runtime.execute_task(task_dict)
+
+            self.state.status = "completed"
+            self.state.progress = 100.0
+            self.state.completed_at = datetime.now(timezone.utc)
+            logger.info(
+                f"SubOrchestrator {self.id} task completed",
+                extra={"result_status": validated_result.get("status")},
+            )
+
+        except Exception as exc:
+            logger.error(f"SubOrchestrator {self.id} task failed: {exc}")
             self.state.status = "failed"
-            self.state.error_message = str(e)
+            self.state.error_message = str(exc)
         finally:
-            # Mark task as done in queue
             self._task_queue.task_done()
     
     @property
