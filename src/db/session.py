@@ -74,3 +74,20 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+def AsyncSessionLocal() -> AsyncSession:
+    """Return a new ``AsyncSession`` context manager.
+
+    Designed for use outside of FastAPI's DI (e.g. background tasks,
+    the DB-watcher in lifespan, the evolution benchmark workers).
+
+    Usage::
+
+        async with AsyncSessionLocal() as session:
+            ...
+
+    Returns:
+        An ``AsyncSession`` context-manager object.
+    """
+    return get_session_factory()()
