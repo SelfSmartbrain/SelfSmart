@@ -78,6 +78,7 @@ class CognitiveKernel:
         self.cognitive_bus = CognitiveBus(kernel=self)
         self.context_manager = ContextManager(kernel=self)
         self.memory_fabric = memory_fabric
+        self.reasoning_hub = None
         
         # Active cognitive operations
         self._active_tasks: Set[str] = set()
@@ -89,17 +90,22 @@ class CognitiveKernel:
     async def initialize(self) -> None:
         """Initialize all cognitive subsystems"""
         logger.info("Initializing CognitiveKernel subsystems")
-        
+
         await self.cognitive_bus.initialize()
         await self.attention_manager.initialize()
         await self.context_manager.initialize()
-        
+
         if self.memory_fabric:
             await self.memory_fabric.initialize()
-        
-        # Start the scheduler
-        asyncio.create_task(self.scheduler.run())
-        
+
+        # Initialize ReasoningHub — await it fully so it is ready before first process() call
+        from src.reasoning.reasoning_hub import ReasoningHub
+        self.reasoning_hub = ReasoningHub()
+        await self.reasoning_hub.initialize()
+
+        # Start the cognitive scheduler as a background task
+        asyncio.create_task(self.scheduler.run(), name="cognitive-scheduler")
+
         self.state = CognitiveState.ACTIVE
         logger.info("CognitiveKernel initialization complete")
     
@@ -241,17 +247,42 @@ class CognitiveKernel:
         context: Dict[str, Any],
         attention_allocation: Dict[str, Any],
     ) -> Dict[str, Any]:
+        """Delegate decision-making to the ReasoningHub.
+
+        Falls back to a safe default if the hub is not available.
         """
-        Make a decision based on input, context, and attention allocation.
-        This is a simplified version - will be enhanced by the reasoning engine.
-        """
-        # Placeholder decision logic
-        # In the full implementation, this would delegate to the reasoning hub
-        return {
-            "action": "process",
-            "confidence": 0.8,
-            "reasoning": "Default decision - will be enhanced by reasoning engine",
-        }
+        if self.reasoning_hub is None:
+            # Hub not yet initialized — return a safe, logged default
+            logger.warning("ReasoningHub not initialized; using fallback decision")
+            return {"action": "process", "confidence": 0.5, "reasoning": "hub-not-ready"}
+
+        from src.reasoning.reasoning_hub import ReasoningRequest
+
+        query = (
+            input_data.get("query")
+            or input_data.get("objective", {}).get("description", "")
+            or str(input_data)
+        )
+        # Use attention-based timeout: high attention → slower/deeper System 2
+        timeout = 30.0 if attention_allocation.get("reasoning_depth", 0.5) > 0.6 else 5.0
+
+        request = ReasoningRequest(
+            query=query,
+            context={**context, "input": input_data, "attention": attention_allocation},
+            timeout=timeout,
+        )
+        try:
+            result = await self.reasoning_hub.reason(request)
+            return {
+                "action": "process",
+                "confidence": result.confidence,
+                "reasoning": result.conclusion,
+                "mode": result.mode_used.value,
+                "steps": result.reasoning_steps,
+            }
+        except Exception as exc:
+            logger.error(f"ReasoningHub failed: {exc}")
+            return {"action": "process", "confidence": 0.5, "reasoning": str(exc)}
     
     async def _consolidate_memory(
         self,
