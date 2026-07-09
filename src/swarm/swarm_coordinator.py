@@ -89,16 +89,28 @@ class SwarmCoordinator:
     async def submit_goal(self, goal: SwarmGoal) -> UUID:
         """Submit a goal to the swarm (assigns to least loaded director)."""
         logger.info(f"Submitting goal to swarm: {goal.description}")
-        
+
+        # Also register with the global runtime's ObjectiveManager
+        try:
+            from src.runtime.runtime_singleton import get_runtime
+            runtime = get_runtime()
+            runtime.objective_manager.set_objective(
+                goal.description,
+                priority=goal.priority,
+                metadata={"swarm_goal": True, "goal_id": str(goal.goal_id)},
+            )
+        except RuntimeError:
+            pass  # Runtime not initialized yet (startup)
+
         # Find director with least load
         director = await self._get_least_loaded_director()
-        
+
         if not director:
             raise RuntimeError("No available directors")
-        
+
         goal_id = await director.submit_goal(goal)
         logger.info(f"Goal {goal_id} assigned to director")
-        
+
         return goal_id
     
     async def _get_least_loaded_director(self) -> Optional[DirectorAgent]:
