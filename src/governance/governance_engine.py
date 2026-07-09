@@ -76,40 +76,52 @@ class GovernanceEngine:
     ) -> GovernanceResult:
         """Evaluate a decision against all governance standards."""
         decision_id = decision_data.get("id", "")
-        
+
         logger.info(f"Evaluating governance for decision: {decision_id}")
-        
+
         result = GovernanceResult(decision_id=decision_id)
-        
+
         # Check policy compliance
         policy_result = self.policy_manager.check_compliance(decision_data)
         result.policy_compliance = policy_result
-        
+
         # Check constraint compliance
         constraint_result = self.constraint_system.check_constraints(decision_data)
         result.constraint_compliance = constraint_result
-        
+
         # Run audit if required
         if require_audit:
             audit = self.decision_auditor.run_audit(decision_id, decision_data, trace)
             result.audit_result = audit.to_dict()
-        
+
         # Calculate overall compliance score
         result.compliance_score = self._calculate_compliance_score(result)
-        
+
         # Determine approval
         result.approved = self._determine_approval(result)
-        
+
         # Generate findings and recommendations
         result.findings = self._generate_findings(result)
         result.recommendations = self._generate_recommendations(result)
-        
+
         # Store result
         self.governance_history[decision_id] = result
-        
+
         logger.info(f"Governance evaluation complete: {decision_id} - Approved: {result.approved}")
-        
+
         return result
+
+    async def evaluate_decision_async(
+        self,
+        decision_data: Dict[str, Any],
+        trace: Optional[Any] = None,
+        require_audit: bool = True,
+    ) -> GovernanceResult:
+        """Non-blocking async version of evaluate_decision."""
+        import asyncio
+        return await asyncio.to_thread(
+            self.evaluate_decision, decision_data, trace, require_audit
+        )
     
     def _calculate_compliance_score(self, result: GovernanceResult) -> float:
         """Calculate overall compliance score."""
