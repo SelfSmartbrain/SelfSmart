@@ -21,21 +21,6 @@ class ProgressRecord:
     result: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
     db_id: Any = None
-    _await_hook: Callable[[], Awaitable[None]] | None = field(
-        default=None,
-        repr=False,
-        compare=False,
-    )
-
-    def __await__(self):
-        async def resolve() -> ProgressRecord:
-            if self._await_hook is not None:
-                hook = self._await_hook
-                self._await_hook = None
-                await hook()
-            return self
-
-        return resolve().__await__()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -93,13 +78,14 @@ class ProgressTracker:
         await session.commit()
         return record
 
-    def track_progress(
+    async def track_progress(
         self,
         objective: Any,
         status: str = "in_progress",
         detail: str = "",
         result: dict[str, Any] | None = None,
     ) -> ProgressRecord:
+        """Record progress and persist immediately if session is available."""
         objective_id = getattr(objective, "objective_id", str(objective))
         record = ProgressRecord(
             objective_id=objective_id,
@@ -110,11 +96,11 @@ class ProgressTracker:
         self.records.append(record)
 
         if self.session:
-
-            async def persist() -> None:
+            try:
                 await self.save_record(record, self.session)
-
-            record._await_hook = persist
+            except Exception as e:
+                from src.config.logging import get_logger
+                get_logger(__name__).warning(f"Failed to persist progress: {e}")
 
         return record
 
