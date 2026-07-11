@@ -18,7 +18,7 @@ class SmartSelfClient:
         payload = {"message": message}
         if conversation_id:
             payload["conversation_id"] = conversation_id
-            
+
         response = self.session.post(f"{self.base_url}/api/chat", json=payload)
         response.raise_for_status()
         return response.json()
