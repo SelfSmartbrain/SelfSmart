@@ -1,0 +1,5327 @@
+{
+  "files_analyzed": 597,
+  "syntax_errors": [
+    {
+      "file": "src/memory/memory_consolidation.py",
+      "line": 90,
+      "error": "invalid syntax (<unknown>, line 90)"
+    },
+    {
+      "file": "src/agents/orchestrator.py",
+      "line": 2,
+      "error": "invalid character '\u2014' (U+2014) (<unknown>, line 2)"
+    }
+  ],
+  "todos": [
+    {
+      "file": "src/coding/repository_benchmark.py",
+      "line": 316,
+      "content": "# Todo apps"
+    }
+  ],
+  "not_implemented": [
+    {
+      "file": "analyzer.py",
+      "line": 66,
+      "content": "if 'NotImplementedError' in line or 'raise NotImplemented' in line:"
+    },
+    {
+      "file": "modelx_voice/main.py",
+      "line": 99,
+      "content": "except NotImplementedError:"
+    },
+    {
+      "file": "src/tools/mcp_client.py",
+      "line": 91,
+      "content": "raise NotImplementedError(f\"Transport {config.transport} not yet implemented\")"
+    },
+    {
+      "file": "src/api/routes/tools.py",
+      "line": 28,
+      "content": "raise NotImplementedError(\"get_db not implemented\")"
+    }
+  ],
+  "hardcoded_values": [
+    {
+      "file": "run.py",
+      "line": 107,
+      "type": "url",
+      "content": "https://github.com/rhasspy/piper/releases/latest/download/piper_{arch}.tar.gz"
+    },
+    {
+      "file": "run.py",
+      "line": 121,
+      "type": "url",
+      "content": "https://github.com/ggerganov/whisper.cpp.git"
+    },
+    {
+      "file": "run.py",
+      "line": 131,
+      "type": "url",
+      "content": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+    },
+    {
+      "file": "run.py",
+      "line": 137,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/{voice.replace("
+    },
+    {
+      "file": "run.py",
+      "line": 141,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/{voice.replace("
+    },
+    {
+      "file": "get-pip.py",
+      "line": 21,
+      "type": "url",
+      "content": "https://github.com/pypa/get-pip."
+    },
+    {
+      "file": "get-pip.py",
+      "line": 31,
+      "type": "url",
+      "content": "https://bootstrap.pypa.io/pip/{}.{}/get-pip.py"
+    },
+    {
+      "file": "src/tools/wikipedia_search.py",
+      "line": 21,
+      "type": "url",
+      "content": "https://github.com/agent-platform)"
+    },
+    {
+      "file": "src/tools/semantic_retrieval.py",
+      "line": 73,
+      "type": "url",
+      "content": "https://api.openai.com/v1/embeddings"
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 73,
+      "type": "ip",
+      "content": "ipaddress.ip_network(\"10.0.0.0/8\"),"
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 74,
+      "type": "ip",
+      "content": "ipaddress.ip_network(\"172.16.0.0/12\"),"
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 75,
+      "type": "ip",
+      "content": "ipaddress.ip_network(\"192.168.0.0/16\"),"
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 76,
+      "type": "ip",
+      "content": "ipaddress.ip_network(\"127.0.0.0/8\"),"
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 77,
+      "type": "ip",
+      "content": "ipaddress.ip_network(\"169.254.0.0/16\"),"
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 87,
+      "type": "ip",
+      "content": "\"169.254.169.254\","
+    },
+    {
+      "file": "src/tools/api_caller.py",
+      "line": 139,
+      "type": "url",
+      "content": "https://api.example.com/data"
+    },
+    {
+      "file": "src/tools/web_search.py",
+      "line": 22,
+      "type": "url",
+      "content": "https://api.tavily.com/search"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 81,
+      "type": "url",
+      "content": "https://aiapiv2.pekpik.com/v1"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 94,
+      "type": "url",
+      "content": "https://aiapiv2.pekpik.com/v1"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 107,
+      "type": "url",
+      "content": "https://aiapiv2.pekpik.com/v1"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 120,
+      "type": "url",
+      "content": "https://aiapiv2.pekpik.com/v1"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 133,
+      "type": "url",
+      "content": "https://aiapiv2.pekpik.com/v1"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 360,
+      "type": "url",
+      "content": "https://openrouter.ai/api/v1"
+    },
+    {
+      "file": "src/config/settings.py",
+      "line": 361,
+      "type": "url",
+      "content": "https://openrouter.ai/api"
+    },
+    {
+      "file": "src/voice_assistant/download_models.py",
+      "line": 15,
+      "type": "url",
+      "content": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+    },
+    {
+      "file": "src/voice_assistant/download_models.py",
+      "line": 20,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx"
+    },
+    {
+      "file": "src/voice_assistant/download_models.py",
+      "line": 25,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json"
+    },
+    {
+      "file": "src/voice_assistant/tts.py",
+      "line": 40,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main"
+    },
+    {
+      "file": "src/voice_assistant/main.py",
+      "line": 56,
+      "type": "url",
+      "content": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+    },
+    {
+      "file": "src/voice_assistant/main.py",
+      "line": 64,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx"
+    },
+    {
+      "file": "src/voice_assistant/main.py",
+      "line": 65,
+      "type": "url",
+      "content": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json"
+    },
+    {
+      "file": "src/voice_assistant/stt.py",
+      "line": 38,
+      "type": "url",
+      "content": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+    },
+    {
+      "file": "modelx_voice/brain/llm_client.py",
+      "line": 182,
+      "type": "url",
+      "content": "https://openrouter.ai/api/v1"
+    },
+    {
+      "file": "modelx_voice/brain/llm_client.py",
+      "line": 198,
+      "type": "url",
+      "content": "https://github.com/modelx/modelx-voice"
+    },
+    {
+      "file": "modelx_voice/brain/llm_client.py",
+      "line": 227,
+      "type": "url",
+      "content": "https://github.com/modelx/modelx-voice"
+    },
+    {
+      "file": "tests/unit/test_brain.py",
+      "line": 51,
+      "type": "secret",
+      "content": "provider = get_provider(\"anthropic\", api_key=\"test-key\")"
+    },
+    {
+      "file": "tests/unit/test_brain.py",
+      "line": 56,
+      "type": "secret",
+      "content": "provider = get_provider(\"openai\", api_key=\"test-key\")"
+    },
+    {
+      "file": "tests/unit/test_brain.py",
+      "line": 74,
+      "type": "secret",
+      "content": "provider = AnthropicProvider(api_key=\"test-key\")"
+    },
+    {
+      "file": "tests/unit/test_brain.py",
+      "line": 126,
+      "type": "secret",
+      "content": "provider = OpenAIProvider(api_key=\"test-key\")"
+    },
+    {
+      "file": "tests/unit/test_provider_config.py",
+      "line": 17,
+      "type": "url",
+      "content": "https://openrouter.ai/api/v1/"
+    },
+    {
+      "file": "tests/unit/test_provider_config.py",
+      "line": 21,
+      "type": "url",
+      "content": "https://openrouter.ai/api"
+    },
+    {
+      "file": "tests/unit/test_provider_config.py",
+      "line": 30,
+      "type": "url",
+      "content": "https://openrouter.ai/api/v1"
+    },
+    {
+      "file": "tests/unit/test_provider_config.py",
+      "line": 42,
+      "type": "secret",
+      "content": "api_key=\"sk-or-v1-test\","
+    },
+    {
+      "file": "tests/unit/test_provider_config.py",
+      "line": 45,
+      "type": "url",
+      "content": "https://openrouter.ai/api"
+    },
+    {
+      "file": "tests/unit/test_config.py",
+      "line": 77,
+      "type": "secret",
+      "content": "self.manager.update_api(provider=\"openai\", api_key=\"new-key\", model=\"gpt-4o\")"
+    },
+    {
+      "file": "tests/unit/test_config.py",
+      "line": 106,
+      "type": "secret",
+      "content": "self.manager.update_api(api_key=\"test-key\")"
+    },
+    {
+      "file": "tests/unit/test_config.py",
+      "line": 111,
+      "type": "secret",
+      "content": "self.manager.update_api(api_key=\"test-key\")"
+    },
+    {
+      "file": "tests/unit/test_schemas.py",
+      "line": 234,
+      "type": "url",
+      "content": "https://example.com"
+    },
+    {
+      "file": "tests/unit/test_schemas.py",
+      "line": 235,
+      "type": "url",
+      "content": "https://example.com"
+    },
+    {
+      "file": "tests/unit/test_schemas.py",
+      "line": 239,
+      "type": "url",
+      "content": "https://example.com"
+    },
+    {
+      "file": "tests/unit/test_schemas.py",
+      "line": 241,
+      "type": "url",
+      "content": "https://example.com"
+    },
+    {
+      "file": "tests/e2e/autonomous_tool_test.py",
+      "line": 44,
+      "type": "url",
+      "content": "https://example.com/test.jpg"
+    }
+  ],
+  "imports": {
+    "run.py": [
+      "argparse",
+      "asyncio",
+      "os",
+      "platform",
+      "shutil",
+      "subprocess",
+      "sys",
+      "urllib.request",
+      "pathlib"
+    ],
+    "get-pip.py": [
+      "sys",
+      "os.path",
+      "pkgutil",
+      "shutil",
+      "tempfile",
+      "argparse",
+      "importlib",
+      "base64",
+      "pip._internal.commands.install",
+      "pip._internal.cli.main"
+    ],
+    "analyzer.py": [
+      "os",
+      "ast",
+      "re",
+      "pathlib",
+      "collections",
+      "json"
+    ],
+    "commit_all.py": [
+      "subprocess"
+    ],
+    "test_orchestrator_protection.py": [
+      "sys",
+      "src.safety.self_patch_safety_gate",
+      "src.coding.code_editor",
+      "traceback"
+    ],
+    "tests/conftest.py": [
+      "pytest",
+      "asyncio",
+      "pathlib",
+      "tempfile"
+    ],
+    "tests/test_phase_14_17_integration.py": [
+      "pytest",
+      "asyncio",
+      "datetime",
+      "pathlib",
+      "unittest.mock",
+      "src.runtime.execution_loop",
+      "src.runtime.agent_runtime",
+      "src.autonomy.objective_manager",
+      "src.autonomy.checkpoint_manager",
+      "src.autonomy.autonomy_recovery",
+      "src.governance.assumption_detector",
+      "src.safety.self_patch_safety_gate",
+      "src.autonomy.autonomy_recovery",
+      "src.autonomy.autonomy_recovery"
+    ],
+    "tests/test_generated.py": [
+      "pytest",
+      "os",
+      "pathlib",
+      "syntax_error_feature"
+    ],
+    "tests/test_decision_intelligence.py": [
+      "pytest",
+      "src.decision.decision_engine",
+      "src.decision.option_generator",
+      "src.decision.decision_evaluator",
+      "src.decision.utility_functions",
+      "src.decision.reward_models",
+      "src.decision.objective_engine",
+      "src.decision.strategy_engine",
+      "src.decision.strategic_planner",
+      "src.decision.goal_optimizer",
+      "src.decision.scenario_generator",
+      "src.decision.future_simulator",
+      "src.decision.outcome_predictor",
+      "src.decision.risk_engine",
+      "src.decision.uncertainty_model",
+      "src.decision.failure_predictor",
+      "src.decision.decision_memory",
+      "src.decision.strategy_memory",
+      "src.decision.outcome_memory",
+      "src.decision.pareto_optimizer",
+      "src.decision.tradeoff_engine",
+      "src.decision.executive_agent",
+      "src.decision.executive_council",
+      "src.decision.strategy_engine",
+      "src.decision.pareto_optimizer"
+    ],
+    "modelx_voice/pipeline.py": [
+      "asyncio",
+      "numpy",
+      "typing",
+      "dataclasses",
+      "enum",
+      "logging",
+      "audio",
+      "stt",
+      "tts",
+      "brain",
+      "config",
+      "ui",
+      "ui.commands",
+      "pathlib"
+    ],
+    "modelx_voice/main.py": [
+      "asyncio",
+      "sys",
+      "signal",
+      "pathlib",
+      "typing",
+      "config",
+      "brain",
+      "pipeline",
+      "ui",
+      "sounddevice",
+      "brain",
+      "argparse",
+      "tts",
+      "brain"
+    ],
+    "alembic/env.py": [
+      "__future__",
+      "asyncio",
+      "logging.config",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.engine",
+      "sqlalchemy.ext.asyncio",
+      "src.config.settings",
+      "src.db.models",
+      "sqlalchemy"
+    ],
+    "src/knowledge_fitness/__init__.py": [
+      "knowledge_fitness",
+      "knowledge_benchmark"
+    ],
+    "src/knowledge_fitness/knowledge_benchmark.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "time",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/knowledge_fitness/knowledge_fitness.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/cognitive_communication/agent_protocol.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "uuid"
+    ],
+    "src/cognitive_communication/__init__.py": [
+      "cognitive_events",
+      "agent_protocol",
+      "message_broker"
+    ],
+    "src/cognitive_communication/message_broker.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "heapq"
+    ],
+    "src/cognitive_communication/cognitive_events.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "json"
+    ],
+    "src/reporting/validation_report_generator.py": [
+      "__future__",
+      "json",
+      "csv",
+      "io",
+      "typing",
+      "datetime",
+      "uuid",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/reporting/project_report_generator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/swarm/sub_orchestrator.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/swarm/load_balancer.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "collections",
+      "time",
+      "pydantic",
+      "src.config.logging",
+      "random"
+    ],
+    "src/swarm/__init__.py": [
+      "__future__",
+      "src.swarm.director",
+      "src.swarm.sub_orchestrator",
+      "src.swarm.swarm_coordinator",
+      "src.swarm.task_distributor",
+      "src.swarm.load_balancer"
+    ],
+    "src/swarm/task_distributor.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/swarm/swarm_coordinator.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging",
+      "src.swarm.director"
+    ],
+    "src/swarm/director.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging",
+      "src.swarm.sub_orchestrator",
+      "src.swarm.sub_orchestrator"
+    ],
+    "src/knowledge_graph/client.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "neo4j",
+      "src.config.settings"
+    ],
+    "src/knowledge_graph/__init__.py": [
+      "client",
+      "manager",
+      "reasoning"
+    ],
+    "src/knowledge_graph/reasoning.py": [
+      "__future__",
+      "logging",
+      "client"
+    ],
+    "src/knowledge_graph/manager.py": [
+      "__future__",
+      "logging",
+      "re",
+      "typing",
+      "client"
+    ],
+    "src/tools/python_executor.py": [
+      "__future__",
+      "ast",
+      "re",
+      "subprocess",
+      "sys",
+      "textwrap",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base",
+      "os"
+    ],
+    "src/tools/wikipedia_search.py": [
+      "__future__",
+      "typing",
+      "wikipediaapi",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base"
+    ],
+    "src/tools/semantic_retrieval.py": [
+      "__future__",
+      "typing",
+      "httpx",
+      "pydantic",
+      "qdrant_client",
+      "qdrant_client.http.models",
+      "src.config.logging",
+      "src.config.settings",
+      "src.tools.base"
+    ],
+    "src/tools/filesystem_tool.py": [
+      "os",
+      "shutil",
+      "pathlib"
+    ],
+    "src/tools/__init__.py": [
+      "src.tools.base",
+      "src.tools.api_caller",
+      "src.tools.arxiv_search",
+      "src.tools.database_query",
+      "src.tools.file_operations",
+      "src.tools.pdf_ingestion",
+      "src.tools.python_executor",
+      "src.tools.report_generator",
+      "src.tools.semantic_retrieval",
+      "src.tools.web_search",
+      "src.tools.wikipedia_search"
+    ],
+    "src/tools/api_caller.py": [
+      "__future__",
+      "asyncio",
+      "ipaddress",
+      "time",
+      "typing",
+      "urllib.parse",
+      "httpx",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base",
+      "socket"
+    ],
+    "src/tools/report_generator.py": [
+      "__future__",
+      "json",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base"
+    ],
+    "src/tools/shell_tool.py": [
+      "__future__",
+      "os",
+      "subprocess",
+      "signal",
+      "asyncio",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base"
+    ],
+    "src/tools/arxiv_search.py": [
+      "__future__",
+      "typing",
+      "arxiv",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base"
+    ],
+    "src/tools/mcp_client.py": [
+      "asyncio",
+      "json",
+      "logging",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "enum",
+      "subprocess",
+      "shlex"
+    ],
+    "src/tools/mcp_discovery.py": [
+      "typing",
+      "dataclasses",
+      "src.tools.mcp_client",
+      "src.tools.base",
+      "src.tools.mcp_client",
+      "src.tools.base"
+    ],
+    "src/tools/pdf_ingestion.py": [
+      "__future__",
+      "os",
+      "typing",
+      "pydantic",
+      "pypdf",
+      "pypdf.errors",
+      "src.config.logging",
+      "src.tools.base"
+    ],
+    "src/tools/web_search.py": [
+      "__future__",
+      "typing",
+      "httpx",
+      "pydantic",
+      "src.config.logging",
+      "src.config.settings",
+      "src.tools.base"
+    ],
+    "src/tools/database_query.py": [
+      "__future__",
+      "re",
+      "typing",
+      "asyncpg",
+      "pydantic",
+      "src.config.logging",
+      "src.config.settings",
+      "src.tools.base"
+    ],
+    "src/tools/file_operations.py": [
+      "__future__",
+      "os",
+      "pathlib",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.tools.base"
+    ],
+    "src/tools/base.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "abc",
+      "typing",
+      "dataclasses",
+      "langchain_core.callbacks",
+      "langchain_core.tools",
+      "pydantic",
+      "tenacity",
+      "src.config.logging",
+      "src.config.settings",
+      "json"
+    ],
+    "src/core/service_registry.py": [
+      "__future__",
+      "asyncio",
+      "typing",
+      "src.config.logging",
+      "src.cognition.reflection_agent",
+      "src.cognition.failure_analyzer",
+      "src.cognition.meta_learning_engine",
+      "src.cognition.strategy_synthesizer",
+      "src.cognition.skill_discovery",
+      "src.cognition.self_improvement",
+      "src.cognition.cognitive_metrics",
+      "src.cognition.intelligence_reporter",
+      "src.cognition.learning_velocity",
+      "src.cognition.performance_tracker"
+    ],
+    "src/capabilities/tool_code_generator.py": [
+      "__future__",
+      "json",
+      "typing",
+      "src.config.logging",
+      "src.capabilities.tool_spec_generator"
+    ],
+    "src/capabilities/capability_gap_detector.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy",
+      "src.db.models"
+    ],
+    "src/capabilities/tool_validator.py": [
+      "__future__",
+      "os",
+      "asyncio",
+      "pathlib",
+      "pydantic",
+      "src.config.logging",
+      "src.sandbox.sandbox_manager",
+      "src.sandbox.sandbox_runner",
+      "src.capabilities.static_validator"
+    ],
+    "src/capabilities/tool_evolution_engine.py": [
+      "__future__",
+      "logging",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capabilities/tool_benchmark.py": [
+      "__future__",
+      "time",
+      "asyncio",
+      "pathlib",
+      "pydantic",
+      "src.config.logging",
+      "src.sandbox.sandbox_manager",
+      "src.sandbox.sandbox_runner"
+    ],
+    "src/capabilities/static_validator.py": [
+      "__future__",
+      "ast",
+      "src.config.logging"
+    ],
+    "src/capabilities/tool_spec_generator.py": [
+      "__future__",
+      "json",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/memory/working_memory.py": [
+      "time",
+      "typing"
+    ],
+    "src/memory/memory_fabric.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "json"
+    ],
+    "src/memory/procedural_memory.py": [
+      "datetime",
+      "typing",
+      "sqlalchemy",
+      "sqlalchemy.ext.declarative"
+    ],
+    "src/memory/memory_manager.py": [
+      "logging",
+      "typing",
+      "datetime",
+      "working_memory",
+      "episodic_memory",
+      "memory_router",
+      "semantic_memory",
+      "procedural_memory"
+    ],
+    "src/memory/memory_index.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections",
+      "hashlib"
+    ],
+    "src/memory/__init__.py": [
+      "src.memory.short_term",
+      "src.memory.long_term"
+    ],
+    "src/memory/semantic_memory.py": [
+      "typing",
+      "neo4j",
+      "qdrant_client"
+    ],
+    "src/memory/context_compressor.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "json",
+      "numpy",
+      "sklearn.cluster",
+      "sklearn.metrics.pairwise",
+      "src.memory.memory_fabric"
+    ],
+    "src/memory/short_term.py": [
+      "__future__",
+      "json",
+      "typing",
+      "redis.asyncio",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/memory/episodic_memory.py": [
+      "datetime",
+      "typing",
+      "sqlalchemy",
+      "sqlalchemy.ext.declarative",
+      "sqlalchemy.orm",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy",
+      "sqlalchemy",
+      "sqlalchemy",
+      "sqlalchemy"
+    ],
+    "src/memory/memory_router.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections"
+    ],
+    "src/memory/long_term.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "src.config.logging",
+      "src.db.enums",
+      "src.db.repositories.memory_repo",
+      "src.rag.embeddings",
+      "src.rag.vector_store",
+      "memory_consolidation",
+      "src.db.repositories.memory_repo",
+      "src.rag.embeddings"
+    ],
+    "src/identity/identity_engine.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/identity/__init__.py": [
+      "identity_engine",
+      "self_model",
+      "mission_manager"
+    ],
+    "src/identity/mission_manager.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/identity/self_model.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/scientific_discovery/__init__.py": [
+      "discovery_loop",
+      "experiment_orchestrator"
+    ],
+    "src/scientific_discovery/discovery_loop.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/scientific_discovery/experiment_orchestrator.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/config/logging.py": [
+      "__future__",
+      "logging",
+      "sys",
+      "typing",
+      "structlog"
+    ],
+    "src/config/__init__.py": [
+      "src.config.settings"
+    ],
+    "src/config/settings.py": [
+      "__future__",
+      "functools",
+      "typing",
+      "pydantic",
+      "pydantic_settings"
+    ],
+    "src/cognitive_kernel/context_manager.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "json"
+    ],
+    "src/cognitive_kernel/cognitive_bus.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "json"
+    ],
+    "src/cognitive_kernel/kernel.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "scheduler",
+      "attention_manager",
+      "cognitive_bus",
+      "context_manager",
+      "memory.memory_fabric"
+    ],
+    "src/cognitive_kernel/attention_manager.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "math"
+    ],
+    "src/cognitive_kernel/__init__.py": [
+      "kernel",
+      "scheduler",
+      "attention_manager",
+      "cognitive_bus",
+      "context_manager"
+    ],
+    "src/cognitive_kernel/scheduler.py": [
+      "asyncio",
+      "heapq",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/cognition/delegation_protocol.py": [
+      "asyncio",
+      "logging",
+      "uuid",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections"
+    ],
+    "src/cognition/intelligence_reporter.py": [
+      "__future__",
+      "json",
+      "datetime",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings",
+      "src.cognition.cognitive_metrics",
+      "src.cognition.performance_tracker"
+    ],
+    "src/cognition/swarm.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections",
+      "uuid",
+      "src.cognition.hierarchical_agent_registry",
+      "src.cognition.delegation_protocol",
+      "src.cognition.cognitive_bus"
+    ],
+    "src/cognition/meta_learning_engine.py": [
+      "__future__",
+      "json",
+      "collections",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/self_improvement.py": [
+      "__future__",
+      "json",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/cognitive_bus.py": [
+      "asyncio",
+      "logging",
+      "collections",
+      "dataclasses",
+      "datetime",
+      "typing",
+      "enum",
+      "uuid"
+    ],
+    "src/cognition/hierarchical_agent_registry.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections",
+      "numpy",
+      "hashlib"
+    ],
+    "src/cognition/reflection_agent.py": [
+      "__future__",
+      "json",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings",
+      "src.db.models"
+    ],
+    "src/cognition/learning_velocity.py": [
+      "__future__",
+      "time",
+      "typing",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/skill_discovery.py": [
+      "__future__",
+      "json",
+      "collections",
+      "typing",
+      "uuid6",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/strategy_synthesizer.py": [
+      "__future__",
+      "json",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/__init__.py": [
+      "__future__",
+      "src.cognition.reflection_agent",
+      "src.cognition.failure_analyzer",
+      "src.cognition.meta_learning_engine",
+      "src.cognition.strategy_synthesizer",
+      "src.cognition.skill_discovery",
+      "src.cognition.self_improvement",
+      "src.cognition.performance_tracker",
+      "src.cognition.learning_velocity",
+      "src.cognition.cognitive_metrics",
+      "src.cognition.intelligence_reporter"
+    ],
+    "src/cognition/cognitive_metrics.py": [
+      "__future__",
+      "typing",
+      "src.config.logging",
+      "src.config.settings",
+      "src.cognition.learning_velocity",
+      "src.cognition.performance_tracker"
+    ],
+    "src/cognition/failure_analyzer.py": [
+      "__future__",
+      "json",
+      "collections",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/performance_tracker.py": [
+      "__future__",
+      "time",
+      "collections",
+      "typing",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/cognition/decision_tracker.py": [
+      "__future__",
+      "enum",
+      "dataclasses",
+      "typing",
+      "datetime",
+      "collections",
+      "src.config.logging",
+      "datetime",
+      "uuid"
+    ],
+    "src/learning/forgetting_engine.py": [
+      "typing",
+      "sqlalchemy.orm",
+      "memory.episodic_memory"
+    ],
+    "src/learning/abstraction_engine.py": [
+      "typing",
+      "memory.episodic_memory"
+    ],
+    "src/learning/learning_scheduler.py": [
+      "datetime",
+      "memory.memory_consolidation",
+      "db.repositories.memory_repo",
+      "rag.embeddings"
+    ],
+    "src/learning/experience_encoder.py": [
+      "typing",
+      "transformers",
+      "torch"
+    ],
+    "src/learning/continuous_learning.py": [
+      "datetime",
+      "threading",
+      "experience_encoder",
+      "learning_scheduler"
+    ],
+    "src/learning/consolidation_engine.py": [
+      "typing",
+      "sqlalchemy.orm",
+      "memory.episodic_memory"
+    ],
+    "src/projects/project_monitor.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.projects.long_horizon_project"
+    ],
+    "src/projects/impact_analyzer.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/impact_tracker.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/resource_manager.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/resource_optimizer.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/milestone_generator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/recovery_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/execution_orchestrator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/long_horizon_project.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/task_executor.py": [
+      "__future__",
+      "uuid",
+      "asyncio",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/dependency_planner.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.projects.task_decomposer"
+    ],
+    "src/projects/budget_allocator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/project_manager.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.projects.long_horizon_project"
+    ],
+    "src/projects/task_decomposer.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/workflow_executor.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/failure_detector.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/checkpoint_manager.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/outcome_validator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/incident_manager.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/projects/project_scheduler.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "apscheduler.schedulers.asyncio",
+      "pydantic",
+      "src.config.logging",
+      "src.projects.task_decomposer"
+    ],
+    "src/mental_models/mental_models.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/mental_models/model_selection.py": [
+      "__future__",
+      "typing",
+      "enum",
+      "pydantic",
+      "src.config.logging",
+      "mental_models"
+    ],
+    "src/mental_models/__init__.py": [
+      "mental_models",
+      "model_registry",
+      "model_selection"
+    ],
+    "src/mental_models/model_registry.py": [
+      "__future__",
+      "json",
+      "typing",
+      "datetime",
+      "pathlib",
+      "pydantic",
+      "src.config.logging",
+      "mental_models"
+    ],
+    "src/capability/capability_comparator.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capability/novelty_analyzer.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging",
+      "src.capability.discovery_tracker"
+    ],
+    "src/capability/capability_reporter.py": [
+      "__future__",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.capability.capability_growth_engine",
+      "src.capability.capability_comparator"
+    ],
+    "src/capability/discovery_tracker.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capability/transfer_learning_engine.py": [
+      "__future__",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capability/capability_growth_engine.py": [
+      "__future__",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capability/regression_detector.py": [
+      "__future__",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capability/performance_guardian.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging",
+      "src.capability.regression_detector"
+    ],
+    "src/capability/innovation_index.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/capability/capability_tracker.py": [
+      "__future__",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "fastapi"
+    ],
+    "src/capability/cross_domain_evaluator.py": [
+      "__future__",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.capability.transfer_learning_engine"
+    ],
+    "src/runtime/agent_runtime.py": [
+      "__future__",
+      "typing",
+      "src.autonomy.objective_manager",
+      "src.autonomy.progress_tracker",
+      "src.autonomy.checkpoint_manager",
+      "src.runtime.execution_loop",
+      "src.runtime.task_runtime"
+    ],
+    "src/runtime/task_runtime.py": [
+      "__future__",
+      "inspect",
+      "typing",
+      "src.safety.action_validator"
+    ],
+    "src/runtime/execution_loop.py": [
+      "__future__",
+      "asyncio",
+      "dataclasses",
+      "datetime",
+      "typing",
+      "src.autonomy.objective_manager",
+      "src.autonomy.progress_tracker",
+      "src.autonomy.checkpoint_manager",
+      "src.runtime.task_runtime",
+      "src.config.logging",
+      "src.config.logging"
+    ],
+    "src/runtime/__init__.py": [
+      "src.runtime.agent_runtime",
+      "src.runtime.execution_loop",
+      "src.runtime.task_runtime"
+    ],
+    "src/theories/theory_store.py": [
+      "__future__",
+      "json",
+      "typing",
+      "datetime",
+      "pathlib",
+      "pydantic",
+      "src.config.logging",
+      "theory_generator"
+    ],
+    "src/theories/theory_generator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/theories/__init__.py": [
+      "theory_generator",
+      "theory_validator",
+      "theory_store"
+    ],
+    "src/theories/theory_validator.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "enum",
+      "pydantic",
+      "src.config.logging",
+      "theory_generator"
+    ],
+    "src/knowledge_lineage/__init__.py": [
+      "knowledge_lineage"
+    ],
+    "src/knowledge_lineage/knowledge_lineage.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/meta/task_classifier.py": [
+      "__future__",
+      "json",
+      "logging",
+      "typing",
+      "langchain_core.messages",
+      "pydantic",
+      "src.config.settings",
+      "src.db.enums",
+      "langchain_anthropic"
+    ],
+    "src/meta/knowledge_gap_detector.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.knowledge_graph.reasoning",
+      "src.rag.vector_store"
+    ],
+    "src/meta/experience_replay.py": [
+      "__future__",
+      "logging",
+      "uuid",
+      "src.db.models",
+      "src.db.repositories.learning_repo",
+      "src.rag.vector_store",
+      "src.rag.embeddings"
+    ],
+    "src/meta/learning_engine.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "langchain_core.messages",
+      "pydantic",
+      "src.config.settings",
+      "src.db.repositories.learning_repo",
+      "langchain_anthropic"
+    ],
+    "src/meta/skill_library.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.skill_repo",
+      "src.rag.vector_store",
+      "src.rag.embeddings"
+    ],
+    "src/meta/performance_monitor.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.db.enums",
+      "src.db.repositories.analytics_repo"
+    ],
+    "src/meta/portfolio_manager.py": [
+      "__future__",
+      "logging",
+      "uuid",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/meta/curiosity_engine.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/meta/self_improvement_agent.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "langchain_core.messages",
+      "pydantic",
+      "src.config.settings",
+      "src.db.repositories.learning_repo",
+      "src.meta.performance_monitor",
+      "langchain_anthropic"
+    ],
+    "src/meta/strategy_engine.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.strategy_repo",
+      "src.rag.vector_store",
+      "src.rag.embeddings"
+    ],
+    "src/meta/strategy_agent.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "langchain_core.messages",
+      "pydantic",
+      "src.config.settings",
+      "src.db.enums",
+      "src.db.repositories.skill_repo",
+      "src.meta.strategy_engine",
+      "langchain_anthropic"
+    ],
+    "src/meta/goal_tree.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/meta/memory_consolidator.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.db.models",
+      "src.db.repositories.base",
+      "src.rag.vector_store",
+      "src.rag.embeddings"
+    ],
+    "src/agents/world_model_nodes.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid"
+    ],
+    "src/agents/project_nodes.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "datetime",
+      "uuid",
+      "src.config.logging"
+    ],
+    "src/agents/cognition_nodes.py": [
+      "__future__",
+      "typing",
+      "src.agents.state",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/agents/evolution_nodes.py": [
+      "__future__",
+      "typing",
+      "src.config.logging"
+    ],
+    "src/agents/reflection_agent.py": [
+      "__future__",
+      "json",
+      "time",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/agents/goal_generator.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "langchain_core.messages",
+      "pydantic",
+      "src.config.settings",
+      "src.db.models",
+      "src.db.repositories.base",
+      "langchain_anthropic"
+    ],
+    "src/agents/architecture_nodes.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "src.config.logging",
+      "typing_extensions"
+    ],
+    "src/agents/planner_v2.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "langchain_core.messages",
+      "pydantic",
+      "src.config.settings",
+      "src.db.models",
+      "src.meta.goal_tree",
+      "langchain_anthropic"
+    ],
+    "src/agents/__init__.py": [
+      "src.agents.state",
+      "src.agents.orchestrator"
+    ],
+    "src/agents/autonomous_research_loop.py": [
+      "__future__",
+      "logging",
+      "src.meta.knowledge_gap_detector",
+      "src.meta.curiosity_engine",
+      "src.agents.goal_generator",
+      "src.agents.research_director",
+      "src.agents.planner_v2",
+      "src.knowledge_graph.manager",
+      "src.db.models",
+      "uuid6"
+    ],
+    "src/agents/research_agent.py": [
+      "__future__",
+      "json",
+      "time",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/agents/memory_agent.py": [
+      "__future__",
+      "json",
+      "time",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/agents/capability_nodes.py": [
+      "__future__",
+      "typing",
+      "src.config.logging"
+    ],
+    "src/agents/execution_agent.py": [
+      "__future__",
+      "json",
+      "time",
+      "typing",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/agents/research_director.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "uuid",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/agents/state.py": [
+      "__future__",
+      "dataclasses",
+      "typing",
+      "langchain_core.messages",
+      "langgraph.graph.message",
+      "typing"
+    ],
+    "src/cli/config.py": [
+      "__future__",
+      "json",
+      "os",
+      "pathlib",
+      "typing",
+      "dotenv",
+      "src.config.logging"
+    ],
+    "src/cli/formatters.py": [
+      "__future__",
+      "json",
+      "typing",
+      "rich.console",
+      "rich.table",
+      "rich.json",
+      "src.config.logging"
+    ],
+    "src/cli/repl.py": [
+      "src.cli.command_router",
+      "src.cli.session",
+      "src.cli.history"
+    ],
+    "src/cli/session.py": [
+      "os",
+      "uuid"
+    ],
+    "src/cli/__init__.py": [
+      "__future__",
+      "src.cli.main"
+    ],
+    "src/cli/command_router.py": [
+      "os",
+      "shlex",
+      "src.tools.shell_tool",
+      "src.tools.filesystem_tool"
+    ],
+    "src/cli/execution_loop_harness.py": [
+      "__future__",
+      "json",
+      "os",
+      "signal",
+      "time",
+      "datetime",
+      "pathlib",
+      "typing",
+      "uuid",
+      "click",
+      "rich.console",
+      "rich.table"
+    ],
+    "src/cli/main.py": [
+      "__future__",
+      "click",
+      "rich.console",
+      "rich.table",
+      "src.cli.config",
+      "src.cli.api_client",
+      "src.cli.formatters"
+    ],
+    "src/cli/api_client.py": [
+      "__future__",
+      "json",
+      "typing",
+      "httpx",
+      "src.config.logging"
+    ],
+    "src/world_model/world_model_benchmark.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.world_model.belief_engine",
+      "src.world_model.prediction_engine"
+    ],
+    "src/world_model/belief_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/world_model/prediction_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.world_model.belief_engine"
+    ],
+    "src/world_model/pattern_discovery.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/world_model/causal_graph_engine.py": [
+      "neo4j",
+      "typing"
+    ],
+    "src/world_model/experiment_executor.py": [
+      "__future__",
+      "uuid",
+      "random",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.world_model.experiment_designer"
+    ],
+    "src/world_model/prediction_validator.py": [
+      "typing",
+      "sqlalchemy.orm",
+      "memory.episodic_memory"
+    ],
+    "src/world_model/causal_reasoner.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/world_model/counterfactual_simulator.py": [
+      "typing",
+      "world_model.causal_graph_engine"
+    ],
+    "src/world_model/hypothesis_generator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/world_model/experiment_designer.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.world_model.hypothesis_generator"
+    ],
+    "src/rag/ingestion.py": [
+      "__future__",
+      "hashlib",
+      "uuid",
+      "dataclasses",
+      "datetime",
+      "enum",
+      "pathlib",
+      "typing",
+      "httpx",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy.orm",
+      "src.config.logging",
+      "src.config.settings",
+      "src.rag.chunking",
+      "src.rag.embeddings",
+      "src.rag.vector_store",
+      "pypdf",
+      "re",
+      "io"
+    ],
+    "src/rag/chunking.py": [
+      "__future__",
+      "re",
+      "dataclasses",
+      "enum",
+      "functools",
+      "tiktoken",
+      "src.config.logging"
+    ],
+    "src/rag/vector_store.py": [
+      "__future__",
+      "dataclasses",
+      "typing",
+      "qdrant_client",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/rag/retriever.py": [
+      "__future__",
+      "dataclasses",
+      "typing",
+      "src.config.logging",
+      "src.rag.chunking",
+      "src.rag.embeddings",
+      "src.rag.vector_store",
+      "tiktoken"
+    ],
+    "src/rag/__init__.py": [
+      "src.rag.chunking",
+      "src.rag.embeddings",
+      "src.rag.ingestion",
+      "src.rag.retriever",
+      "src.rag.vector_store"
+    ],
+    "src/rag/embeddings.py": [
+      "__future__",
+      "asyncio",
+      "hashlib",
+      "dataclasses",
+      "functools",
+      "typing",
+      "tiktoken",
+      "openai",
+      "tenacity",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/reasoning/planner.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "src.reasoning.drift_detector",
+      "src.reasoning.reactive_replanner"
+    ],
+    "src/reasoning/reasoning_engine.py": [
+      "typing",
+      "search_engine",
+      "hypothesis_tree",
+      "counterfactual_engine"
+    ],
+    "src/reasoning/hypothesis_tree.py": [
+      "typing"
+    ],
+    "src/reasoning/search_engine.py": [
+      "typing",
+      "memory.working_memory",
+      "memory.episodic_memory",
+      "memory.semantic_memory",
+      "memory.procedural_memory"
+    ],
+    "src/reasoning/drift_detector.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "numpy",
+      "hashlib"
+    ],
+    "src/reasoning/deliberation_engine.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/reasoning/reasoning_hub.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/reasoning/__init__.py": [
+      "reasoning_hub",
+      "planner",
+      "deliberation_engine",
+      "counterfactual_reasoner"
+    ],
+    "src/reasoning/counterfactual_reasoner.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/reasoning/reactive_replanner.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "uuid"
+    ],
+    "src/reasoning/counterfactual_engine.py": [
+      "typing"
+    ],
+    "src/safety/sandbox_runner.py": [
+      "__future__",
+      "typing",
+      "src.safety.action_validator"
+    ],
+    "src/safety/action_validator.py": [
+      "__future__",
+      "dataclasses",
+      "typing"
+    ],
+    "src/safety/permission_manager.py": [
+      "__future__",
+      "collections"
+    ],
+    "src/safety/self_patch_safety_gate.py": [
+      "__future__",
+      "asyncio",
+      "subprocess",
+      "shutil",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "enum",
+      "datetime",
+      "src.config.logging",
+      "src.sandbox.sandbox_manager",
+      "src.coding.code_editor"
+    ],
+    "src/voice_assistant/server.py": [
+      "fastapi",
+      "fastapi.responses",
+      "fastapi.staticfiles",
+      "fastapi.middleware.cors",
+      "asyncio",
+      "json",
+      "logging",
+      "base64",
+      "typing",
+      "contextlib",
+      "src.voice_assistant.assistant",
+      "src.voice_assistant.integration",
+      "src.voice_assistant.audio",
+      "src.cognition.cognitive_bus",
+      "src.config.settings",
+      "uvicorn"
+    ],
+    "src/voice_assistant/download_models.py": [
+      "os",
+      "sys",
+      "urllib.request",
+      "pathlib"
+    ],
+    "src/voice_assistant/assistant.py": [
+      "asyncio",
+      "logging",
+      "dataclasses",
+      "typing",
+      "enum",
+      "numpy",
+      "sounddevice",
+      "numpy",
+      "faster_whisper",
+      "subprocess",
+      "tempfile",
+      "whisper",
+      "edge_tts",
+      "tempfile",
+      "tempfile",
+      "os",
+      "tempfile",
+      "os",
+      "os",
+      "os"
+    ],
+    "src/voice_assistant/tts.py": [
+      "asyncio",
+      "subprocess",
+      "tempfile",
+      "os",
+      "logging",
+      "typing",
+      "pathlib",
+      "json",
+      "urllib.request",
+      "tempfile",
+      "TTS.api"
+    ],
+    "src/voice_assistant/__init__.py": [
+      "assistant",
+      "stt",
+      "tts",
+      "audio"
+    ],
+    "src/voice_assistant/integration.py": [
+      "asyncio",
+      "logging",
+      "typing",
+      "dataclasses",
+      "src.cognition.cognitive_bus",
+      "src.reasoning.planner",
+      "src.reasoning.drift_detector",
+      "src.reasoning.reactive_replanner",
+      "src.memory.memory_fabric",
+      "src.memory.working_memory",
+      "src.memory.context_compressor",
+      "src.cognition.hierarchical_agent_registry",
+      "src.cognition.delegation_protocol",
+      "src.cognition.swarm",
+      "src.tools.mcp_client",
+      "src.tools.mcp_discovery",
+      "src.tools.base",
+      "src.autonomous_development.architecture_evolver",
+      "src.config.settings",
+      "src.memory.memory_fabric",
+      "src.memory.working_memory",
+      "src.memory.context_compressor",
+      "src.reasoning.planner",
+      "src.cognition.hierarchical_agent_registry",
+      "src.cognition.delegation_protocol",
+      "src.cognition.swarm",
+      "src.tools.mcp_client",
+      "src.tools.mcp_discovery",
+      "src.tools.base",
+      "json",
+      "langchain_anthropic",
+      "langchain_openai",
+      "neo4j",
+      "qdrant_client",
+      "redis.asyncio",
+      "src.tools.file_operations",
+      "src.tools.shell_tool",
+      "src.tools.python_executor",
+      "src.tools.web_search",
+      "subprocess",
+      "src.autonomous_development.architecture_evolver"
+    ],
+    "src/voice_assistant/audio.py": [
+      "asyncio",
+      "pyaudio",
+      "numpy",
+      "logging",
+      "typing",
+      "dataclasses"
+    ],
+    "src/voice_assistant/main.py": [
+      "asyncio",
+      "logging",
+      "sys",
+      "os",
+      "src.voice_assistant.server",
+      "uvicorn"
+    ],
+    "src/voice_assistant/stt.py": [
+      "asyncio",
+      "subprocess",
+      "tempfile",
+      "os",
+      "logging",
+      "typing",
+      "pathlib",
+      "urllib.request",
+      "torch",
+      "numpy",
+      "wave",
+      "torch"
+    ],
+    "src/testing/long_horizon_runner.py": [
+      "__future__",
+      "asyncio",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/multimodal/vision_processor.py": [
+      "__future__",
+      "base64",
+      "io",
+      "typing",
+      "PIL",
+      "pydantic",
+      "transformers",
+      "src.config.logging",
+      "hashlib"
+    ],
+    "src/multimodal/__init__.py": [
+      "__future__",
+      "src.multimodal.vision_processor",
+      "src.multimodal.screenshot_pipeline",
+      "src.multimodal.visual_interaction",
+      "src.multimodal.element_detector"
+    ],
+    "src/multimodal/visual_interaction.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "pydantic",
+      "playwright.async_api",
+      "src.config.logging",
+      "src.multimodal.screenshot_pipeline",
+      "src.multimodal.element_detector",
+      "src.multimodal.vision_processor",
+      "PIL",
+      "io"
+    ],
+    "src/multimodal/element_detector.py": [
+      "__future__",
+      "typing",
+      "cv2",
+      "numpy",
+      "PIL",
+      "pydantic",
+      "src.config.logging",
+      "src.multimodal.vision_processor"
+    ],
+    "src/multimodal/screenshot_pipeline.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "pathlib",
+      "typing",
+      "uuid",
+      "pydantic",
+      "playwright.async_api",
+      "src.config.logging",
+      "src.multimodal.vision_processor"
+    ],
+    "src/agent_society/agent_registry.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/agent_society/__init__.py": [
+      "society_runtime",
+      "agent_registry",
+      "task_marketplace",
+      "knowledge_marketplace"
+    ],
+    "src/agent_society/society_runtime.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections",
+      "src.cognition.delegation_protocol"
+    ],
+    "src/agent_society/task_marketplace.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "heapq"
+    ],
+    "src/agent_society/knowledge_marketplace.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections"
+    ],
+    "src/programs/research_program_manager.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging",
+      "src.programs.long_horizon_program"
+    ],
+    "src/programs/long_horizon_program.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/architecture/architecture_mapper.py": [
+      "__future__",
+      "ast",
+      "os",
+      "pathlib",
+      "typing",
+      "src.config.logging"
+    ],
+    "src/architecture/component_analyzer.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/architecture/architecture_registry.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy",
+      "src.config.logging"
+    ],
+    "src/architecture/bottleneck_detector.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "networkx",
+      "pydantic",
+      "src.config.logging",
+      "src.architecture.performance_profiler",
+      "src.architecture.resource_analyzer"
+    ],
+    "src/architecture/architecture_generator.py": [
+      "__future__",
+      "os",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.config.settings",
+      "src.architecture.improvement_hypothesis_generator",
+      "src.db.repositories.architecture_candidate_repo"
+    ],
+    "src/architecture/dependency_graph.py": [
+      "__future__",
+      "networkx",
+      "typing",
+      "src.config.logging"
+    ],
+    "src/architecture/sandbox_executor.py": [
+      "__future__",
+      "os",
+      "asyncio",
+      "time",
+      "datetime",
+      "typing",
+      "src.config.logging",
+      "src.architecture.architecture_sandbox"
+    ],
+    "src/architecture/improvement_hypothesis_generator.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/architecture/architecture_benchmark.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic"
+    ],
+    "src/architecture/performance_profiler.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/architecture/architecture_sandbox.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic"
+    ],
+    "src/architecture/benchmark_runner.py": [
+      "__future__",
+      "uuid",
+      "asyncio",
+      "datetime",
+      "typing",
+      "src.config.logging",
+      "src.architecture.architecture_benchmark"
+    ],
+    "src/architecture/resource_analyzer.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic",
+      "apscheduler.schedulers.asyncio",
+      "src.config.logging"
+    ],
+    "src/research_programs/__init__.py": [
+      "research_program",
+      "program_scheduler",
+      "program_memory"
+    ],
+    "src/research_programs/program_scheduler.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/research_programs/research_program.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/research_programs/program_memory.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "json"
+    ],
+    "src/knowledge_compression/knowledge_distiller.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "collections",
+      "pydantic",
+      "src.config.logging",
+      "uuid",
+      "uuid",
+      "uuid",
+      "re",
+      "uuid",
+      "uuid",
+      "uuid"
+    ],
+    "src/knowledge_compression/abstraction_engine.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "collections",
+      "pydantic",
+      "src.config.logging",
+      "uuid",
+      "re"
+    ],
+    "src/knowledge_compression/__init__.py": [
+      "compression_engine",
+      "abstraction_engine",
+      "knowledge_distiller"
+    ],
+    "src/knowledge_compression/compression_engine.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/autonomy/objective_manager.py": [
+      "__future__",
+      "dataclasses",
+      "datetime",
+      "typing",
+      "uuid",
+      "random",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.config.logging"
+    ],
+    "src/autonomy/recovery.py": [
+      "__future__",
+      "asyncio",
+      "logging",
+      "dataclasses",
+      "datetime",
+      "enum",
+      "typing",
+      "sqlalchemy.ext.asyncio",
+      "src.autonomy.checkpoint_manager"
+    ],
+    "src/autonomy/progress_tracker.py": [
+      "__future__",
+      "dataclasses",
+      "datetime",
+      "typing",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.models"
+    ],
+    "src/autonomy/runtime_scheduler.py": [
+      "__future__",
+      "asyncio",
+      "heapq",
+      "logging",
+      "dataclasses",
+      "datetime",
+      "enum",
+      "typing",
+      "sqlalchemy.ext.asyncio",
+      "src.autonomy.objective_manager",
+      "src.autonomy.checkpoint_manager"
+    ],
+    "src/autonomy/__init__.py": [
+      "src.autonomy.objective_manager",
+      "src.autonomy.progress_tracker"
+    ],
+    "src/autonomy/autonomous_runner.py": [
+      "__future__",
+      "asyncio",
+      "src.runtime.agent_runtime",
+      "src.runtime.execution_loop"
+    ],
+    "src/autonomy/runtime_metrics.py": [
+      "__future__",
+      "typing",
+      "src.monitoring.prometheus"
+    ],
+    "src/autonomy/autonomy_recovery.py": [
+      "__future__",
+      "asyncio",
+      "enum",
+      "dataclasses",
+      "typing",
+      "datetime",
+      "src.config.logging"
+    ],
+    "src/autonomy/checkpoint_manager.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.models"
+    ],
+    "src/self_play/self_play_manager.py": [
+      "typing",
+      "synthetic_problem_generator",
+      "curriculum_engine",
+      "learning.continuous_learning"
+    ],
+    "src/self_play/synthetic_problem_generator.py": [
+      "random",
+      "typing"
+    ],
+    "src/self_play/curriculum_engine.py": [
+      "typing",
+      "random"
+    ],
+    "src/knowledge/concept_splitter.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "dataclasses",
+      "enum",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/knowledge/concept_extractor.py": [
+      "typing",
+      "sklearn.feature_extraction.text",
+      "memory.episodic_memory",
+      "memory.semantic_memory",
+      "sqlalchemy"
+    ],
+    "src/knowledge/concept_evolution.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/knowledge/concept_merger.py": [
+      "difflib",
+      "typing"
+    ],
+    "src/sandbox/sandbox_runner.py": [
+      "__future__",
+      "os",
+      "subprocess",
+      "resource",
+      "asyncio",
+      "pathlib",
+      "src.config.logging"
+    ],
+    "src/sandbox/sandbox_manager.py": [
+      "__future__",
+      "os",
+      "shutil",
+      "tempfile",
+      "asyncio",
+      "pathlib",
+      "src.config.logging"
+    ],
+    "src/cognitive_attention/attention_engine.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "numpy"
+    ],
+    "src/cognitive_attention/__init__.py": [
+      "attention_engine",
+      "salience_detector",
+      "priority_manager"
+    ],
+    "src/cognitive_attention/salience_detector.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "collections",
+      "hashlib"
+    ],
+    "src/cognitive_attention/priority_manager.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "heapq"
+    ],
+    "src/review/verification_agent.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/review/critic_agent.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/review/peer_review_engine.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging",
+      "src.review.critic_agent",
+      "src.review.verification_agent",
+      "src.review.challenge_generator"
+    ],
+    "src/review/challenge_generator.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evolution/candidate_evaluator.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evolution/selection_engine.py": [
+      "__future__",
+      "random",
+      "typing",
+      "uuid",
+      "src.config.logging",
+      "src.evolution.population_manager"
+    ],
+    "src/evolution/genome_mutator.py": [
+      "__future__",
+      "copy",
+      "random",
+      "typing",
+      "uuid",
+      "src.config.logging",
+      "src.evolution.cognitive_genome"
+    ],
+    "src/evolution/fitness_function.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "src.config.logging",
+      "src.evolution.population_manager"
+    ],
+    "src/evolution/cognitive_genome.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/evolution/deployment_manager.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.evolution.rollback_engine"
+    ],
+    "src/evolution/promotion_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evolution/rollback_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evolution/long_horizon_evolution.py": [
+      "__future__",
+      "asyncio",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging",
+      "apscheduler.schedulers.asyncio"
+    ],
+    "src/evolution/evolution_engine.py": [
+      "__future__",
+      "asyncio",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging",
+      "apscheduler.schedulers.asyncio"
+    ],
+    "src/evolution/population_manager.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evolution/genome_registry.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging",
+      "src.evolution.cognitive_genome"
+    ],
+    "src/concepts/concept_registry.py": [
+      "__future__",
+      "json",
+      "typing",
+      "datetime",
+      "pathlib",
+      "pydantic",
+      "src.config.logging",
+      "concept_graph"
+    ],
+    "src/concepts/__init__.py": [
+      "concept_graph",
+      "concept_registry",
+      "concept_relationships"
+    ],
+    "src/concepts/concept_relationships.py": [
+      "__future__",
+      "enum",
+      "typing",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging",
+      "concept_graph"
+    ],
+    "src/concepts/concept_graph.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/governance/explanation_engine.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.governance.decision_trace"
+    ],
+    "src/governance/review_board.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/belief_extractor.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/strategic_review.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/success_pattern_detector.py": [
+      "__future__",
+      "uuid",
+      "collections",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "collections",
+      "datetime",
+      "collections",
+      "collections"
+    ],
+    "src/governance/governance_engine.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.governance.policy_manager",
+      "src.governance.constraint_system",
+      "src.governance.decision_auditor"
+    ],
+    "src/governance/assumption_detector.py": [
+      "__future__",
+      "uuid",
+      "re",
+      "typing",
+      "enum",
+      "dataclasses",
+      "datetime",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/governance/policy_manager.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/strategy_mutator.py": [
+      "__future__",
+      "uuid",
+      "random",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/__init__.py": [
+      "__future__",
+      "src.governance.decision_auditor",
+      "src.governance.decision_trace",
+      "src.governance.explanation_engine",
+      "src.governance.assumption_detector",
+      "src.governance.belief_extractor",
+      "src.governance.premise_analyzer",
+      "src.governance.decision_pattern_miner",
+      "src.governance.success_pattern_detector",
+      "src.governance.failure_pattern_detector",
+      "src.governance.governance_engine",
+      "src.governance.policy_manager",
+      "src.governance.constraint_system",
+      "src.governance.review_board",
+      "src.governance.strategic_review",
+      "src.governance.decision_evolution",
+      "src.governance.strategy_mutator",
+      "src.governance.policy_optimizer",
+      "src.governance.decision_fitness",
+      "src.governance.decision_benchmark",
+      "src.governance.outcome_tracker",
+      "src.governance.outcome_validator",
+      "src.governance.causal_attribution",
+      "src.governance.governance_memory",
+      "src.governance.policy_memory",
+      "src.governance.decision_archive"
+    ],
+    "src/governance/premise_analyzer.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/causal_attribution.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/constraint_system.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "datetime"
+    ],
+    "src/governance/decision_benchmark.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.governance.decision_fitness"
+    ],
+    "src/governance/policy_memory.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/governance_memory.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/decision_pattern_miner.py": [
+      "__future__",
+      "uuid",
+      "collections",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/decision_trace.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/policy_optimizer.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "collections"
+    ],
+    "src/governance/decision_fitness.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/outcome_tracker.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/decision_archive.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/decision_auditor.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "src.governance.decision_trace"
+    ],
+    "src/governance/failure_pattern_detector.py": [
+      "__future__",
+      "uuid",
+      "collections",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "datetime",
+      "collections",
+      "collections"
+    ],
+    "src/governance/outcome_validator.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/governance/decision_evolution.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "collections"
+    ],
+    "src/db/enums.py": [
+      "__future__",
+      "enum"
+    ],
+    "src/db/models.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "uuid6",
+      "sqlalchemy",
+      "sqlalchemy.dialects.postgresql",
+      "sqlalchemy.orm",
+      "src.db.enums"
+    ],
+    "src/db/session.py": [
+      "__future__",
+      "collections.abc",
+      "functools",
+      "sqlalchemy.ext.asyncio",
+      "src.config.settings"
+    ],
+    "src/db/__init__.py": [
+      "src.db.enums",
+      "src.db.models",
+      "src.db.session"
+    ],
+    "src/environment/opportunity_detector.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/environment/capability_inventory.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "datetime",
+      "src.config.logging"
+    ],
+    "src/environment/goal_opportunity_ranker.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.environment.opportunity_detector"
+    ],
+    "src/environment/environment_registry.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "datetime",
+      "src.config.logging"
+    ],
+    "src/environment/resource_discovery.py": [
+      "__future__",
+      "uuid",
+      "asyncio",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.environment.environment_registry"
+    ],
+    "src/environment/environment_mapper.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging",
+      "src.environment.environment_registry",
+      "src.environment.capability_inventory"
+    ],
+    "src/api/auth.py": [
+      "uuid",
+      "datetime",
+      "typing",
+      "fastapi",
+      "fastapi.security",
+      "jose",
+      "passlib.context",
+      "pydantic",
+      "src.config.settings",
+      "src.db.repositories.user_repo",
+      "src.db.session"
+    ],
+    "src/api/main.py": [
+      "contextlib",
+      "typing",
+      "fastapi",
+      "fastapi.responses",
+      "src.api.middleware",
+      "src.api.routes",
+      "src.config.logging",
+      "src.config.settings",
+      "src.api.routes"
+    ],
+    "src/api/middleware.py": [
+      "time",
+      "fastapi",
+      "fastapi.middleware.cors",
+      "starlette.middleware.base",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/api/dependencies.py": [
+      "asyncio",
+      "typing",
+      "fastapi",
+      "src.api.auth",
+      "src.config.settings",
+      "src.db.session",
+      "src.db.repositories.session_repo",
+      "src.db.repositories.task_repo",
+      "src.db.repositories.memory_repo",
+      "src.db.repositories.reflection_repo",
+      "src.db.repositories.strategy_repo",
+      "src.db.repositories.skill_repo",
+      "src.db.repositories.analytics_repo",
+      "src.db.repositories.learning_repo",
+      "src.rag.vector_store",
+      "src.rag.embeddings",
+      "src.rag.retriever",
+      "src.rag.ingestion",
+      "src.db.repositories.user_repo"
+    ],
+    "src/evaluation/generalization_suite.py": [
+      "typing",
+      "novel_domain_benchmark",
+      "transfer_validation"
+    ],
+    "src/evaluation/autonomy_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/skill_validation.py": [
+      "__future__",
+      "asyncio",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/novel_domain_benchmark.py": [
+      "typing"
+    ],
+    "src/evaluation/transfer_validation.py": [
+      "typing"
+    ],
+    "src/evaluation/knowledge_graph_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/reflection_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/closed_loop_validator.py": [
+      "__future__",
+      "asyncio",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/research_quality_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/learning_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/failure_recovery.py": [
+      "__future__",
+      "asyncio",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/strategy_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/knowledge_graph_evolution.py": [
+      "__future__",
+      "asyncio",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/skill_reuse_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/evaluation/system_stability_benchmark.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging"
+    ],
+    "src/workers/skill_discovery_worker.py": [
+      "__future__",
+      "asyncio",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/workers/reflection_worker.py": [
+      "__future__",
+      "asyncio",
+      "tenacity",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/workers/meta_learning_worker.py": [
+      "__future__",
+      "asyncio",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/workers/research_loop_worker.py": [
+      "__future__",
+      "asyncio",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/workers/reporting_worker.py": [
+      "__future__",
+      "asyncio",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/workers/scheduler.py": [
+      "__future__",
+      "asyncio",
+      "apscheduler.schedulers.asyncio",
+      "src.config.logging",
+      "src.workers.research_loop_worker",
+      "src.workers.reflection_worker",
+      "src.workers.meta_learning_worker",
+      "src.workers.skill_discovery_worker",
+      "src.workers.optimization_worker",
+      "src.workers.reporting_worker"
+    ],
+    "src/workers/optimization_worker.py": [
+      "__future__",
+      "asyncio",
+      "src.config.logging",
+      "src.core.service_registry"
+    ],
+    "src/coding/planner.py": [
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/coding/repository_benchmark.py": [
+      "typing",
+      "dataclasses",
+      "enum",
+      "pathlib",
+      "repository_analyzer",
+      "test_runner",
+      "code_editor",
+      "planner",
+      "patch_generator",
+      "time",
+      "json"
+    ],
+    "src/coding/long_horizon_validation.py": [
+      "time",
+      "json",
+      "typing",
+      "dataclasses",
+      "pathlib",
+      "datetime",
+      "repository_benchmark",
+      "benchmark_tasks",
+      "psutil"
+    ],
+    "src/coding/patch_generator.py": [
+      "typing",
+      "dataclasses",
+      "langchain_anthropic",
+      "langchain_core.messages",
+      "planner",
+      "code_editor",
+      "src.config.settings"
+    ],
+    "src/coding/__init__.py": [
+      "repository_analyzer",
+      "code_editor",
+      "planner",
+      "patch_generator",
+      "test_runner",
+      "repository_benchmark",
+      "benchmark_tasks",
+      "long_horizon_validation"
+    ],
+    "src/coding/benchmark_tasks.py": [
+      "typing",
+      "repository_benchmark"
+    ],
+    "src/coding/code_editor.py": [
+      "difflib",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "hashlib",
+      "ast"
+    ],
+    "src/coding/test_runner.py": [
+      "subprocess",
+      "json",
+      "re",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/coding/repository_analyzer.py": [
+      "os",
+      "ast",
+      "json",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "subprocess",
+      "tomli"
+    ],
+    "src/decision/goal_optimizer.py": [
+      "__future__",
+      "typing",
+      "dataclasses",
+      "numpy",
+      "scipy.optimize",
+      "src.config.logging",
+      "src.decision.strategy_engine"
+    ],
+    "src/decision/utility_functions.py": [
+      "__future__",
+      "typing",
+      "enum",
+      "dataclasses",
+      "numpy",
+      "scipy.optimize",
+      "src.config.logging"
+    ],
+    "src/decision/strategy_memory.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.strategy_engine"
+    ],
+    "src/decision/tradeoff_engine.py": [
+      "__future__",
+      "typing",
+      "dataclasses",
+      "enum",
+      "src.config.logging",
+      "uuid"
+    ],
+    "src/decision/decision_evaluator.py": [
+      "__future__",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.decision_engine"
+    ],
+    "src/decision/option_generator.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "src.config.logging",
+      "src.decision.decision_engine",
+      "src.decision.decision_engine"
+    ],
+    "src/decision/reward_models.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging",
+      "src.decision.utility_functions"
+    ],
+    "src/decision/decision_marketplace.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/decision/__init__.py": [
+      "__future__",
+      "src.decision.decision_engine",
+      "src.decision.option_generator",
+      "src.decision.decision_evaluator",
+      "src.decision.utility_functions",
+      "src.decision.reward_models",
+      "src.decision.objective_engine",
+      "src.decision.strategy_engine",
+      "src.decision.strategic_planner",
+      "src.decision.goal_optimizer",
+      "src.decision.scenario_generator",
+      "src.decision.future_simulator",
+      "src.decision.outcome_predictor",
+      "src.decision.risk_engine",
+      "src.decision.uncertainty_model",
+      "src.decision.failure_predictor",
+      "src.decision.decision_memory",
+      "src.decision.strategy_memory",
+      "src.decision.outcome_memory",
+      "src.decision.pareto_optimizer",
+      "src.decision.tradeoff_engine",
+      "src.decision.executive_agent",
+      "src.decision.executive_council",
+      "src.decision.decision_marketplace"
+    ],
+    "src/decision/risk_engine.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.decision_engine"
+    ],
+    "src/decision/outcome_memory.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "datetime",
+      "src.config.logging"
+    ],
+    "src/decision/decision_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging",
+      "src.decision.option_generator",
+      "src.decision.decision_evaluator",
+      "src.decision.risk_engine",
+      "src.decision.decision_memory"
+    ],
+    "src/decision/pareto_optimizer.py": [
+      "__future__",
+      "typing",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/decision/uncertainty_model.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "enum",
+      "numpy",
+      "src.config.logging",
+      "scipy"
+    ],
+    "src/decision/strategy_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging",
+      "src.decision.objective_engine"
+    ],
+    "src/decision/executive_agent.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.decision_engine",
+      "src.decision.strategy_engine",
+      "src.decision.objective_engine",
+      "src.decision.strategy_engine",
+      "src.decision.objective_engine"
+    ],
+    "src/decision/objective_engine.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/decision/executive_council.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.executive_agent",
+      "datetime"
+    ],
+    "src/decision/scenario_generator.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging"
+    ],
+    "src/decision/decision_memory.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.decision_engine"
+    ],
+    "src/decision/strategic_planner.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.strategy_engine"
+    ],
+    "src/decision/outcome_predictor.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "enum",
+      "src.config.logging",
+      "src.decision.future_simulator",
+      "src.decision.scenario_generator",
+      "datetime"
+    ],
+    "src/decision/failure_predictor.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "enum",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.decision_engine"
+    ],
+    "src/decision/future_simulator.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "dataclasses",
+      "src.config.logging",
+      "src.decision.scenario_generator",
+      "random"
+    ],
+    "src/monitoring/health.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "typing",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy",
+      "src.config.logging"
+    ],
+    "src/monitoring/prometheus.py": [
+      "__future__",
+      "time",
+      "typing",
+      "fastapi",
+      "prometheus_client"
+    ],
+    "src/monitoring/otel.py": [
+      "__future__",
+      "fastapi",
+      "opentelemetry",
+      "opentelemetry.exporter.otlp.proto.grpc.trace_exporter",
+      "opentelemetry.instrumentation.fastapi",
+      "opentelemetry.instrumentation.sqlalchemy",
+      "opentelemetry.sdk.resources",
+      "opentelemetry.sdk.trace",
+      "opentelemetry.sdk.trace.export",
+      "src.config.logging",
+      "src.config.settings"
+    ],
+    "src/autonomous_development/self_development.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "os"
+    ],
+    "src/autonomous_development/__init__.py": [
+      "self_development",
+      "code_improvement",
+      "repo_optimizer"
+    ],
+    "src/autonomous_development/code_improvement.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/autonomous_development/repo_optimizer.py": [
+      "asyncio",
+      "logging",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "src/autonomous_development/architecture_evolver.py": [
+      "asyncio",
+      "logging",
+      "json",
+      "uuid",
+      "hashlib",
+      "datetime",
+      "typing",
+      "dataclasses",
+      "enum",
+      "pathlib",
+      "numpy"
+    ],
+    "src/validation/metrics.py": [
+      "typing",
+      "threading"
+    ],
+    "src/validation/experiment_runner.py": [
+      "datetime",
+      "typing",
+      "apscheduler.schedulers.background",
+      "sqlalchemy",
+      "sqlalchemy.orm",
+      "src.config.settings",
+      "validation.metrics"
+    ],
+    "src/validation/baseline_collector.py": [
+      "datetime",
+      "typing",
+      "sqlalchemy",
+      "sqlalchemy.orm",
+      "reasoning.reasoning_engine",
+      "reasoning.search_engine",
+      "reasoning.counterfactual_engine",
+      "memory.working_memory",
+      "learning.experience_encoder",
+      "validation.metrics"
+    ],
+    "src/validation/self_play_evaluator.py": [
+      "threading",
+      "typing"
+    ],
+    "src/evaluation/universal/tool_creation_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/world_model_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/society_evaluator.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "datetime",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/coding_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/research_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/planning_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/architecture_evolution_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/reasoning_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/evaluation/universal/mathematics_benchmark.py": [
+      "__future__",
+      "asyncio",
+      "datetime",
+      "uuid",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/api/schemas/skill.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/tasks.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "pydantic"
+    ],
+    "src/api/schemas/memory.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "enum",
+      "typing",
+      "pydantic"
+    ],
+    "src/api/schemas/reflections.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "pydantic"
+    ],
+    "src/api/schemas/goals.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "enum",
+      "pydantic"
+    ],
+    "src/api/schemas/reflection.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/evolution.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/tools.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/__init__.py": [
+      "src.api.schemas.goals",
+      "src.api.schemas.tasks",
+      "src.api.schemas.memory",
+      "src.api.schemas.knowledge",
+      "src.api.schemas.reflections"
+    ],
+    "src/api/schemas/strategy.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/cognition.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/dashboard.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "pydantic"
+    ],
+    "src/api/schemas/capability.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/failure.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/autonomous.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.db.enums"
+    ],
+    "src/api/schemas/architecture.py": [
+      "__future__",
+      "pydantic",
+      "typing",
+      "datetime",
+      "uuid"
+    ],
+    "src/api/schemas/world_model.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/projects.py": [
+      "__future__",
+      "typing",
+      "datetime",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/knowledge.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "enum",
+      "typing",
+      "pydantic"
+    ],
+    "src/api/schemas/benchmarks.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/report.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/schemas/meta.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "pydantic",
+      "src.db.enums"
+    ],
+    "src/api/schemas/validation.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "pydantic"
+    ],
+    "src/api/routes/swarm.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "pydantic",
+      "src.api.dependencies",
+      "src.config.logging",
+      "src.swarm.director",
+      "src.swarm.swarm_coordinator"
+    ],
+    "src/api/routes/tasks.py": [
+      "__future__",
+      "uuid",
+      "fastapi",
+      "src.api.dependencies",
+      "src.api.schemas.tasks",
+      "src.config.logging"
+    ],
+    "src/api/routes/skills.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.skill"
+    ],
+    "src/api/routes/strategies.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.strategy"
+    ],
+    "src/api/routes/vision.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "pydantic",
+      "src.api.dependencies",
+      "src.config.logging",
+      "src.multimodal.vision_processor",
+      "src.multimodal.screenshot_pipeline",
+      "src.multimodal.element_detector",
+      "src.multimodal.visual_interaction",
+      "PIL",
+      "io",
+      "PIL",
+      "io",
+      "src.multimodal.vision_processor"
+    ],
+    "src/api/routes/memory.py": [
+      "__future__",
+      "uuid",
+      "fastapi",
+      "src.api.dependencies",
+      "src.api.schemas.memory",
+      "src.config.logging",
+      "src.db.enums",
+      "datetime",
+      "src.db.enums"
+    ],
+    "src/api/routes/reflections.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.reflection"
+    ],
+    "src/api/routes/goals.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "fastapi",
+      "src.api.dependencies",
+      "src.api.schemas.goals",
+      "src.agents.orchestrator",
+      "src.config.logging",
+      "src.api.schemas.goals",
+      "src.db.enums"
+    ],
+    "src/api/routes/health.py": [
+      "__future__",
+      "fastapi",
+      "src.config.settings"
+    ],
+    "src/api/routes/tools.py": [
+      "__future__",
+      "uuid",
+      "datetime",
+      "typing",
+      "fastapi",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy",
+      "src.api.schemas.tools",
+      "src.config.logging",
+      "src.db.session",
+      "src.db.models"
+    ],
+    "src/api/routes/__init__.py": [
+      "src.api.routes"
+    ],
+    "src/api/routes/cognition.py": [
+      "__future__",
+      "typing",
+      "fastapi",
+      "src.config.logging"
+    ],
+    "src/api/routes/review.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.api.schemas.capability",
+      "src.config.logging"
+    ],
+    "src/api/routes/auth_routes.py": [
+      "datetime",
+      "typing",
+      "fastapi",
+      "fastapi.security",
+      "pydantic",
+      "src.api.auth",
+      "src.api.dependencies",
+      "src.db.repositories.user_repo"
+    ],
+    "src/api/routes/opportunities.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.projects"
+    ],
+    "src/api/routes/failures.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.failure"
+    ],
+    "src/api/routes/programs.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.api.schemas.capability",
+      "src.config.logging"
+    ],
+    "src/api/routes/autonomous.py": [
+      "__future__",
+      "logging",
+      "typing",
+      "fastapi",
+      "src.api.dependencies",
+      "src.api.schemas.autonomous"
+    ],
+    "src/api/routes/reports.py": [
+      "__future__",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.report"
+    ],
+    "src/api/routes/environment.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.projects"
+    ],
+    "src/api/routes/world_model.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "sqlalchemy.ext.asyncio",
+      "sqlalchemy",
+      "src.config.logging",
+      "src.db.session",
+      "src.db.models.world_model",
+      "src.api.schemas.world_model"
+    ],
+    "src/api/routes/knowledge.py": [
+      "__future__",
+      "uuid",
+      "typing",
+      "fastapi",
+      "src.api.dependencies",
+      "src.api.schemas.knowledge",
+      "src.config.logging",
+      "datetime"
+    ],
+    "src/api/routes/benchmarks.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "sqlalchemy.ext.asyncio",
+      "src.config.logging",
+      "src.api.schemas.benchmarks"
+    ],
+    "src/api/routes/impact.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.config.logging",
+      "src.api.schemas.projects"
+    ],
+    "src/api/routes/meta.py": [
+      "typing",
+      "uuid",
+      "fastapi",
+      "src.api.dependencies",
+      "src.api.schemas.meta",
+      "src.db.enums",
+      "src.db.enums"
+    ],
+    "src/db/repositories/session_repo.py": [
+      "__future__",
+      "datetime",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/memory_repo.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/skill_repo.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/strategy_repo.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/__init__.py": [
+      "src.db.repositories.base",
+      "src.db.repositories.execution_repo",
+      "src.db.repositories.memory_repo",
+      "src.db.repositories.reflection_repo",
+      "src.db.repositories.session_repo",
+      "src.db.repositories.task_repo"
+    ],
+    "src/db/repositories/execution_repo.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/task_repo.py": [
+      "__future__",
+      "datetime",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/learning_repo.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/analytics_repo.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/reflection_repo.py": [
+      "__future__",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.enums",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/user_repo.py": [
+      "uuid",
+      "typing",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.models",
+      "src.db.repositories.base"
+    ],
+    "src/db/repositories/base.py": [
+      "__future__",
+      "typing",
+      "uuid",
+      "sqlalchemy",
+      "sqlalchemy.ext.asyncio",
+      "src.db.models"
+    ],
+    "src/evolution/validation/promotion_validator.py": [
+      "__future__",
+      "src.config.logging"
+    ],
+    "src/evolution/validation/rollback_validator.py": [
+      "__future__",
+      "src.config.logging"
+    ],
+    "src/evolution/validation/evolution_validator.py": [
+      "__future__",
+      "typing",
+      "src.config.logging"
+    ],
+    "src/evolution/validation/fitness_validator.py": [
+      "__future__",
+      "math",
+      "src.config.logging"
+    ],
+    "src/evolution/validation/genome_validator.py": [
+      "__future__",
+      "typing",
+      "src.config.logging"
+    ],
+    "src/testing/stress_tests/research_stress_test.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/testing/stress_tests/knowledge_graph_stress_test.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/testing/stress_tests/strategy_stress_test.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/testing/stress_tests/goal_stress_test.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "typing",
+      "pydantic",
+      "src.config.logging"
+    ],
+    "src/testing/stress_tests/worker_stress_test.py": [
+      "__future__",
+      "asyncio",
+      "time",
+      "datetime",
+      "pydantic",
+      "src.config.logging",
+      "apscheduler.schedulers.asyncio"
+    ],
+    "alembic/versions/003_autonomous_research.py": [
+      "__future__",
+      "typing",
+      "sqlalchemy",
+      "alembic",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/006_phase8_tools.py": [
+      "__future__",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/001_initial_schema.py": [
+      "__future__",
+      "typing",
+      "sqlalchemy",
+      "alembic",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/002_meta_learning.py": [
+      "__future__",
+      "typing",
+      "sqlalchemy",
+      "alembic",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/007_phase9_world_model.py": [
+      "__future__",
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/012_phase7_multimodal.py": [
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/004_phase7_cognition.py": [
+      "__future__",
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/008_phase10_architecture.py": [
+      "__future__",
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/011_phase12_projects.py": [
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/014_phase17_runtime.py": [
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/009_phase10g_evolution.py": [
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/013_phase8_swarm.py": [
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/005_phase7_6_benchmarks.py": [
+      "__future__",
+      "typing",
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "alembic/versions/010_phase11_capabilities.py": [
+      "alembic",
+      "sqlalchemy",
+      "sqlalchemy.dialects"
+    ],
+    "modelx_voice/ui/terminal.py": [
+      "asyncio",
+      "typing",
+      "rich.console",
+      "rich.live",
+      "rich.layout",
+      "rich.panel",
+      "rich.text",
+      "rich.align",
+      "rich.table",
+      "rich.box",
+      "time"
+    ],
+    "modelx_voice/ui/__init__.py": [
+      "terminal"
+    ],
+    "modelx_voice/ui/commands.py": [
+      "re",
+      "typing",
+      "dataclasses",
+      "enum"
+    ],
+    "modelx_voice/config/__init__.py": [
+      "manager",
+      "setup_wizard"
+    ],
+    "modelx_voice/config/setup_wizard.py": [
+      "asyncio",
+      "os",
+      "sys",
+      "typing",
+      "pathlib",
+      "rich.console",
+      "rich.prompt",
+      "rich.panel",
+      "rich.table",
+      "rich",
+      "manager",
+      "modelx_voice.brain",
+      "sounddevice"
+    ],
+    "modelx_voice/config/manager.py": [
+      "json",
+      "os",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "keyring",
+      "logging"
+    ],
+    "modelx_voice/audio/__init__.py": [
+      "capture",
+      "vad"
+    ],
+    "modelx_voice/audio/capture.py": [
+      "asyncio",
+      "sounddevice",
+      "numpy",
+      "typing",
+      "threading",
+      "queue"
+    ],
+    "modelx_voice/audio/vad.py": [
+      "webrtcvad",
+      "numpy",
+      "typing"
+    ],
+    "modelx_voice/voices/downloader.py": [
+      "asyncio",
+      "aiohttp",
+      "pathlib",
+      "typing",
+      "logging",
+      "json",
+      "json",
+      "json",
+      "json"
+    ],
+    "modelx_voice/tts/__init__.py": [
+      "piper_wrapper"
+    ],
+    "modelx_voice/tts/piper_wrapper.py": [
+      "asyncio",
+      "json",
+      "os",
+      "pathlib",
+      "typing",
+      "numpy",
+      "piper",
+      "piper.config",
+      "logging"
+    ],
+    "modelx_voice/brain/__init__.py": [
+      "llm_client",
+      "context"
+    ],
+    "modelx_voice/brain/context.py": [
+      "json",
+      "time",
+      "datetime",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "collections",
+      "logging",
+      "llm_client"
+    ],
+    "modelx_voice/brain/llm_client.py": [
+      "abc",
+      "dataclasses",
+      "typing",
+      "os",
+      "anthropic",
+      "openai",
+      "openai",
+      "httpx",
+      "json"
+    ],
+    "modelx_voice/stt/__init__.py": [
+      "whisper_wrapper"
+    ],
+    "modelx_voice/stt/whisper_wrapper.py": [
+      "asyncio",
+      "numpy",
+      "faster_whisper",
+      "typing",
+      "logging"
+    ],
+    "tests/unit/test_brain.py": [
+      "pytest",
+      "unittest.mock",
+      "modelx_voice.brain.llm_client"
+    ],
+    "tests/unit/test_autonomous_runtime.py": [
+      "__future__",
+      "pytest",
+      "src.autonomy.objective_manager",
+      "src.runtime.execution_loop",
+      "src.runtime.task_runtime",
+      "src.safety.action_validator"
+    ],
+    "tests/unit/test_provider_config.py": [
+      "unittest.mock",
+      "pydantic",
+      "src.config.settings",
+      "src.coding.patch_generator"
+    ],
+    "tests/unit/test_audio.py": [
+      "pytest",
+      "numpy",
+      "unittest.mock",
+      "modelx_voice.audio.vad"
+    ],
+    "tests/unit/test_failure_analyzer.py": [
+      "__future__",
+      "pytest",
+      "unittest.mock",
+      "src.cognition.analyzer"
+    ],
+    "tests/unit/test_cognition_metrics.py": [
+      "__future__",
+      "pytest",
+      "unittest.mock",
+      "src.cognition.metrics"
+    ],
+    "tests/unit/test_commands.py": [
+      "pytest",
+      "modelx_voice.ui.commands"
+    ],
+    "tests/unit/test_config.py": [
+      "pytest",
+      "json",
+      "tempfile",
+      "pathlib",
+      "unittest.mock",
+      "modelx_voice.config"
+    ],
+    "tests/unit/test_memory.py": [
+      "pytest",
+      "json",
+      "time",
+      "pathlib",
+      "unittest.mock",
+      "modelx_voice.brain.context"
+    ],
+    "tests/unit/test_schemas.py": [
+      "__future__",
+      "pytest",
+      "pydantic",
+      "src.api.schemas.goals",
+      "src.api.schemas.memory",
+      "src.api.schemas.knowledge"
+    ],
+    "tests/unit/test_phase17_runtime.py": [
+      "asyncio",
+      "pytest",
+      "datetime",
+      "uuid",
+      "sqlalchemy.ext.asyncio",
+      "src.autonomy.objective_manager",
+      "src.autonomy.progress_tracker",
+      "src.autonomy.checkpoint_manager",
+      "src.autonomy.runtime_scheduler",
+      "src.autonomy.runtime_metrics",
+      "src.autonomy.recovery",
+      "src.db.models"
+    ],
+    "tests/unit/test_skill_discovery.py": [
+      "__future__",
+      "pytest",
+      "unittest.mock",
+      "src.cognition.discovery"
+    ],
+    "tests/adversarial/test_failure_type_specific_recovery.py": [
+      "pytest",
+      "src.autonomy.autonomy_recovery"
+    ],
+    "tests/adversarial/test_objective_template_suggestion.py": [
+      "pytest",
+      "src.autonomy.objective_manager"
+    ],
+    "tests/adversarial/test_checkpoint_survives_hard_kill.py": [
+      "asyncio",
+      "json",
+      "os",
+      "signal",
+      "subprocess",
+      "sys",
+      "time",
+      "pathlib",
+      "unittest.mock",
+      "pytest",
+      "src.runtime.execution_loop",
+      "src.autonomy.objective_manager",
+      "src.autonomy.checkpoint_manager",
+      "src.autonomy.progress_tracker",
+      "src.autonomy.objective_manager"
+    ],
+    "tests/adversarial/test_assumption_testing_against_ground_truth.py": [
+      "unittest.mock",
+      "pytest",
+      "sqlalchemy",
+      "src.governance.assumption_detector"
+    ],
+    "tests/adversarial/test_self_patch_safety_gate_rejects_bad_patches.py": [
+      "pytest",
+      "src.safety.self_patch_safety_gate",
+      "src.coding.code_editor"
+    ],
+    "tests/integration/test_phase13_cognitive_os.py": [
+      "asyncio",
+      "pytest",
+      "datetime",
+      "src.cognitive_kernel.kernel",
+      "src.cognitive_kernel.scheduler",
+      "src.cognitive_kernel.attention_manager",
+      "src.cognitive_kernel.cognitive_bus",
+      "src.cognitive_kernel.context_manager",
+      "src.memory.memory_fabric",
+      "src.memory.memory_router",
+      "src.memory.memory_index",
+      "src.cognitive_attention.attention_engine",
+      "src.cognitive_attention.salience_detector",
+      "src.cognitive_attention.priority_manager",
+      "src.reasoning.reasoning_hub",
+      "src.reasoning.planner",
+      "src.reasoning.deliberation_engine",
+      "src.reasoning.counterfactual_reasoner",
+      "src.cognitive_communication.cognitive_events",
+      "src.cognitive_communication.agent_protocol",
+      "src.cognitive_communication.message_broker",
+      "src.agent_society.society_runtime",
+      "src.agent_society.agent_registry",
+      "src.agent_society.task_marketplace",
+      "src.identity.identity_engine",
+      "src.identity.self_model",
+      "src.identity.mission_manager",
+      "src.research_programs.research_program",
+      "src.research_programs.program_scheduler",
+      "src.research_programs.program_memory",
+      "src.reasoning.reasoning_hub",
+      "src.reasoning.reasoning_hub"
+    ],
+    "tests/integration/test_service_registry.py": [
+      "__future__",
+      "pytest",
+      "asyncio",
+      "src.registry"
+    ],
+    "tests/integration/test_pipeline.py": [
+      "pytest",
+      "asyncio",
+      "unittest.mock",
+      "modelx_voice.pipeline",
+      "modelx_voice.config",
+      "modelx_voice.brain",
+      "modelx_voice.ui"
+    ],
+    "tests/e2e/master_validation_test.py": [
+      "__future__",
+      "pytest",
+      "datetime",
+      "uuid"
+    ],
+    "tests/e2e/autonomous_tool_test.py": [
+      "pytest",
+      "httpx",
+      "uuid"
+    ],
+    "tests/e2e/recursive_self_improvement_test.py": [
+      "pytest",
+      "asyncio",
+      "typing"
+    ],
+    "tests/e2e/autonomous_loop_test.py": [
+      "__future__",
+      "asyncio",
+      "pytest",
+      "typing",
+      "src.agents.state",
+      "src.agents.orchestrator",
+      "src.core.service_registry"
+    ],
+    "tests/validation/metrics.py": [
+      "time",
+      "dataclasses",
+      "typing",
+      "enum",
+      "contextlib",
+      "logging"
+    ],
+    "tests/validation/test_memory_ablation.py": [
+      "pytest",
+      "pathlib",
+      "tests.validation.ablation",
+      "tests.validation.framework",
+      "src.memory.memory_manager"
+    ],
+    "tests/validation/test_world_model_ablation.py": [
+      "pytest",
+      "pathlib",
+      "tests.validation.ablation",
+      "tests.validation.framework",
+      "src.world_model.prediction_engine",
+      "src.world_model.belief_engine",
+      "asyncio"
+    ],
+    "tests/validation/ablation.py": [
+      "typing",
+      "dataclasses",
+      "logging",
+      "framework",
+      "metrics",
+      "src.memory.memory_manager"
+    ],
+    "tests/validation/test_long_horizon.py": [
+      "pytest",
+      "time",
+      "datetime",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "logging",
+      "tests.validation.framework"
+    ],
+    "tests/validation/framework.py": [
+      "time",
+      "json",
+      "dataclasses",
+      "datetime",
+      "pathlib",
+      "typing",
+      "enum",
+      "logging"
+    ],
+    "tests/validation/__init__.py": [
+      "framework",
+      "metrics",
+      "ablation",
+      "benchmarks"
+    ],
+    "tests/validation/test_coding_benchmark.py": [
+      "pytest",
+      "pathlib",
+      "tests.validation.benchmarks",
+      "tests.validation.framework"
+    ],
+    "tests/validation/test_openrouter_connection.py": [
+      "asyncio",
+      "os",
+      "dotenv",
+      "langchain_anthropic",
+      "langchain_core.messages"
+    ],
+    "tests/validation/test_full_lifecycle_single.py": [
+      "asyncio",
+      "tests.validation.v31_executor",
+      "traceback"
+    ],
+    "tests/validation/test_patch_generator_single.py": [
+      "asyncio",
+      "os",
+      "pathlib",
+      "src.coding.patch_generator",
+      "src.coding.planner",
+      "traceback"
+    ],
+    "tests/validation/long_horizon.py": [
+      "time",
+      "datetime",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "logging",
+      "tests.validation.framework"
+    ],
+    "tests/validation/v31_campaign.py": [
+      "sys",
+      "argparse",
+      "json",
+      "time",
+      "logging",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "enum",
+      "subprocess",
+      "tempfile",
+      "shutil",
+      "collections",
+      "tests.validation.v31_executor",
+      "asyncio",
+      "src.coding.benchmark_tasks"
+    ],
+    "tests/validation/test_cost_analysis.py": [
+      "pytest",
+      "time",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "logging",
+      "tests.validation.framework",
+      "tests.validation.metrics"
+    ],
+    "tests/validation/run_validation.py": [
+      "sys",
+      "argparse",
+      "pathlib",
+      "typing",
+      "json",
+      "logging",
+      "tests.validation.framework",
+      "tests.validation.ablation",
+      "tests.validation.benchmarks",
+      "tests.validation.long_horizon",
+      "tests.validation.cost_analysis",
+      "tests.validation.cost_analysis"
+    ],
+    "tests/validation/cost_analysis.py": [
+      "time",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "logging",
+      "tests.validation.framework",
+      "tests.validation.metrics"
+    ],
+    "tests/validation/v31_metrics.py": [
+      "time",
+      "subprocess",
+      "tempfile",
+      "shutil",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "logging",
+      "json",
+      "psutil",
+      "re",
+      "re"
+    ],
+    "tests/validation/test_governance_ablation.py": [
+      "pytest",
+      "pathlib",
+      "tests.validation.ablation",
+      "tests.validation.framework",
+      "src.governance.decision_auditor"
+    ],
+    "tests/validation/test_concept_ablation.py": [
+      "pytest",
+      "pathlib",
+      "tests.validation.ablation",
+      "tests.validation.framework",
+      "src.concepts.concept_graph"
+    ],
+    "tests/validation/benchmarks.py": [
+      "time",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "enum",
+      "logging",
+      "framework",
+      "metrics"
+    ],
+    "tests/validation/v31_executor.py": [
+      "sys",
+      "time",
+      "logging",
+      "pathlib",
+      "typing",
+      "dataclasses",
+      "src.coding.planner",
+      "src.coding.code_editor",
+      "src.coding.test_runner",
+      "src.coding.repository_analyzer",
+      "src.coding.patch_generator",
+      "v31_metrics",
+      "os",
+      "random"
+    ],
+    "tests/e2e/swarm/swarm_test.py": [
+      "__future__",
+      "pytest",
+      "asyncio",
+      "uuid",
+      "src.swarm.director",
+      "src.swarm.sub_orchestrator",
+      "src.swarm.swarm_coordinator",
+      "src.swarm.task_distributor",
+      "src.swarm.load_balancer",
+      "src.swarm.director",
+      "src.swarm.director"
+    ],
+    "tests/e2e/projects/real_world_autonomy_test.py": [
+      "__future__",
+      "asyncio",
+      "uuid",
+      "logging",
+      "src.config.logging"
+    ],
+    "tests/e2e/projects/long_horizon_autonomy_runner.py": [
+      "__future__",
+      "asyncio",
+      "logging",
+      "src.config.logging",
+      "tests.e2e.projects.real_world_autonomy_test"
+    ],
+    "tests/e2e/capability/master_capability_verification_test.py": [
+      "__future__",
+      "pytest",
+      "asyncio",
+      "typing"
+    ],
+    "tests/e2e/multimodal/vision_test.py": [
+      "__future__",
+      "pytest",
+      "asyncio",
+      "io",
+      "PIL",
+      "src.multimodal.vision_processor",
+      "src.multimodal.element_detector",
+      "src.multimodal.screenshot_pipeline",
+      "PIL",
+      "PIL",
+      "PIL",
+      "PIL",
+      "src.multimodal.vision_processor"
+    ],
+    "tests/e2e/architecture/architecture_analysis_test.py": [
+      "__future__",
+      "pytest",
+      "asyncio",
+      "src.agents.architecture_nodes"
+    ]
+  },
+  "file_summaries": {}
+}

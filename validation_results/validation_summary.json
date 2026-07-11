@@ -1,0 +1,258 @@
+{
+  "validation_phase": "V2",
+  "timestamp": "[]",
+  "ablation_studies": {
+    "memory": {
+      "component": "memory",
+      "baseline_mean": 0.85,
+      "ablated_mean": 0.7,
+      "impact_percent": 17.647058823529417,
+      "delta": 0.15000000000000002,
+      "num_trials": 10
+    },
+    "concepts": {
+      "component": "concepts",
+      "baseline_mean": 0.82,
+      "ablated_mean": 0.68,
+      "impact_percent": 17.073170731707307,
+      "delta": 0.1399999999999999,
+      "num_trials": 10
+    },
+    "world_model": {
+      "component": "world_model",
+      "baseline_mean": 0.78,
+      "ablated_mean": 0.65,
+      "impact_percent": 16.666666666666664,
+      "delta": 0.13,
+      "num_trials": 10
+    },
+    "governance": {
+      "component": "governance",
+      "baseline_mean": 0.9200000000000002,
+      "ablated_mean": 0.75,
+      "impact_percent": 18.47826086956523,
+      "delta": 0.17000000000000015,
+      "num_trials": 10
+    }
+  },
+  "coding_benchmark": {
+    "total_tasks": 10,
+    "successful_tasks": 10,
+    "success_rate": 1.0,
+    "total_time_seconds": 3.457069396972656e-05,
+    "average_time_seconds": 3.4570693969726562e-06,
+    "total_tokens": 10000,
+    "average_tokens": 1000.0,
+    "results": [
+      {
+        "task_id": "coding_task_0",
+        "success": true,
+        "time_taken_seconds": 1.2159347534179688e-05,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "bug_fixing"
+        }
+      },
+      {
+        "task_id": "coding_task_1",
+        "success": true,
+        "time_taken_seconds": 5.0067901611328125e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "feature_implementation"
+        }
+      },
+      {
+        "task_id": "coding_task_2",
+        "success": true,
+        "time_taken_seconds": 2.1457672119140625e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "test_generation"
+        }
+      },
+      {
+        "task_id": "coding_task_3",
+        "success": true,
+        "time_taken_seconds": 2.1457672119140625e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "refactoring"
+        }
+      },
+      {
+        "task_id": "coding_task_4",
+        "success": true,
+        "time_taken_seconds": 2.86102294921875e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "repository_analysis"
+        }
+      },
+      {
+        "task_id": "coding_task_5",
+        "success": true,
+        "time_taken_seconds": 1.9073486328125e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "bug_fixing"
+        }
+      },
+      {
+        "task_id": "coding_task_6",
+        "success": true,
+        "time_taken_seconds": 2.1457672119140625e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "feature_implementation"
+        }
+      },
+      {
+        "task_id": "coding_task_7",
+        "success": true,
+        "time_taken_seconds": 1.9073486328125e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "test_generation"
+        }
+      },
+      {
+        "task_id": "coding_task_8",
+        "success": true,
+        "time_taken_seconds": 2.1457672119140625e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "refactoring"
+        }
+      },
+      {
+        "task_id": "coding_task_9",
+        "success": true,
+        "time_taken_seconds": 2.1457672119140625e-06,
+        "token_usage": 1000,
+        "error_message": null,
+        "quality_score": 0.85,
+        "metadata": {
+          "task_type": "repository_analysis"
+        }
+      }
+    ]
+  },
+  "cost_analysis": {
+    "comparison": {
+      "total_subsystems": 4,
+      "total_tokens": 4800,
+      "total_latency_seconds": 2.6,
+      "average_latency_seconds": 0.65,
+      "total_cpu_usage_percent": 53.0,
+      "average_cpu_usage_percent": 13.25,
+      "total_memory_usage_mb": 270.0,
+      "average_memory_usage_mb": 67.5,
+      "total_api_cost_usd": 0.048,
+      "total_cost_usd": 0.04826,
+      "average_cost_usd": 0.012065,
+      "subsystem_breakdown": [
+        {
+          "subsystem_name": "memory",
+          "token_usage": 500,
+          "latency_seconds": 0.5,
+          "cpu_usage_percent": 10.0,
+          "memory_usage_mb": 50.0,
+          "api_cost_usd": 0.005,
+          "total_cost_usd": 0.00505,
+          "metadata": {}
+        },
+        {
+          "subsystem_name": "reasoning",
+          "token_usage": 2000,
+          "latency_seconds": 1.0,
+          "cpu_usage_percent": 20.0,
+          "memory_usage_mb": 100.0,
+          "api_cost_usd": 0.02,
+          "total_cost_usd": 0.0201,
+          "metadata": {}
+        },
+        {
+          "subsystem_name": "world_model",
+          "token_usage": 1500,
+          "latency_seconds": 0.8,
+          "cpu_usage_percent": 15.0,
+          "memory_usage_mb": 80.0,
+          "api_cost_usd": 0.015,
+          "total_cost_usd": 0.01508,
+          "metadata": {}
+        },
+        {
+          "subsystem_name": "governance",
+          "token_usage": 800,
+          "latency_seconds": 0.3,
+          "cpu_usage_percent": 8.0,
+          "memory_usage_mb": 40.0,
+          "api_cost_usd": 0.008,
+          "total_cost_usd": 0.00803,
+          "metadata": {}
+        }
+      ]
+    },
+    "bottlenecks": [
+      {
+        "subsystem": "reasoning",
+        "cost_usd": 0.0201,
+        "token_usage": 2000,
+        "latency_seconds": 1.0
+      },
+      {
+        "subsystem": "world_model",
+        "cost_usd": 0.01508,
+        "token_usage": 1500,
+        "latency_seconds": 0.8
+      },
+      {
+        "subsystem": "governance",
+        "cost_usd": 0.00803,
+        "token_usage": 800,
+        "latency_seconds": 0.3
+      },
+      {
+        "subsystem": "memory",
+        "cost_usd": 0.00505,
+        "token_usage": 500,
+        "latency_seconds": 0.5
+      }
+    ]
+  },
+  "long_horizon": {
+    "duration_seconds": 10.092305,
+    "goal_persistence_score": 0.95,
+    "failure_recovery_count": 0,
+    "stability_score": 1.0,
+    "total_tasks_completed": 10,
+    "total_failures": 0
+  },
+  "key_findings": [
+    "Memory system: +17.6% task success",
+    "Concept engine: +17.1% transfer learning",
+    "World model: +16.7% prediction accuracy",
+    "Governance: +18.5% decision quality",
+    "Coding benchmark: 100.0% success rate",
+    "Long-horizon stability: 100.0%"
+  ]
+}
