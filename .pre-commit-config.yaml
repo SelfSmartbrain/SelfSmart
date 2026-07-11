@@ -1,0 +1,25 @@
+# Pre-commit hooks for SelfSmart AI
+# Install with: pip install pre-commit
+# Run with: pre-commit install
+
+repos:
+  # Detect generic secrets
+    - repo: https://github.com/Yelp/detect-secrets
+      rev: v1.5.0
+      hooks:
+        - id: detect-secrets
+          args: ['--baseline', '.secrets.baseline']
+          exclude: package-lock.json|package\.json|yarn\.lock|pnpm-lock\.yaml|.env|.env.*|.secrets.baseline
+
+  # General Python checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-toml
