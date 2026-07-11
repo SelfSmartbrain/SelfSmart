@@ -5,9 +5,9 @@ from src.learning.continuous_learner import ContinuousLearner, LearningConfig
 
 logger = logging.getLogger(__name__)
 
-@app.task(bind=True, name="src.tasks.learning_tasks.run_learning_loop")
-def run_learning_loop(self):
-    """Celery task to run the continuous learning loop."""
+
+async def _run_learning_loop():
+    """Async function to run the continuous learning loop."""
     logger.info("Starting continuous learning task...")
 
     # Initialize learner
@@ -18,9 +18,20 @@ def run_learning_loop(self):
     # In a real senior implementation, we'd check a Redis key in the loop
 
     try:
-        # Run the async learning loop in the Celery worker
+        await learner.start_learning()
+    except Exception as e:
+        logger.error(f"Learning task failed: {e}")
+        raise
+
+    return {"status": "completed", "stats": learner.stats.__dict__ if hasattr(learner, 'stats') else {}
+
+
+@app.task(bind=True, name="src.tasks.learning_tasks.run_learning_loop")
+def run_learning_loop(self):
+    """Celery task to run the continuous learning loop."""
+    try:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(learner.start_learning())
+        loop.run_until_complete(_run_learning_loop())
     except Exception as e:
         logger.error(f"Learning task failed: {e}")
         self.retry(exc=e, countdown=60, max_retries=3)
