@@ -41,15 +41,15 @@ class GeminiClient:
     Production-grade Gemini API client.
     Handles the Google AI Studio / Gemini API specific format.
     """
-    
+
     def __init__(self, api_key: Optional[str] = None):
         settings = get_settings()
         self.api_key = api_key or settings.gemini_api_key
-        
+
         if not self.api_key:
             logger.warning("Gemini API key not configured")
             raise ValueError("Gemini API key is required")
-        
+
         self.base_url = "https://generativelanguage.googleapis.com/v1beta/models"
         # Allow overriding the model name via env/config.
         # The model must match the IDs returned by ModelService.ListModels (minus the "models/" prefix).
@@ -57,7 +57,7 @@ class GeminiClient:
         self.model = getattr(settings, "gemini_model", None) or "gemini-flash-latest"
         self.session: Optional[aiohttp.ClientSession] = None
         self.timeout = 60.0
-        
+
         logger.info(f"Gemini client initialized with model: {self.model}")
 
     async def __aenter__(self):
@@ -110,10 +110,10 @@ class GeminiClient:
         """Send chat completion request to Gemini"""
         if not self.session:
             raise RuntimeError("Client not initialized. Use async context manager.")
-        
+
         contents = self._format_messages(messages)
         url = f"{self.base_url}/{self.model}:generateContent?key={self.api_key}"
-        
+
         payload = {
             "contents": contents,
             "generationConfig": {
@@ -121,13 +121,13 @@ class GeminiClient:
                 "maxOutputTokens": max_tokens,
             }
         }
-        
+
         start_time = time.time()
         async with self.session.post(url, json=payload) as response:
             if response.status != 200:
                 error_text = await response.text()
                 raise Exception(f"Gemini API error {response.status}: {error_text}")
-            
+
             latency = time.time() - start_time
             LLM_LATENCY.labels(provider="gemini", model=self.model).observe(latency)
 
@@ -135,7 +135,7 @@ class GeminiClient:
             try:
                 content = data['candidates'][0]['content']['parts'][0]['text']
                 finish_reason = data['candidates'][0].get('finishReason', 'STOP')
-                
+
                 # Gemini usage metadata
                 usage_metadata = data.get('usageMetadata', {})
                 if usage_metadata:
@@ -167,10 +167,10 @@ class GeminiClient:
         """Stream chat completion response from Gemini"""
         if not self.session:
             raise RuntimeError("Client not initialized. Use async context manager.")
-        
+
         contents = self._format_messages(messages)
         url = f"{self.base_url}/{self.model}:streamGenerateContent?alt=sse&key={self.api_key}"
-        
+
         payload = {
             "contents": contents,
             "generationConfig": {
@@ -178,12 +178,12 @@ class GeminiClient:
                 "maxOutputTokens": max_tokens,
             }
         }
-        
+
         async with self.session.post(url, json=payload) as response:
             if response.status != 200:
                 error_text = await response.text()
                 raise Exception(f"Gemini Stream API error {response.status}: {error_text}")
-            
+
             async for line in response.content:
                 line = line.decode('utf-8').strip()
                 if line.startswith('data: '):
