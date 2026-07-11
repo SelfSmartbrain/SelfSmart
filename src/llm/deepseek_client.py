@@ -43,29 +43,29 @@ class DeepSeekClient:
     Production-grade DeepSeek API client with streaming and context management.
     Implements retry logic, rate limiting, and proper error handling.
     """
-    
+
     def __init__(self, api_key: Optional[str] = None):
         """Initialize DeepSeek client"""
         settings = get_settings()
         self.api_key = api_key or settings.deepseek_api_key
-        
+
         if not self.api_key:
             logger.warning("DeepSeek API key not configured")
             raise ValueError("DeepSeek API key is required")
-        
+
         self.base_url = "https://api.deepseek.com/v1"
         self.model = "deepseek-chat"
         self.session: Optional[aiohttp.ClientSession] = None
         self.max_retries = 3
         self.retry_delay = 2.0
         self.timeout = 60.0  # Increased from 30 to 60 seconds
-        
+
         # Rate limiting
         self.request_semaphore = asyncio.Semaphore(10)  # Max concurrent requests
         self.rate_limit_delay = 0.1  # 100ms between requests
-        
+
         logger.info("DeepSeek client initialized")
-    
+
     async def __aenter__(self):
         """Async context manager entry"""
         timeout = aiohttp.ClientTimeout(total=self.timeout, connect=30)  # Increased connect timeout
@@ -77,7 +77,7 @@ class DeepSeekClient:
             enable_cleanup_closed=True,
             limit_per_host=5  # Limit connections per host to avoid rate limiting
         )
-        
+
         self.session = aiohttp.ClientSession(
             timeout=timeout,
             connector=connector,
@@ -90,12 +90,12 @@ class DeepSeekClient:
             skip_auto_headers=['Accept-Encoding']  # Skip auto headers that might cause issues
         )
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
         if self.session:
             await self.session.close()
-    
+
     async def _make_request_with_retry(
         self,
         endpoint: str,
@@ -107,7 +107,7 @@ class DeepSeekClient:
         """
         async with self.request_semaphore:
             await asyncio.sleep(self.rate_limit_delay)
-            
+
             for attempt in range(self.max_retries):
                 try:
                     url = f"{self.base_url}{endpoint}"
@@ -134,7 +134,7 @@ class DeepSeekClient:
                             error_text = await response.text()
                             error_data = await response.json() if response.headers.get('content-type') == 'application/json' else {}
                             raise Exception(f"API error {response.status}: {error_text} - {error_data}")
-                
+
                 except asyncio.TimeoutError as e:
                     logger.error(f"Timeout error (attempt {attempt + 1}): {e}")
                     if attempt < self.max_retries - 1:
@@ -156,9 +156,9 @@ class DeepSeekClient:
                         continue
                     else:
                         raise Exception(f"Network error after {self.max_retries} attempts: {e}")
-            
+
             raise Exception("Max retries exceeded")
-    
+
     async def chat(
         self,
         messages: List[Message],
@@ -168,19 +168,19 @@ class DeepSeekClient:
     ) -> LLMResponse:
         """
         Send chat completion request to DeepSeek API.
-        
+
         Args:
             messages: List of conversation messages
             temperature: Sampling temperature (0.0 to 2.0)
             max_tokens: Maximum tokens in response
             stream: Whether to stream response
-            
+
         Returns:
             LLMResponse with content and metadata
         """
         if not self.session:
             raise RuntimeError("Client not initialized. Use async context manager.")
-        
+
         # Convert Message objects to API format
         api_messages = [
             {
@@ -189,7 +189,7 @@ class DeepSeekClient:
             }
             for msg in messages
         ]
-        
+
         payload = {
             "model": self.model,
             "messages": api_messages,
@@ -197,12 +197,12 @@ class DeepSeekClient:
             "max_tokens": max_tokens,
             "stream": stream
         }
-        
+
         try:
             start_time = time.time()
             response_data = await self._make_request_with_retry("/chat/completions", payload)
             latency = time.time() - start_time
-            
+
             # Record metrics
             LLM_LATENCY.labels(provider="deepseek", model=self.model).observe(latency)
             usage = response_data.get("usage", {})
@@ -211,18 +211,18 @@ class DeepSeekClient:
                 TOKEN_USAGE.labels(provider="deepseek", model=self.model, token_type="completion").inc(usage.get("completion_tokens", 0))
 
             choice = response_data["choices"][0]
-            
+
             return LLMResponse(
                 content=choice["message"]["content"],
                 finish_reason=choice.get("finish_reason", "stop"),
                 usage=usage,
                 model=response_data.get("model", self.model)
             )
-            
+
         except Exception as e:
             logger.error(f"Chat completion failed: {e}")
             raise
-    
+
     async def chat_stream(
         self,
         messages: List[Message],
@@ -232,18 +232,18 @@ class DeepSeekClient:
         """
         Stream chat completion response from DeepSeek API.
         Yields chunks of text as they arrive.
-        
+
         Args:
             messages: List of conversation messages
             temperature: Sampling temperature
             max_tokens: Maximum tokens in response
-            
+
         Yields:
             String chunks of the response
         """
         if not self.session:
             raise RuntimeError("Client not initialized. Use async context manager.")
-        
+
         # Convert Message objects to API format
         api_messages = [
             {
@@ -252,7 +252,7 @@ class DeepSeekClient:
             }
             for msg in messages
         ]
-        
+
         payload = {
             "model": self.model,
             "messages": api_messages,
@@ -260,22 +260,22 @@ class DeepSeekClient:
             "max_tokens": max_tokens,
             "stream": True
         }
-        
+
         async with self.request_semaphore:
             await asyncio.sleep(self.rate_limit_delay)
-            
+
             try:
                 url = f"{self.base_url}/chat/completions"
                 async with self.session.post(url, json=payload) as response:
                     if response.status != 200:
                         error_text = await response.text()
                         raise Exception(f"Stream API error {response.status}: {error_text}")
-                    
+
                     async for line in response.content:
                         line = line.decode('utf-8').strip()
                         if not line or line == 'data: [DONE]':
                             continue
-                        
+
                         if line.startswith('data: '):
                             try:
                                 data = json.loads(line[6:])
@@ -287,11 +287,11 @@ class DeepSeekClient:
                             except json.JSONDecodeError as e:
                                 logger.warning(f"Failed to parse stream chunk: {e}")
                                 continue
-                
+
             except aiohttp.ClientError as e:
                 logger.error(f"Streaming error: {e}")
                 raise
-    
+
     async def get_model_info(self) -> Dict[str, Any]:
         """Get information about available models"""
         try:
@@ -300,7 +300,7 @@ class DeepSeekClient:
         except Exception as e:
             logger.error(f"Failed to get model info: {e}")
             return {}
-    
+
     def create_system_prompt(self, context: Optional[str] = None) -> Message:
         """
         Create a system prompt with optional context.
@@ -320,12 +320,12 @@ When responding:
 4. Break down complex topics
 5. Adapt to user's expertise level
 """
-        
+
         if context:
             base_prompt += f"\n\nContext:\n{context}"
-        
+
         return Message(role="system", content=base_prompt)
-    
+
     def estimate_tokens(self, text: str) -> int:
         """
         Estimate token count for text.
