@@ -84,7 +84,7 @@ async def api_info():
 async def health():
     if learning_chatbot is None:
         return {"status": "initializing", "chatbot_ready": False}
-    
+
     try:
         status = await learning_chatbot.get_chatbot_status()
         return {
@@ -164,7 +164,7 @@ async def toggle_learning():
     """Toggle continuous learning on/off"""
     if learning_chatbot is None:
         raise HTTPException(status_code=503, detail="Chatbot not initialized")
-    
+
     try:
         # This would need to be implemented in the learning chatbot
         # For now, return a placeholder response
@@ -182,15 +182,15 @@ async def startup_event():
         print(" Initializing Self-Learning Chatbot...")
         print(" Setting up vector store...")
         print(" Starting web crawler...")
-        
+
         # Initialize LLM pipeline
         from llm_pipeline import initialize_llm_pipeline
-        
+
         # Get API key from environment (prioritize working APIs)
         openai_key = os.getenv("OPENAI_API_KEY")
         deepseek_key = os.getenv("DEEPSEEK_API_KEY")
         gemini_key = os.getenv("GEMINI_API_KEY")
-        
+
         if openai_key:
             print(" Initializing OpenAI pipeline (reliable)...")
             initialize_llm_pipeline(openai_key, "openai")
@@ -207,28 +207,28 @@ async def startup_event():
             print(" WARNING: No LLM API key found!")
             print(" Set OPENAI_API_KEY, DEEPSEEK_API_KEY or GEMINI_API_KEY in your .env file")
             print(" Chatbot will use basic responses only")
-        
+
         # Initialize the chatbot (will be created lazily when needed)
         chatbot = await get_chatbot()
-        
+
         print(" Self-Learning Chatbot ready!")
         print(" API available at: http://localhost:8000")
         print(" Try: POST /api/chat with {\"message\": \"Hello, what can you tell me about AI?\"}")
         print(" Or: POST /api/learn with {\"urls\": [\"https://example.com\"]} to teach me")
-        
+
     except Exception as e:
         print(f" Failed to initialize chatbot: {e}")
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     print(" Starting Self-Learning Chatbot Server...")
     print(" This bot continuously learns from the internet!")
     print()
-    
+
     uvicorn.run(
-        app, 
-        host="0.0.0.0", 
+        app,
+        host="0.0.0.0",
         port=8000,
         log_level="info"
     )
