@@ -29,7 +29,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     setError(null);
 
     const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
-    const payload = isLogin 
+    const payload = isLogin
       ? { email, password }
       : { email, password, full_name: fullName };
 
@@ -90,12 +90,12 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
             {isLogin ? "Welcome back" : "Create an account"}
           </CardTitle>
           <CardDescription className="text-zinc-400">
-            {isLogin 
-              ? "Sign in to access your continuous learning assistant" 
+            {isLogin
+              ? "Sign in to access your continuous learning assistant"
               : "Get started with your personal RAG Copilot"}
           </CardDescription>
         </CardHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
@@ -158,8 +158,8 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-indigo-600 text-white hover:bg-indigo-500 font-semibold"
               disabled={isLoading}
             >
