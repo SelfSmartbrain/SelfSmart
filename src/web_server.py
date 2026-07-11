@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import List, Optional
 import uvicorn
 import asyncio
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     Handles startup/shutdown and model pre-warming.
     """
     logger.info("starting_up", app_name=settings.app_name)
-    
+
     # Pre-warm local model if enabled
     global local_llm_client, use_local_llm
     if use_local_llm:
@@ -49,15 +49,15 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error("local_llm_prewarm_failed", error=str(e))
             use_local_llm = False
-            
+
     yield
-    
+
     logger.info("shutting_down")
 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
-    title="SmartSelf AI", 
+    title="SmartSelf AI",
     description="Intelligent Self-Learning Chatbot with LLM",
     lifespan=lifespan
 )
@@ -80,10 +80,10 @@ async def register(user_data: UserCreate):
     existing_user = await conversation_manager.get_user_by_email(user_data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     hashed_password = get_password_hash(user_data.password)
     user_id = await conversation_manager.create_user(user_data.email, hashed_password, user_data.full_name)
-    
+
     access_token = create_access_token(data={"sub": user_id, "email": user_data.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -92,7 +92,7 @@ async def login(credentials: UserLogin):
     user = await conversation_manager.get_user_by_email(credentials.email)
     if not user or not verify_password(credentials.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     access_token = create_access_token(data={"sub": user["id"], "email": user["email"]})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -132,7 +132,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(correlation_id=correlation_id)
-        
+
         response = await call_next(request)
         response.headers["X-Correlation-ID"] = correlation_id
         return response
@@ -146,7 +146,7 @@ async def lifespan(app: FastAPI):
     Handles startup/shutdown and model pre-warming.
     """
     logger.info("starting_up", app_name=settings.app_name)
-    
+
     # Pre-warm local model if enabled
     global local_llm_client, use_local_llm
     if use_local_llm:
@@ -161,9 +161,9 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error("local_llm_prewarm_failed", error=str(e))
             use_local_llm = False
-            
+
     yield
-    
+
     logger.info("shutting_down")
 
 
@@ -218,9 +218,25 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
 
+    @field_validator('message')
+    @classmethod
+    def validate_message_length(cls, v):
+        max_length = 1000
+        if len(v) > max_length:
+            raise ValueError(f'Message must be at most {max_length} characters long')
+        return v
+
 class StreamChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
+
+    @field_validator('message')
+    @classmethod
+    def validate_message_length(cls, v):
+        max_length = 1000
+        if len(v) > max_length:
+            raise ValueError(f'Message must be at most {max_length} characters long')
+        return v
 
 class ChatResponse(BaseModel):
     response: str
@@ -249,7 +265,7 @@ async def save_feedback(request: FeedbackRequest):
         "is_positive": request.is_positive,
         "comment": request.comment
     }
-    
+
     try:
         with open(feedback_path, "a") as f:
             f.write(json.dumps(feedback_data) + "\n")
@@ -273,42 +289,42 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
                 raise HTTPException(status_code=403, detail="Conversation not found or access denied")
         else:
             conversation = await conversation_manager.create_conversation(user_id=current_user.user_id)
-        
+
         # Add user message
         await conversation_manager.add_message(
             conversation.id,
             "user",
             request.message
         )
-        
+
         # Get conversation context
         context_messages = await conversation_manager.get_conversation_context(conversation.id)
-        
+
         # Build messages for LLM
         messages = []
         messages.append(Message(role="system", content="You are SmartSelf AI, an intelligent assistant that continuously learns from the internet. Be helpful, accurate, and conversational."))
         messages.extend(context_messages)
-        
+
         # Enhance query with RAG
         enhanced_query, retrieved_knowledge = await rag_service.enhance_query(
             request.message,
             context_messages
         )
-        
+
         # If RAG found relevant knowledge
         if retrieved_knowledge:
             knowledge_context = "Relevant information from the system's learning:\n"
             for piece in retrieved_knowledge:
                 knowledge_context += f"- {piece.content}\n"
             messages.append(Message(role="system", content=knowledge_context))
-        
+
         messages[-1] = Message(role="user", content=request.message)
-        
+
         # Get LLM response (use local or API)
         if use_local_llm:
             if local_llm_client is None:
                 raise HTTPException(status_code=503, detail="Local model is not yet loaded.")
-            
+
             # Convert Message objects to dict format
             messages_dict = [{"role": msg.role, "content": msg.content} for msg in messages]
             llm_response = local_llm_client.generate(messages_dict)
@@ -317,7 +333,7 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
                 # Add tool calling instructions (Phase 8)
                 messages.insert(0, Message(role="system", content="You are a helpful assistant. If you need external data (web_search, python_repl, get_datetime), reply with a JSON object: {'tool': 'name', 'args': {}}. If not, reply normally."))
                 llm_response = await llm.chat(messages)
-                
+
                 # Check for Tool Call
                 try:
                     tool_call = json.loads(llm_response.content)
@@ -329,7 +345,7 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
                         llm_response = await llm.chat(messages)
                 except:
                     pass
-                
+
                 # Self-Critique Step (Phase 5)
                 final_content, refined = await rag_service.critique_response(
                     request.message,
@@ -339,18 +355,18 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
                 )
                 if refined:
                     llm_response.content = final_content
-        
+
         # Add assistant message
         await conversation_manager.add_message(
             conversation.id,
             "assistant",
             llm_response.content
         )
-        
+
         # Process response with knowledge sources
         if retrieved_knowledge:
             llm_response.sources = [piece.source for piece in retrieved_knowledge]
-        
+
         return ChatResponse(
             response=llm_response.content,
             sources=llm_response.sources,
@@ -358,7 +374,7 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
             learning_active=learner.is_running if hasattr(learner, 'is_running') else True,
             conversation_id=conversation.id
         )
-        
+
     except Exception as e:
         logger.error(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -379,43 +395,43 @@ async def chat_stream(request: StreamChatRequest, current_user: TokenData = Depe
                     return
             else:
                 conversation = await conversation_manager.create_conversation(user_id=current_user.user_id)
-            
+
             # Send conversation ID
             yield f"data: {json.dumps({'type': 'conversation_id', 'id': conversation.id})}\n\n"
-            
+
             # Add user message
             await conversation_manager.add_message(
                 conversation.id,
                 "user",
                 request.message
             )
-            
+
             # Get conversation context
             context_messages = await conversation_manager.get_conversation_context(conversation.id)
-            
+
             # Build messages for LLM
             messages = []
             messages.append(Message(role="system", content="You are SmartSelf AI, an intelligent assistant that continuously learns from the internet. Be helpful, accurate, and conversational."))
             messages.extend(context_messages)
-            
+
             # Enhance query with RAG
             enhanced_query, retrieved_knowledge = await rag_service.enhance_query(
                 request.message,
                 context_messages
             )
-            
+
             # If RAG found relevant knowledge
             if retrieved_knowledge:
                 knowledge_context = "Relevant information from the system's learning:\n"
                 for piece in retrieved_knowledge:
                     knowledge_context += f"- {piece.content}\n"
                 messages.append(Message(role="system", content=knowledge_context))
-            
+
             messages[-1] = Message(role="user", content=request.message)
-            
+
             # Stream LLM response (use local or API)
             full_response = ""
-            
+
             if use_local_llm:
                 if local_llm_client is None:
                     local_llm_client = LocalLLMClient(
@@ -423,10 +439,10 @@ async def chat_stream(request: StreamChatRequest, current_user: TokenData = Depe
                         base_model_path="mistralai/Mistral-7B-v0.1"
                     )
                     local_llm_client.load_model()
-                
+
                 # Convert Message objects to dict format
                 messages_dict = [{"role": msg.role, "content": msg.content} for msg in messages]
-                
+
                 # Stream from local LLM
                 async for chunk in local_llm_client.generate_stream(messages_dict):
                     full_response += chunk
@@ -437,22 +453,22 @@ async def chat_stream(request: StreamChatRequest, current_user: TokenData = Depe
                     async for chunk in llm.chat_stream(messages):
                         full_response += chunk
                         yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-            
+
             # Add assistant message
             await conversation_manager.add_message(
                 conversation.id,
                 "assistant",
                 full_response
             )
-            
+
             # Send completion with sources
             sources = [piece.source for piece in retrieved_knowledge] if retrieved_knowledge else []
             yield f"data: {json.dumps({'type': 'done', 'sources': sources})}\n\n"
-            
+
         except Exception as e:
             logger.error(f"Stream chat error: {e}")
             yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
-    
+
     return StreamingResponse(
         generate(),
         media_type="text/event-stream",
@@ -490,7 +506,7 @@ async def get_conversation(conversation_id: str, current_user: TokenData = Depen
         conversation = await conversation_manager.get_conversation(conversation_id, user_id=current_user.user_id)
         if not conversation:
             raise HTTPException(status_code=404, detail="Conversation not found or access denied")
-        
+
         return {
             "id": conversation.id,
             "title": conversation.title,
@@ -536,12 +552,12 @@ async def get_stats():
     try:
         conv_stats = await conversation_manager.get_stats()
         rag_stats = rag_service.get_rag_stats()
-        
+
         # Get learning stats if available
         learning_stats = {}
         if hasattr(learner, 'integration_stats'):
             learning_stats = learner.integration_stats
-        
+
         return {
             "conversations": conv_stats,
             "rag": rag_stats,
@@ -559,7 +575,7 @@ async def start_learning():
     try:
         task = run_learning_loop.delay()
         return {
-            "success": True, 
+            "success": True,
             "message": "Learning pipeline started in background",
             "task_id": task.id
         }
@@ -592,7 +608,7 @@ async def start_training():
     try:
         task = run_model_training.delay()
         return {
-            "success": True, 
+            "success": True,
             "message": "Model training started in background",
             "task_id": task.id
         }
@@ -660,14 +676,14 @@ async def root():
                 padding: 0;
                 box-sizing: border-box;
             }
-            
+
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
                 background: #343541;
                 height: 100vh;
                 display: flex;
             }
-            
+
             .sidebar {
                 width: 260px;
                 background: #202123;
@@ -676,7 +692,7 @@ async def root():
                 padding: 10px;
                 border-right: 1px solid #4d4d4f;
             }
-            
+
             .new-chat-btn {
                 background: #40414f;
                 color: white;
@@ -690,16 +706,16 @@ async def root():
                 margin-bottom: 20px;
                 transition: background 0.2s;
             }
-            
+
             .new-chat-btn:hover {
                 background: #4d4d4f;
             }
-            
+
             .conversations-list {
                 flex: 1;
                 overflow-y: auto;
             }
-            
+
             .conversation-item {
                 padding: 12px;
                 color: #ececf1;
@@ -711,22 +727,22 @@ async def root():
                 text-overflow: ellipsis;
                 transition: background 0.2s;
             }
-            
+
             .conversation-item:hover {
                 background: #2a2b32;
             }
-            
+
             .conversation-item.active {
                 background: #343541;
             }
-            
+
             .main-content {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
                 background: #343541;
             }
-            
+
             .chat-header {
                 padding: 20px;
                 border-bottom: 1px solid #4d4d4f;
@@ -734,12 +750,12 @@ async def root():
                 justify-content: space-between;
                 align-items: center;
             }
-            
+
             .chat-header h2 {
                 color: white;
                 font-size: 18px;
             }
-            
+
             .voice-btn {
                 background: #40414f;
                 color: white;
@@ -749,21 +765,21 @@ async def root():
                 cursor: pointer;
                 transition: background 0.2s;
             }
-            
+
             .voice-btn:hover {
                 background: #4d4d4f;
             }
-            
+
             .voice-btn.recording {
                 background: #ef4444;
                 animation: pulse 1s infinite;
             }
-            
+
             @keyframes pulse {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0.5; }
             }
-            
+
             .chat-messages {
                 flex: 1;
                 overflow-y: auto;
@@ -772,7 +788,7 @@ async def root():
                 flex-direction: column;
                 gap: 20px;
             }
-            
+
             .message {
                 display: flex;
                 gap: 15px;
@@ -780,11 +796,11 @@ async def root():
                 margin: 0 auto;
                 width: 100%;
             }
-            
+
             .message.user {
                 justify-content: flex-end;
             }
-            
+
             .message-avatar {
                 width: 30px;
                 height: 30px;
@@ -795,50 +811,50 @@ async def root():
                 font-size: 14px;
                 flex-shrink: 0;
             }
-            
+
             .message.bot .message-avatar {
                 background: #19c37d;
             }
-            
+
             .message.user .message-avatar {
                 background: #5436da;
             }
-            
+
             .message-content {
                 padding: 12px 16px;
                 border-radius: 8px;
                 line-height: 1.6;
                 max-width: 70%;
             }
-            
+
             .message.bot .message-content {
                 background: #444654;
                 color: #ececf1;
             }
-            
+
             .message.user .message-content {
                 background: #5436da;
                 color: white;
             }
-            
+
             .message-sources {
                 margin-top: 8px;
                 font-size: 12px;
                 color: #8e8ea0;
                 font-style: italic;
             }
-            
+
             .chat-input {
                 padding: 20px;
                 border-top: 1px solid #4d4d4f;
             }
-            
+
             .input-container {
                 max-width: 800px;
                 margin: 0 auto;
                 position: relative;
             }
-            
+
             .chat-input textarea {
                 width: 100%;
                 background: #40414f;
@@ -851,11 +867,11 @@ async def root():
                 outline: none;
                 font-family: inherit;
             }
-            
+
             .chat-input textarea:focus {
                 border-color: #19c37d;
             }
-            
+
             .send-btn {
                 position: absolute;
                 right: 10px;
@@ -868,26 +884,26 @@ async def root():
                 cursor: pointer;
                 transition: background 0.2s;
             }
-            
+
             .send-btn:hover {
                 background: #1a885d;
             }
-            
+
             .send-btn:disabled {
                 background: #565869;
                 cursor: not-allowed;
             }
-            
+
             .typing-indicator {
                 color: #8e8ea0;
                 font-style: italic;
                 display: none;
             }
-            
+
             .typing-indicator.active {
                 display: block;
             }
-            
+
             @media (max-width: 768px) {
                 .sidebar {
                     display: none;
@@ -929,12 +945,12 @@ async def root():
                 </div>
             </div>
         </div>
-        
+
         <script>
             let currentConversationId = null;
             let isRecording = false;
             let recognition = null;
-            
+
             // Initialize speech recognition
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -942,43 +958,43 @@ async def root():
                 recognition.continuous = false;
                 recognition.interimResults = false;
                 recognition.lang = 'en-US';
-                
+
                 recognition.onresult = (event) => {
                     const transcript = event.results[0][0].transcript;
                     document.getElementById('userInput').value = transcript;
                     stopRecording();
                 };
-                
+
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
                     stopRecording();
                 };
-                
+
                 recognition.onend = () => {
                     stopRecording();
                 };
             }
-            
+
             function toggleVoice() {
                 if (!recognition) {
                     alert('Speech recognition is not supported in your browser.');
                     return;
                 }
-                
+
                 if (isRecording) {
                     stopRecording();
                 } else {
                     startRecording();
                 }
             }
-            
+
             function startRecording() {
                 isRecording = true;
                 recognition.start();
                 document.getElementById('voiceBtn').classList.add('recording');
                 document.getElementById('voiceBtn').textContent = '🔴 Stop';
             }
-            
+
             function stopRecording() {
                 isRecording = false;
                 if (recognition) {
@@ -987,7 +1003,7 @@ async def root():
                 document.getElementById('voiceBtn').classList.remove('recording');
                 document.getElementById('voiceBtn').textContent = '🎤 Voice';
             }
-            
+
             function speak(text) {
                 if ('speechSynthesis' in window) {
                     const utterance = new SpeechSynthesisUtterance(text);
@@ -996,21 +1012,21 @@ async def root():
                     speechSynthesis.speak(utterance);
                 }
             }
-            
+
             async function sendMessage() {
                 const input = document.getElementById('userInput');
                 const message = input.value.trim();
-                
+
                 if (!message) return;
-                
+
                 // Add user message to chat
                 addMessage(message, 'user');
                 input.value = '';
-                
+
                 // Show typing indicator
                 document.getElementById('typingIndicator').classList.add('active');
                 document.getElementById('sendBtn').disabled = true;
-                
+
                 try {
                     const response = await fetch('/api/chat/stream', {
                         method: 'POST',
@@ -1022,25 +1038,25 @@ async def root():
                             conversation_id: currentConversationId
                         })
                     });
-                    
+
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let botMessageContent = '';
                     let botMessageDiv = null;
                     let sources = [];
-                    
+
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-                        
+
                         const chunk = decoder.decode(value);
                         const lines = chunk.split('\\n');
-                        
+
                         for (const line of lines) {
                             if (line.startsWith('data: ')) {
                                 try {
                                     const data = JSON.parse(line.slice(6));
-                                    
+
                                     if (data.type === 'conversation_id') {
                                         currentConversationId = data.id;
                                         loadConversations();
@@ -1064,12 +1080,12 @@ async def root():
                             }
                         }
                     }
-                    
+
                     // Speak the response
                     if (botMessageContent) {
                         speak(botMessageContent);
                     }
-                    
+
                 } catch (error) {
                     console.error('Error:', error);
                     addMessage('Sorry, I encountered an error. Please try again.', 'bot');
@@ -1078,33 +1094,33 @@ async def root():
                     document.getElementById('sendBtn').disabled = false;
                 }
             }
-            
+
             function addMessage(content, role) {
                 const messagesDiv = document.getElementById('chatMessages');
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${role}`;
-                
+
                 const avatar = role === 'bot' ? '🤖' : '👤';
-                
+
                 messageDiv.innerHTML = `
                     <div class="message-avatar">${avatar}</div>
                     <div class="message-content">${content}</div>
                 `;
-                
+
                 messagesDiv.appendChild(messageDiv);
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                
+
                 return messageDiv;
             }
-            
+
             function updateMessageContent(messageDiv, content) {
                 const contentDiv = messageDiv.querySelector('.message-content');
                 contentDiv.textContent = content;
-                
+
                 const messagesDiv = document.getElementById('chatMessages');
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
-            
+
             function addSources(messageDiv, sources) {
                 const contentDiv = messageDiv.querySelector('.message-content');
                 const sourcesDiv = document.createElement('div');
@@ -1112,14 +1128,14 @@ async def root():
                 sourcesDiv.textContent = `Sources: ${sources.join(', ')}`;
                 contentDiv.appendChild(sourcesDiv);
             }
-            
+
             function handleKeyDown(event) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
                     sendMessage();
                 }
             }
-            
+
             async function newChat() {
                 currentConversationId = null;
                 const messagesDiv = document.getElementById('chatMessages');
@@ -1132,19 +1148,19 @@ async def root():
                     </div>
                 `;
             }
-            
+
             function clearChat() {
                 newChat();
             }
-            
+
             async function loadConversations() {
                 try {
                     const response = await fetch('/api/conversations');
                     const conversations = await response.json();
-                    
+
                     const listDiv = document.getElementById('conversationsList');
                     listDiv.innerHTML = '';
-                    
+
                     conversations.forEach(conv => {
                         const item = document.createElement('div');
                         item.className = 'conversation-item';
@@ -1159,27 +1175,27 @@ async def root():
                     console.error('Error loading conversations:', error);
                 }
             }
-            
+
             async function loadConversation(conversationId) {
                 currentConversationId = conversationId;
-                
+
                 try {
                     const response = await fetch(`/api/conversations/${conversationId}`);
                     const conversation = await response.json();
-                    
+
                     const messagesDiv = document.getElementById('chatMessages');
                     messagesDiv.innerHTML = '';
-                    
+
                     conversation.messages.forEach(msg => {
                         addMessage(msg.content, msg.role);
                     });
-                    
+
                     loadConversations();
                 } catch (error) {
                     console.error('Error loading conversation:', error);
                 }
             }
-            
+
             // Load conversations on page load
             loadConversations();
         </script>
