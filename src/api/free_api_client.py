@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class FreeAPIClient:
     """Client for accessing free public APIs without authentication"""
-    
+
     def __init__(self):
         self.session = None
         # Disable proxy for API calls to avoid DNS resolution issues
@@ -184,12 +184,12 @@ class FreeAPIClient:
                 }
             }
         }
-    
+
     async def __aenter__(self):
         """Async context manager entry"""
         # Create session with connector to avoid DNS issues
         timeout = aiohttp.ClientTimeout(total=30, connect=10)
-        
+
         # Clear proxy environment variables to avoid DNS resolution issues
         import os
         proxies = None
@@ -199,7 +199,7 @@ class FreeAPIClient:
         else:
             # Use proxy settings if explicitly configured
             proxies = None  # Disable proxy to avoid DNS issues
-        
+
         self.session = aiohttp.ClientSession(
             timeout=timeout,
             connector=self.connector,
@@ -207,12 +207,12 @@ class FreeAPIClient:
             trust_env=False  # Don't use system proxy settings
         )
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
         if self.session:
             await self.session.close()
-    
+
     async def fetch_wikipedia_random(self) -> Optional[Dict[str, Any]]:
         """Fetch a random Wikipedia article"""
         try:
@@ -229,7 +229,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching Wikipedia: {e}")
         return None
-    
+
     async def fetch_wikipedia_search(self, title: str) -> Optional[Dict[str, Any]]:
         """Search Wikipedia for a specific title"""
         try:
@@ -247,25 +247,25 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error searching Wikipedia: {e}")
         return None
-    
+
     async def fetch_hacker_news_stories(self, story_type: str = "top", limit: int = 5) -> List[Dict[str, Any]]:
         """Fetch Hacker News stories"""
         try:
             story_types = {
                 "top": "top_stories",
-                "new": "new_stories", 
+                "new": "new_stories",
                 "best": "best_stories"
             }
-            
+
             # Get story IDs
             endpoint = story_types.get(story_type, "top_stories")
             url = f"{self.base_apis['hacker_news']['base_url']}{self.base_apis['hacker_news']['endpoints'][endpoint]}"
-            
+
             async with self.session.get(url) as response:
                 if response.status == 200:
                     story_ids = await response.json()
                     story_ids = story_ids[:limit]  # Limit results
-                    
+
                     # Fetch story details
                     stories = []
                     for story_id in story_ids:
@@ -281,12 +281,12 @@ class FreeAPIClient:
                                     'by': story_data.get('by'),
                                     'time': datetime.fromtimestamp(story_data.get('time', 0)).isoformat()
                                 })
-                    
+
                     return stories
         except Exception as e:
             logger.error(f"Error fetching Hacker News: {e}")
         return []
-    
+
     async def fetch_github_trending(self) -> List[Dict[str, Any]]:
         """Fetch trending GitHub repositories"""
         try:
@@ -308,7 +308,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching GitHub trending: {e}")
         return []
-    
+
     async def fetch_joke(self, joke_type: str = "chuck") -> Optional[Dict[str, Any]]:
         """Fetch a random joke"""
         try:
@@ -336,7 +336,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching joke: {e}")
         return None
-    
+
     async def fetch_quote(self) -> Optional[Dict[str, Any]]:
         """Fetch a random quote"""
         try:
@@ -353,7 +353,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching quote: {e}")
         return None
-    
+
     async def fetch_advice(self) -> Optional[Dict[str, Any]]:
         """Fetch random advice"""
         try:
@@ -368,7 +368,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching advice: {e}")
         return None
-    
+
     async def fetch_trivia(self) -> Optional[Dict[str, Any]]:
         """Fetch a trivia question"""
         try:
@@ -389,7 +389,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching trivia: {e}")
         return None
-    
+
     async def fetch_countries(self, limit: int = 5) -> List[Dict[str, Any]]:
         """Fetch country information"""
         try:
@@ -411,7 +411,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching countries: {e}")
         return []
-    
+
     async def fetch_crypto_prices(self) -> List[Dict[str, Any]]:
         """Fetch cryptocurrency prices"""
         try:
@@ -433,7 +433,7 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching crypto prices: {e}")
         return []
-    
+
     async def fetch_activity_suggestion(self) -> Optional[Dict[str, Any]]:
         """Fetch a random activity suggestion"""
         try:
@@ -451,11 +451,11 @@ class FreeAPIClient:
         except Exception as e:
             logger.error(f"Error fetching activity: {e}")
         return None
-    
+
     async def fetch_all_random_content(self) -> Dict[str, Any]:
         """Fetch random content from multiple APIs"""
         results = {}
-        
+
         # Fetch from multiple APIs in parallel
         tasks = [
             self.fetch_wikipedia_random(),
@@ -465,17 +465,17 @@ class FreeAPIClient:
             self.fetch_activity_suggestion(),
             self.fetch_trivia()
         ]
-        
+
         api_names = ['wikipedia', 'joke', 'quote', 'advice', 'activity', 'trivia']
-        
+
         responses = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         for api_name, response in zip(api_names, responses):
             if not isinstance(response, Exception) and response:
                 results[api_name] = response
-        
+
         return results
-    
+
     def get_available_apis(self) -> List[str]:
         """Get list of available free APIs"""
         return list(self.base_apis.keys())
