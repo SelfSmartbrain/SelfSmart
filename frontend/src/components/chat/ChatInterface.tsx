@@ -43,18 +43,18 @@ export function ChatInterface() {
             </div>
             <h2 className="text-2xl font-bold mb-2">Welcome to SmartSelf AI</h2>
             <p className="text-muted-foreground max-w-md">
-              Your autonomous learning assistant. Ask me anything about retail intelligence, 
+              Your autonomous learning assistant. Ask me anything about retail intelligence,
               demand forecasting, or latest market trends.
             </p>
           </div>
         ) : (
           <div className="flex flex-col divide-y">
             {messages.map((msg, i) => (
-              <ChatMessage 
-                key={i} 
-                message={msg} 
-                index={i} 
-                conversationId={conversationId} 
+              <ChatMessage
+                key={i}
+                message={msg}
+                index={i}
+                conversationId={conversationId}
               />
             ))}
           </div>
