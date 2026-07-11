@@ -38,6 +38,37 @@ async def synthesize_rejected(prompt: str, chosen: str, client: GeminiClient) ->
     response = await client.chat(messages)
     return response.content
 
+def _validate_feedback(fb: dict) -> bool:
+    """Validate a feedback entry.
+    
+    Args:
+        fb: Dictionary containing feedback data.
+        
+    Returns:
+        True if valid, False otherwise.
+    """
+    required_keys = {'conversation_id', 'message_index', 'is_positive'}
+    if not all(key in fb for key in required_keys):
+        return False
+
+    # Check types
+    if not isinstance(fb['conversation_id'], str):
+        return False
+    if not isinstance(fb['message_index'], int):
+        return False
+    if not isinstance(fb['is_positive'], bool):
+        return False
+
+    # Optional: comment validation
+    if 'comment' in fb and fb['comment'] is not None:
+        if not isinstance(fb['comment'], str):
+            return False
+        # Optionally, limit comment length to prevent abuse
+        if len(fb['comment']) > 500:
+            return False
+
+    return True
+
 async def build_dataset():
     load_dotenv()
 
@@ -69,6 +100,11 @@ async def build_dataset():
         dpo_pairs = []
 
         for fb in feedbacks:
+            # Validate feedback
+            if not _validate_feedback(fb):
+                logger.warning(f"Skipping invalid feedback: {fb}")
+                continue
+
             conv_id = fb['conversation_id']
             idx = fb['message_index']
             is_pos = fb['is_positive']
