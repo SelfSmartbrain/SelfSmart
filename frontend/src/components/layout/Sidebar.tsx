@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { 
-  MessageSquare, 
-  BarChart3, 
-  Settings, 
-  BookOpen, 
+import {
+  MessageSquare,
+  BarChart3,
+  Settings,
+  BookOpen,
   ExternalLink,
   PlusCircle,
   Trash2,
@@ -27,18 +27,18 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { 
-    clearChat, 
-    conversations, 
-    conversationId, 
-    fetchConversations, 
-    selectConversation, 
-    deleteConversation 
+  const {
+    clearChat,
+    conversations,
+    conversationId,
+    fetchConversations,
+    selectConversation,
+    deleteConversation
   } = useChatStore();
 
   useEffect(() => {
     fetchConversations();
-    
+
     // Refresh conversations when auth changes
     const handleAuthChange = () => fetchConversations();
     window.addEventListener("auth-changed", handleAuthChange);
@@ -55,9 +55,9 @@ export function Sidebar() {
           <h1 className="text-xl font-bold tracking-tight truncate">SmartSelf AI</h1>
         </div>
 
-        <Button 
+        <Button
           onClick={clearChat}
-          variant="outline" 
+          variant="outline"
           className="w-full justify-start gap-2 mb-4 shrink-0"
         >
           <PlusCircle className="w-4 h-4" />
@@ -74,8 +74,8 @@ export function Sidebar() {
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive 
-                    ? "bg-primary text-primary-foreground" 
+                  isActive
+                    ? "bg-primary text-primary-foreground"
                     : "hover:bg-accent hover:text-accent-foreground"
                 )}
               >
