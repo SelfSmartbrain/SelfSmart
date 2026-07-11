@@ -16,10 +16,10 @@ class YouTubeCrawler:
     """
     Crawler for extracting transcripts from YouTube videos.
     """
-    
+
     def __init__(self):
         logger.info("YouTube crawler initialized")
-        
+
     def _extract_video_id(self, url: str) -> Optional[str]:
         """Extract YouTube video ID from URL"""
         patterns = [
@@ -27,7 +27,7 @@ class YouTubeCrawler:
             r'(?:embed\/)([0-9A-Za-z_-]{11}).*',
             r'(?:youtu\.be\/)([0-9A-Za-z_-]{11}).*'
         ]
-        
+
         for pattern in patterns:
             match = re.search(pattern, url)
             if match:
@@ -40,17 +40,17 @@ class YouTubeCrawler:
         if not video_id:
             logger.warning(f"Could not extract video ID from URL: {url}")
             return None
-            
+
         try:
             # Fetch transcript
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
-            
+
             # Combine transcript parts
             text = " ".join([t['text'] for t in transcript_list])
-            
+
             if not text.strip():
                 return None
-                
+
             return CrawlResult(
                 url=url,
                 title=f"YouTube Video: {video_id}",
