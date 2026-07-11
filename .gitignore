@@ -2,6 +2,7 @@
 .env
 .env.local
 *.env
+.secrets.baseline
 
 # Python
 venv/
@@ -33,4 +34,3 @@ fine_tuned_model.zip
 .vscode/
 *.swp
 *.swo
-.env
