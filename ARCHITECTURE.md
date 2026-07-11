@@ -1,41 +1,41 @@
-# SMARTSHELF AI - System Architecture
+# SelfSmart AI - System Architecture
 
 ## Component Architecture Diagram
 
 ```ascii
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           SMARTSHELF AI PLATFORM                           │
+│                           SELFSMART AI PLATFORM                            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
-│  │   FRONTEND      │    │   BACKEND API   │    │   ML PIPELINE   │        │
-│  │   (React/Next)  │◄──►│   (FastAPI)     │◄──►│   (Prophet/LSTM)│        │
+│  │   FRONTEND      │    │   BACKEND API   │    │   TRAINING      │        │
+│  │   (Next.js)     │◄──►│   (FastAPI)     │◄──►│   (Manual)      │        │
 │  │                 │    │                 │    │                 │        │
-│  │ • Dashboard     │    │ • REST Endpoints│    │ • Forecasting   │        │
-│  │ • Charts        │    │ • Validation    │    │ • Pricing       │        │
-│  │ • Chat UI       │    │ • CORS          │    │ • Inventory     │        │
+│  │ • Chat UI       │    │ • REST Endpoints│    │ • LoRA SFT      │        │
+│  │ • Voice Input   │    │ • SSE Streaming │    │ • DPO Training  │        │
+│  │ • Conversations │    │ • Auth (JWT)    │    │ • Data Scripts  │        │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘        │
 │           │                       │                       │              │
 │           │                       │                       │              │
 │           ▼                       ▼                       ▼              │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
-│  │   STATE STORE   │    │   DATABASE      │    │   MODEL STORE   │        │
-│  │   (Zustand)     │    │   (SQLite)      │    │   (Pickle)      │        │
+│  │   DATABASE      │    │   VECTOR STORE  │    │   MODEL STORE   │        │
+│  │   (SQLite)      │    │   (ChromaDB)    │    │   (Checkpoints) │        │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘        │
 │                                                         │                  │
 │                                                         ▼                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐  │
-│  │                        AI COPILOT ENGINE                            │  │
+│  │                        INFERENCE ENGINE                             │  │
 │  │  ┌─────────────┐  ┌──────────────┐  ┌─────────────────────────────┐ │  │
-│  │  │   RAG       │  │   LLM        │  │   CONTEXT RETRIEVAL         │ │  │
-│  │  │   Pipeline  │  │   Integration│  │   (Vector Search)           │ │  │
+│  │  │   RAG       │  │   LLM        │  │   LOCAL INFERENCE           │ │  │
+│  │  │   Service   │  │   Clients    │  │   (MLX / API Fallback)      │ │  │
 │  │  └─────────────┘  └──────────────┘  └─────────────────────────────┘ │  │
 │  └─────────────────────────────────────────────────────────────────────┘  │
 │                           │                        │                      │
 │                           ▼                        ▼                      │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐        │
-│  │  VECTOR STORE   │    │   DOCUMENTS     │    │   CACHE         │        │
-│  │  (ChromaDB)     │    │   (Knowledge)   │    │   (Redis)       │        │
+│  │  DATA CRAWL    │    │   CONTENT      │    │   FEEDBACK      │        │
+│  │  (Web/RSS/API) │    │   PROCESSOR    │    │   (JSONL)       │        │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘        │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -45,128 +45,95 @@
 
 | Component | Primary Responsibilities | Key Technologies | Success Metrics |
 |-----------|-------------------------|------------------|-----------------|
-| **Frontend Dashboard** | User interface, data visualization, real-time updates | React, Recharts, TailwindCSS, Zustand | <100ms page loads, intuitive UX |
-| **Backend API** | Request handling, data processing, business logic | FastAPI, Pydantic, SQLAlchemy, Uvicorn | <50ms API response, 99.9% uptime |
-| **ML Pipeline** | Forecasting, pricing optimization, inventory analysis | Prophet, LSTM, scikit-learn, pandas | >90% forecast accuracy, <1s inference |
-| **AI Copilot** | Conversational AI, context retrieval, decision support | RAG, ChromaDB, OpenAI/Claude, Sentence Transformers | <2s response, relevant context |
-| **Data Layer** | Storage, indexing, data integrity | SQLite, Pandas, CSV/JSON | <10ms query, data consistency |
-| **Vector Store** | Semantic search, embeddings, similarity matching | ChromaDB, FAISS, sentence-transformers | <100ms retrieval, >85% relevance |
+| **Frontend** | Chat interface, conversation management, voice input | Next.js, TailwindCSS, Lucide | <200ms page loads, responsive UI |
+| **Backend API** | Request handling, auth, streaming, orchestration | FastAPI, Pydantic, JWT, slowapi | <100ms API response, 99.9% uptime |
+| **RAG Service** | Semantic retrieval, cross-encoder reranking, context injection | ChromaDB, sentence-transformers, CrossEncoder | <100ms retrieval, >80% relevance |
+| **Inference Engine** | LLM generation, local MLX inference, API fallback | MLX, DeepSeek/Gemini APIs | <2s response, graceful degradation |
+| **Data Crawler** | Web scraping, RSS feeds, API data collection | aiohttp, BeautifulSoup4, feedparser | 90% crawl success rate |
+| **Content Processor** | Text cleaning, chunking, entity extraction | spaCy, langchain-text-splitters | Quality score >0.7 |
+| **Training Pipeline** | LoRA SFT, DPO training, model merging | PyTorch, PEFT, TRL, transformers | Training completes without OOM |
+| **Database** | Conversation storage, user auth, feedback logs | SQLite, aiosqlite | <10ms query, data consistency |
+| **Vector Store** | Embedding storage, semantic search, deduplication | ChromaDB, sentence-transformers | <50ms search, semantic dedup |
 
 ## Data Flow Architecture
 
 ```ascii
-1. DATA INGESTION
-   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-   │ CSV Upload  │───▶│ Validation  │───▶│ Database    │
-   └─────────────┘    └─────────────┘    └─────────────┘
+1. DATA COLLECTION (Manual / Scheduled)
+    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+    │ Web Crawl   │───▶│ Content     │───▶│ Knowledge   │
+    │ RSS Feeds   │    │ Processor   │    │ Integrator  │
+    │ Free APIs   │    │             │    │             │
+    └─────────────┘    └─────────────┘    └─────────────┘
+                                                   │
+                                                   ▼
+                                         ┌─────────────────┐
+                                         │   ChromaDB      │
+                                         │   Vector Store  │
+                                         └─────────────────┘
 
-2. ML PROCESSING
-   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-   │ Raw Data    │───▶│ Feature     │───▶│ Model       │
-   │ Extraction  │    │ Engineering │    │ Training    │
-   └─────────────┘    └─────────────┘    └─────────────┘
-                           │                   │
-                           ▼                   ▼
-   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-   │ Demand      │    │ Pricing     │    │ Inventory  │
-   │ Forecast    │    │ Optimization│    │ Intelligence│
-   └─────────────┘    └─────────────┘    └─────────────┘
+2. CHAT INFERENCE FLOW
+    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+    │ User Query  │───▶│ RAG Service │───▶│ Context     │
+    │             │    │ (Retrieve)  │    │ Enhancement │
+    └─────────────┘    └─────────────┘    └─────────────┘
+                            │                   │
+                            ▼                   ▼
+                     ┌─────────────┐    ┌─────────────┐
+                     │ LLM         │    │ Response    │
+                     │ Generation  │    │ Critique    │
+                     │ (MLX/API)   │    │ (Optional)  │
+                     └─────────────┘    └─────────────┘
+                            │                   │
+                            ▼                   ▼
+                     ┌─────────────┐    ┌─────────────┐
+                     │ Stream to   │    │ Save to     │
+                     │ Client      │    │ Database    │
+                     └─────────────┘    └─────────────┘
 
-3. AI COPILOT FLOW
-   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-   │ User Query  │───▶│ Vector      │───▶│ Context     │
-   │ Processing  │    │ Search      │    │ Retrieval   │
-   └─────────────┘    └─────────────┘    └─────────────┘
-                           │                   │
-                           ▼                   ▼
-   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-   │ LLM         │    │ Response    │    │ UI          │
-   │ Generation  │    │ Formatting  │    │ Display     │
-   └─────────────┘    └─────────────┘    └─────────────┘
+3. TRAINING PIPELINE (Manual)
+    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+    │ Raw Data    │───▶│ Instruction │───▶│ LoRA SFT    │
+    │ (JSON)      │    │ Formatting  │    │ Training    │
+    └─────────────┘    └─────────────┘    └─────────────┘
+                                                   │
+                                                   ▼
+                                         ┌─────────────────┐
+                                         │   Model         │
+                                         │   Checkpoints   │
+                                         └─────────────────┘
 
-4. REAL-TIME UPDATES
-   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-   │ Model       │───▶│ API         │───▶│ Frontend    │
-   │ Predictions │    │ Endpoints   │    │ Dashboard   │
-   └─────────────┘    └─────────────┘    └─────────────┘
+4. DPO PIPELINE (Manual)
+    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+    │ Feedback    │───▶│ Preference  │───▶│ DPO         │
+    │ (JSONL)     │    │ Dataset     │    │ Training    │
+    └─────────────┘    └─────────────┘    └─────────────┘
+                                                   │
+                                                   ▼
+                                         ┌─────────────────┐
+                                         │   Model         │
+                                         │   Checkpoints   │
+                                         └─────────────────┘
 ```
 
-## Technology Stack Justification
+## Five Phases of Knowledge Integration
 
-### Frontend Stack
-- **React**: Component-based architecture, extensive ecosystem, hackathon-friendly
-- **TailwindCSS**: Rapid UI development, responsive design, minimal custom CSS
-- **Recharts**: Declarative charting, React integration, beautiful visualizations
-- **Zustand**: Lightweight state management, simple API, better than Redux for hackathon
+The system implements a 5-phase approach for knowledge integration:
 
-### Backend Stack
-- **FastAPI**: Auto-generated docs, async support, type hints, excellent for APIs
-- **Pydantic**: Data validation, serialization, OpenAPI integration
-- **SQLAlchemy**: ORM support, database abstraction, migration tools
-- **SQLite**: Zero configuration, portable, perfect for hackathon demo
+| Phase | Feature | Engineering Details | Automation Status |
+|-------|---------|---------------------|-------------------|
+| **1** | Web Crawling | Async data collector pulling HTML/RSS into JSON pipelines via `aiohttp` and `BeautifulSoup4`. | Manual script execution |
+| **2** | RAG Search Engine | `ChromaDB` integration with `sentence-transformers` for semantic retrieval and context-grounding. | Automated in chat flow |
+| **3** | SFT LoRA Fine-Tuning | PyTorch `peft` and `trl.SFTTrainer` pipelines for domain-specific knowledge integration. | Manual script execution |
+| **4** | Apple MLX Inference | `mlx-lm` for native Apple Silicon Unified Memory execution with streaming SSE responses. | Automated in chat flow |
+| **5** | DPO Training | RLHF pipeline using `trl.DPOTrainer` with Gemini-synthesized preference pairs from user feedback. | Manual script execution |
 
-### ML Stack
-- **Prophet**: Time-series forecasting, handles seasonality, Facebook's battle-tested
-- **scikit-learn**: Classical ML, preprocessing, evaluation metrics
-- **pandas/numpy**: Data manipulation, industry standard
-- **joblib**: Model serialization, efficient loading
+## Engineering Principles
 
-### AI Copilot Stack
-- **ChromaDB**: Vector database, local deployment, semantic search
-- **sentence-transformers**: Open-source embeddings, no API keys needed
-- **OpenAI/Claude**: LLM integration, reasoning capabilities (API key required)
-- **RAG Pattern**: Context-aware responses, reduces hallucination
+SelfSmart is designed with a Senior AI/ML Engineering mindset:
 
-## Integration Points
-
-### API Integration Matrix
-```
-Frontend ↔ Backend:
-- WebSocket: Real-time dashboard updates
-- REST API: CRUD operations, data queries
-- File Upload: CSV data ingestion
-
-Backend ↔ ML Pipeline:
-- Direct imports: Model loading/inference
-- Async tasks: Model training, batch processing
-- File system: Model serialization
-
-Backend ↔ AI Copilot:
-- HTTP requests: Query processing
-- Shared database: Context, chat history
-- Vector store: Semantic search integration
-
-ML Pipeline ↔ AI Copilot:
-- Data sharing: Model outputs as context
-- Feature access: Explanations, insights
-- Prediction APIs: Real-time decision support
-```
-
-### Security & Performance
-- **CORS**: Cross-origin request handling
-- **Rate Limiting**: API abuse prevention
-- **Input Validation**: Pydantic models everywhere
-- **Error Handling**: Comprehensive exception management
-- **Caching**: Redis for frequent queries
-- **Async Processing**: Non-blocking operations
-
-## Scalability Vision
-
-### Phase 1 (Hackathon)
-- Single-store deployment
-- SQLite database
-- Local model serving
-- Basic UI dashboard
-
-### Phase 2 (MVP)
-- Multi-tenant architecture
-- PostgreSQL database
-- Containerized deployment
-- Enhanced UI/UX
-
-### Phase 3 (Scale)
-- Microservices architecture
-- Cloud deployment (AWS/GCP)
-- Real-time data streaming
-- Mobile applications
-- Third-party integrations
+| Principle | How It's Applied |
+|-----------|------------------|
+| **Hardware Symbiosis** | We ditched PyTorch inference on Mac in favor of `mlx-lm` to tap directly into Apple's Unified Memory, bypassing expensive CUDA constraints. |
+| **VRAM Optimization** | Kaggle notebooks utilize `bitsandbytes` 4-bit NF4 quantization to squeeze 3.8B parameter models into 16GB T4 instances without OOM crashes. |
+| **Data Integrity** | Instead of manually writing synthetic data, the DPO builder proxies through Gemini to guarantee structurally perfect `chosen`/`rejected` pairings. |
+| **Architectural Agility** | The system is highly modular. The LLM engine, RAG database, and UI are fully decoupled, allowing plug-and-play swaps as the ecosystem evolves. |
