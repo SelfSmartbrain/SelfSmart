@@ -256,7 +256,7 @@ export default function KnowledgePage() {
 
             {teachStatus && (
               <div className={`p-3 rounded-lg border flex items-start gap-2 text-sm ${
-                teachStatus.success 
+                teachStatus.success
                   ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                   : "bg-red-500/10 border-red-500/20 text-red-400"
               }`}>
@@ -293,16 +293,16 @@ export default function KnowledgePage() {
               </div>
               <div className="flex gap-2">
                 {stats?.learning_active ? (
-                  <Button 
-                    onClick={() => toggleLearningLoop(false)} 
+                  <Button
+                    onClick={() => toggleLearningLoop(false)}
                     variant="destructive"
                     className="gap-2 font-semibold"
                   >
                     <Square className="w-4 h-4" /> Stop Loop
                   </Button>
                 ) : (
-                  <Button 
-                    onClick={() => toggleLearningLoop(true)} 
+                  <Button
+                    onClick={() => toggleLearningLoop(true)}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2 font-semibold"
                   >
                     <Play className="w-4 h-4" /> Start Loop
