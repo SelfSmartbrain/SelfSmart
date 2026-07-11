@@ -43,7 +43,7 @@ def process_item_with_chunking(item: dict, text_splitter: RecursiveCharacterText
 
     for idx, chunk in enumerate(chunks):
         content_id = hashlib.sha256(f"{url}_{idx}".encode() if url else str(chunk).encode()).hexdigest()[:16]
-        
+
         timestamp_str = item.get("timestamp")
         try:
             timestamp = datetime.fromisoformat(timestamp_str) if timestamp_str else datetime.utcnow()
@@ -56,7 +56,7 @@ def process_item_with_chunking(item: dict, text_splitter: RecursiveCharacterText
                 title=f"{item.get('title', 'Untitled')} (Part {idx+1})",
                 content=chunk,
                 summary=chunk[:200] + "...",
-                topics=[], 
+                topics=[],
                 entities=[],
                 quality_score=0.9,
                 relevance_score=0.9,
@@ -86,17 +86,17 @@ async def main():
 
     logger.info(f"Chunking {len(raw_data)} items to ProcessedContent...")
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    
+
     processed_contents = []
     for item in raw_data:
         processed_contents.extend(process_item_with_chunking(item, text_splitter))
 
     logger.info("Initializing Knowledge Integrator...")
     ki = KnowledgeIntegrator()
-    
+
     logger.info(f"Ingesting {len(processed_contents)} documents into Vector Store...")
     await ki.batch_integrate(processed_contents)
-    
+
     logger.info("Ingestion complete. RAG is now ready.")
 
 if __name__ == "__main__":
