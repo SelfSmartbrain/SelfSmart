@@ -40,24 +40,24 @@ async def synthesize_rejected(prompt: str, chosen: str, client: GeminiClient) ->
 
 async def build_dataset():
     load_dotenv()
-    
+
     data_dir = project_root / "data"
     feedback_file = data_dir / "feedback.jsonl"
     output_file = project_root / "training_data" / "processed" / "dpo_dataset.json"
-    
+
     if not feedback_file.exists():
         logger.error(f"Feedback file not found at {feedback_file}")
-        
+
         # Create mock feedback for testing if none exists
         logger.info("Creating mock feedback for DPO verification...")
         data_dir.mkdir(parents=True, exist_ok=True)
         with open(feedback_file, "w") as f:
             f.write(json.dumps({"conversation_id": "mock_1", "message_index": 2, "is_positive": False, "comment": "Too generic"}) + "\n")
             f.write(json.dumps({"conversation_id": "mock_2", "message_index": 2, "is_positive": True, "comment": "Great answer!"}) + "\n")
-    
+
     # Initialize DB
     cm = ConversationManager()
-    
+
     async with GeminiClient() as gemini:
         logger.info("Reading feedback...")
         feedbacks = []
@@ -65,14 +65,14 @@ async def build_dataset():
             for line in f:
                 if line.strip():
                     feedbacks.append(json.loads(line))
-                    
+
         dpo_pairs = []
-        
+
         for fb in feedbacks:
             conv_id = fb['conversation_id']
             idx = fb['message_index']
             is_pos = fb['is_positive']
-            
+
             # If mock, hardcode values
             if conv_id.startswith("mock_"):
                 prompt = "What is machine learning?" if conv_id == "mock_1" else "Explain Newton's laws."
@@ -82,18 +82,18 @@ async def build_dataset():
                 conv = await cm.get_conversation(conv_id)
                 if not conv or len(conv.messages) <= idx:
                     continue
-                    
+
                 prompt_msg = conv.messages[idx - 1] if idx > 0 else None
                 response_msg = conv.messages[idx]
-                
+
                 if not prompt_msg or prompt_msg.role != 'user' or response_msg.role != 'assistant':
                     continue
-                    
+
                 prompt = prompt_msg.content
                 original_response = response_msg.content
-                
+
             logger.info(f"Processing feedback for prompt: {prompt[:50]}...")
-            
+
             if is_pos:
                 # original is chosen, synthesize rejected
                 chosen = original_response
@@ -102,21 +102,21 @@ async def build_dataset():
                 # original is rejected, synthesize chosen
                 rejected = original_response
                 chosen = await synthesize_chosen(prompt, rejected, gemini)
-                
+
             dpo_pairs.append({
                 "prompt": prompt,
                 "chosen": chosen,
                 "rejected": rejected
             })
-            
+
             # Don't hit rate limits
             await asyncio.sleep(2)
-            
+
         # Save output
         output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, 'w') as f:
             json.dump(dpo_pairs, f, indent=2)
-            
+
         logger.info(f"✅ Created DPO dataset with {len(dpo_pairs)} pairs at {output_file}")
 
 if __name__ == "__main__":
