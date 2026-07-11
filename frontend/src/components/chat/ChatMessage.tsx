@@ -19,7 +19,7 @@ export function ChatMessage({ message, index, conversationId }: ChatMessageProps
 
   const handleFeedback = async (isPositive: boolean) => {
     if (!conversationId) return;
-    
+
     try {
       await fetch('http://localhost:8000/api/feedback', {
         method: 'POST',
@@ -47,26 +47,26 @@ export function ChatMessage({ message, index, conversationId }: ChatMessageProps
       )}>
         {isAssistant ? <Bot size={20} /> : <User size={20} />}
       </div>
-      
+
       <div className="flex-1 min-w-0 space-y-2 overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="font-semibold text-sm">
             {isAssistant ? "SmartSelf AI" : "You"}
           </div>
-          
+
           {isAssistant && (
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className={cn("h-7 w-7", feedback === 'positive' && "text-green-500")}
                 onClick={() => handleFeedback(true)}
               >
                 <ThumbsUp size={14} />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className={cn("h-7 w-7", feedback === 'negative' && "text-red-500")}
                 onClick={() => handleFeedback(false)}
               >
@@ -75,7 +75,7 @@ export function ChatMessage({ message, index, conversationId }: ChatMessageProps
             </div>
           )}
         </div>
-        
+
         <div className="prose prose-sm dark:prose-invert max-w-none break-words">
           <ReactMarkdown>
             {message.content}
