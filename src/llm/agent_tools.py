@@ -14,7 +14,7 @@ class ToolExecutor:
     """
     Executes tools requested by the Agentic LLM.
     """
-    
+
     def __init__(self):
         self.tools = {
             "web_search": self._web_search,
@@ -22,12 +22,12 @@ class ToolExecutor:
             "get_datetime": self._get_datetime
         }
         logger.info("Tool executor initialized")
-        
+
     async def execute(self, tool_name: str, args: Dict[str, Any]) -> Any:
         """Executes a named tool with provided arguments."""
         if tool_name not in self.tools:
             return {"error": f"Tool '{tool_name}' not found."}
-        
+
         logger.info(f"Executing tool: {tool_name} with args: {args}")
         try:
             return await self.tools[tool_name](**args)
