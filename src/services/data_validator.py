@@ -9,11 +9,11 @@ class DataValidator:
     Validation layer to filter out low-quality or poisoned training data.
     Implements Fix #5.
     """
-    
+
     def __init__(self, min_length: int = 100, max_length: int = 10000):
         self.min_length = min_length
         self.max_length = max_length
-        
+
         # Simple spam/poisoning patterns
         self.poison_patterns = [
             r"buy now", r"special offer", r"click here", # Marketing/SEO
@@ -30,28 +30,28 @@ class DataValidator:
         """
         if not content or len(content) < self.min_length:
             return 0.0
-        
+
         if len(content) > self.max_length:
             return 0.0
-            
+
         score = 1.0
-        
+
         # Check for poison patterns
         matches = 0
         for pattern in self.compiled_patterns:
             if pattern.search(content):
                 matches += 1
-        
+
         # Penalize score based on matches
         score -= (matches * 0.2)
-        
+
         # Check for repetition (potential AI hallucination or spam)
         words = content.split()
         if len(words) > 50:
             unique_words_ratio = len(set(words)) / len(words)
             if unique_words_ratio < 0.4:  # Too much repetition
                 score -= 0.5
-                
+
         return max(0.0, score)
 
     def filter_batch(self, data_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -63,6 +63,6 @@ class DataValidator:
             if quality > 0.5:
                 item["quality_score"] = quality
                 valid_samples.append(item)
-        
+
         logger.info(f"Validated batch: {len(valid_samples)}/{len(data_list)} samples passed.")
         return valid_samples
