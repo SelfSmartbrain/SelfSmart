@@ -249,12 +249,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Build and push Docker image
         run: |
           docker build -f Dockerfile.prod -t smartshelf-chat .
           docker push ${{ secrets.DOCKER_REGISTRY }}/smartshelf-chat
-          
+
       - name: Deploy to production
         run: |
           curl -X POST ${{ secrets.DEPLOY_WEBHOOK }}
