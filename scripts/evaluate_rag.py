@@ -119,7 +119,7 @@ async def main():
 
     print("\n--- RAG Evaluation Report ---")
     print(json.dumps(report, indent=2))
-    
+
     # Save to file
     os.makedirs("docs/evals", exist_ok=True)
     with open("docs/evals/latest_rag_eval.json", "w") as f:
