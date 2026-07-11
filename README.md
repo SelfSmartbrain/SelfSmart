@@ -10,7 +10,7 @@
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-FF6B35?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**A production-grade, autonomous AI platform representing a paradigm shift from static language models to dynamic, continuously learning digital entities.**
+**A RAG-enhanced chatbot with manual fine-tuning capabilities for domain-specific knowledge integration.**
 
 [Architecture](./ARCHITECTURE.md) · [Deployment Guide](./DEPLOYMENT.md)
 
@@ -20,17 +20,15 @@
 
 ## 📌 The Engineering Vision
 
-SelfSmart is **not a chatbot wrapper**. It is an end-to-end AI cognitive architecture engineered to solve the fundamental limitation of static LLMs: **they stop learning the moment training ends**.
+SelfSmart addresses a limitation of static LLMs: **knowledge cutoff dates**. By integrating web crawling with Retrieval-Augmented Generation (RAG), the system can access up-to-date information without retraining. For domain-specific use cases, manual LoRA/DPO fine-tuning scripts allow knowledge to be baked directly into model weights.
 
-By integrating an intelligent web-crawling engine with a production-grade Retrieval-Augmented Generation (RAG) pipeline, high-speed MLX inference, and a LoRA/DPO fine-tuning workflow, SelfSmart creates a **"virtuous cycle"**. The assistant retrieves the latest information from the internet to answer current queries, and eventually absorbs that knowledge directly into its core neural weights. 
-
-> **Core Thesis:** AI agents should no longer be limited by their initial training cutoff dates. They must be living digital entities that grow more knowledgeable and specialized with every hour they spend exploring the digital frontier.
+> **Core Thesis:** Combine RAG for fresh context access with optional fine-tuning for domain specialization. RAG provides immediate knowledge updates; fine-tuning encodes domain expertise into model weights for efficiency.
 
 ---
 
-## 🏗️ The "Virtuous Cycle" Architecture
+## 🏗️ System Architecture
 
-The system operates on a 5-phase continuous loop, moving data from the external world directly into the model's synapses.
+The system has 5 phases for knowledge integration. Phases 1-2 (data collection and RAG) are automated. Phases 3-5 (fine-tuning) are manual scripts that require developer execution.
 
 ```mermaid
 graph TD
@@ -63,11 +61,11 @@ graph TD
         Preference --> DPOTrain[Direct Preference Optimization]
         DPOTrain --> MLX
     end
-    
+
     classDef primary fill:#2b3137,stroke:#24292e,stroke-width:2px,color:#fff;
     classDef secondary fill:#0366d6,stroke:#005cc5,stroke-width:2px,color:#fff;
     classDef db fill:#28a745,stroke:#22863a,stroke-width:2px,color:#fff;
-    
+
     class Crawler,JSON,Instruct,LoRA,Merge,MLX,Inference,User,Feedback,Gemini,Preference,DPOTrain primary;
     class VectorDB db;
 ```
@@ -76,15 +74,13 @@ graph TD
 
 ## ✅ System Capabilities (The 5 Phases)
 
-We have successfully engineered and deployed the following subsystems:
-
-| Phase | Feature | Engineering Details |
-|---|---|---|
-| **1** | Automated Web Crawling | Async data collector pulling HTML/RSS into JSON pipelines via `aiohttp` and `BeautifulSoup4`. |
-| **2** | Hybrid RAG Search Engine | `ChromaDB` integration with `sentence-transformers` for millisecond semantic retrieval and context-grounding. |
-| **3** | SFT LoRA Fine-Tuning | PyTorch `peft` and `trl.SFTTrainer` pipelines. Cloud-ready Kaggle notebooks to bake scraped knowledge into LLM weights. |
-| **4** | Apple MLX Inference | Complete swap from PyTorch to `mlx-lm` for native Apple Silicon Unified Memory execution. Fast, 4-bit streaming SSE responses. |
-| **5** | DPO Data Flywheel | RLHF pipeline using `trl.DPOTrainer`. Automatically synthesizes `(prompt, chosen, rejected)` datasets from UI feedback to continuously self-correct the model. |
+| Phase | Feature | Engineering Details | Automation Status |
+|---|---|---|---|
+| **1** | Web Crawling | Async data collector pulling HTML/RSS into JSON pipelines via `aiohttp` and `BeautifulSoup4`. | Manual script execution |
+| **2** | RAG Search Engine | `ChromaDB` integration with `sentence-transformers` for semantic retrieval and context-grounding. | Automated in chat flow |
+| **3** | SFT LoRA Fine-Tuning | PyTorch `peft` and `trl.SFTTrainer` pipelines for domain-specific knowledge integration. | Manual script execution |
+| **4** | Apple MLX Inference | `mlx-lm` for native Apple Silicon Unified Memory execution with streaming SSE responses. | Automated in chat flow |
+| **5** | DPO Training | RLHF pipeline using `trl.DPOTrainer` with Gemini-synthesized preference pairs from user feedback. | Manual script execution |
 
 ---
 
@@ -123,42 +119,22 @@ cd frontend && npm install && npm run dev
 
 ---
 
-## 🔭 Future Scope: The Autonomous Paradigm
+## 🔭 Potential Applications
 
-The current SelfSmart architecture provides the foundational blueprint for a new class of **Autonomous Enterprise Agents**. 
+The SelfSmart architecture could be adapted for various domain-specific use cases:
 
-By attaching an automated Chron Job to our 5-Phase pipeline, SelfSmart evolves from a reactive chatbot into a proactive, living system. 
+1. **Technical Documentation Assistant:**
+   Crawl and ingest technical docs, API references, and code repositories. Use RAG for immediate Q&A and fine-tune for domain-specific terminology.
 
-```mermaid
-graph LR
-    subgraph The Living Digital Entity
-        Cron[Automated Schedule] --> Scrape(Crawl Target Domain)
-        Scrape --> Store(Update RAG Memory)
-        Store --> Train(Nightly DPO/LoRA Weights Update)
-        Train --> Deploy(Hot-Swap Model)
-        Deploy --> Cron
-    end
-    
-    Deploy -.-> Case1[Autonomous Market Analyst]
-    Deploy -.-> Case2[Corporate Intelligence Hub]
-    Deploy -.-> Case3[Personalized Legal/Medical Researcher]
-    
-    style Cron fill:#f1c40f,stroke:#f39c12,color:#000
-    style Case1 fill:#3498db,stroke:#2980b9,color:#fff
-    style Case2 fill:#9b59b6,stroke:#8e44ad,color:#fff
-    style Case3 fill:#e74c3c,stroke:#c0392b,color:#fff
-```
+2. **Corporate Knowledge Base:**
+   Index internal wikis, Slack conversations, and documentation. RAG provides fresh context; fine-tuning encodes company-specific jargon.
 
-### Real-World Applications
+3. **Research Assistant:**
+   Digest academic papers and research publications. RAG retrieves relevant papers; fine-tuning adapts to specific research domains.
 
-1. **The Autonomous Market Analyst:** 
-   Deployed to track global economic shifts, the agent automatically scrapes financial RSS feeds, SEC filings, and Twitter sentiment every hour. It stores exact quotes in RAG for immediate Q&A, and fine-tunes itself on macro-trends overnight.
-   
-2. **Corporate Intelligence Hub:**
-   Connected to internal Slack, Jira, and Confluence. It continuously learns the evolving jargon, product specs, and culture of the company, effectively becoming the ultimate senior engineering onboarding assistant.
-   
-3. **Personalized Medical/Legal Researcher:**
-   Programmed to digest the latest PubMed journals or Supreme Court rulings. It never suffers from a "2023 training cutoff date" because it rewrites its own neural synapses every week based on newly published literature.
+---
+
+[ROADMAP](./ROADMAP.md) · [Deployment Guide](./DEPLOYMENT.md)
 
 ---
 
@@ -179,43 +155,21 @@ graph LR
 | Automation | **asyncio** | Concurrent web crawling and dataset synthesis |
 | Synthesis | **Gemini API** | Generates missing preference pairs for DPO datasets |
 
-## 📊 ROC / AUC Evaluation
-
-A tiny utility script is provided to quickly generate ROC curves and compute the AUC for any binary‑classification model.
-
-### Usage
-
-```bash
-python src/evaluation/roc_auc.py data/predictions.csv
-```
-
-- `predictions.csv` must contain at least two columns: **`label`** (0 = negative, 1 = positive) and **`score`** (model confidence for the positive class).  
-- The script saves `predictions_roc.png` next to the CSV and prints the AUC value.
-
-### How it works
-
-1. **Load data** with **pandas**.  
-2. Compute **FPR**, **TPR**, and **AUC** using **scikit‑learn**.  
-3. Plot the ROC curve with **matplotlib**, applying a dark‑mode style to match the project aesthetics.  
-4. Save the PNG and log the resulting AUC.
-
-You can integrate this script into any training loop (e.g., after LoRA or DPO fine‑tuning) to monitor how well the model separates positive from negative examples. Feel free to adapt the column names or add additional metrics (precision‑recall, confusion matrix) as needed.
-
 ---
 
 ## 🗂️ Project Structure
 
 ```
 SelfSmart/
-├── src/                          
+├── src/
 │   ├── web_server.py             # FastAPI streaming endpoints & Feedback API
-│   ├── llm_training/             
+│   ├── llm_training/
 │   │   ├── inference.py          # MLX-powered LocalLLMClient
 │   │   ├── lora_trainer.py       # SFTTrainer Pipeline
 │   │   └── dpo_trainer.py        # RLHF DPOTrainerManager
 │   └── llm/                      # RAG logic and Gemini API integrations
 │
-├── scripts/                      
+├── scripts/
 │   ├── build_dataset.py          # Phase 1: Web Scraper -> Instruction JSON
 │   ├── ingest_data.py            # Phase 2: Instruction JSON -> ChromaDB RAG
 │   ├── build_dpo_dataset.py      # Phase 5: Feedback JSONL -> DPO Triplets
