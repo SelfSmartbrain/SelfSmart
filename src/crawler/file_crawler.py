@@ -17,25 +17,25 @@ class FileCrawler:
     """
     Crawler for local files including PDFs, Markdown, and Text files.
     """
-    
+
     def __init__(self):
         logger.info("File crawler initialized")
-        
+
     async def crawl_directory(self, directory_path: str) -> List[CrawlResult]:
         """Crawl all supported files in a directory"""
         results = []
         path = Path(directory_path)
-        
+
         if not path.exists():
             logger.error(f"Directory not found: {directory_path}")
             return []
-            
+
         for file_path in path.glob('**/*'):
             if file_path.is_file():
                 result = await self.crawl_file(str(file_path))
                 if result:
                     results.append(result)
-                    
+
         return results
 
     async def crawl_file(self, file_path: str) -> Optional[CrawlResult]:
@@ -43,7 +43,7 @@ class FileCrawler:
         try:
             path = Path(file_path)
             ext = path.suffix.lower()
-            
+
             if ext == '.pdf':
                 return self._process_pdf(path)
             elif ext in ['.md', '.txt', '.markdown']:
@@ -51,7 +51,7 @@ class FileCrawler:
             else:
                 logger.debug(f"Skipping unsupported file type: {ext}")
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error crawling file {file_path}: {e}")
             return None
@@ -63,10 +63,10 @@ class FileCrawler:
             text = ""
             for page in reader.pages:
                 text += page.extract_text() + "\n"
-                
+
             if not text.strip():
                 return None
-                
+
             return CrawlResult(
                 url=f"file://{path.absolute()}",
                 title=path.name,
@@ -91,10 +91,10 @@ class FileCrawler:
         try:
             with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-                
+
             if not content.strip():
                 return None
-                
+
             return CrawlResult(
                 url=f"file://{path.absolute()}",
                 title=path.name,
