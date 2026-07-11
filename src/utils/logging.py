@@ -7,7 +7,7 @@ def setup_logging(level: str = "INFO", json_format: bool = True):
     """
     Configure structlog for structured logging.
     """
-    
+
     processors = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
