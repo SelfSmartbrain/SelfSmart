@@ -43,13 +43,13 @@ def instrument_app(app):
         start_time = time.time()
         method = request.method
         endpoint = request.url.path
-        
+
         response = await call_next(request)
-        
+
         status_code = response.status_code
         latency = time.time() - start_time
-        
+
         REQUEST_COUNT.labels(method=method, endpoint=endpoint, http_status=status_code).inc()
         REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(latency)
-        
+
         return response
