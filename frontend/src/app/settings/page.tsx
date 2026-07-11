@@ -68,7 +68,7 @@ export default function SettingsPage() {
         if (response.ok) {
           const data = await response.json();
           setTrainingStatus(data);
-          
+
           // Stop polling if task is finished
           if (data.status === "SUCCESS" || data.status === "FAILURE" || data.status === "REVOKED") {
             localStorage.removeItem("training_task_id");
