@@ -5,6 +5,7 @@ Manages integration of processed content into various knowledge stores.
 
 import asyncio
 import logging
+import time
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 import numpy as np
@@ -26,11 +27,18 @@ logger = logging.getLogger(__name__)
 
 
 class VectorStore:
-    """Vector database for semantic search"""
+    """Vector database for semantic search with circuit breaker for fault tolerance"""
 
     def __init__(self, collection_name: str = "learning_chatbot"):
         """Initialize vector store"""
         self.collection_name = collection_name
+        # Circuit breaker state
+        self.circuit_open = False
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.failure_threshold = 5
+        self.recovery_timeout = 60  # seconds
+        
         try:
             self.client = chromadb.PersistentClient(path="./vector_store")
             self.collection = self.client.get_or_create_collection(collection_name)
@@ -41,11 +49,44 @@ class VectorStore:
             self.client = None
             self.collection = None
             self.embedding_model = None
+            self._record_failure()
+
+    def _record_failure(self):
+        """Record a failure for circuit breaker"""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.circuit_open = True
+            logger.warning(f"Vector store circuit breaker opened after {self.failure_count} failures")
+
+    def _record_success(self):
+        """Record a success for circuit breaker"""
+        self.failure_count = 0
+        self.circuit_open = False
+
+    def _should_attempt_operation(self) -> bool:
+        """Check if we should attempt an operation based on circuit breaker state"""
+        if not self.circuit_open:
+            return True
+        
+        # Check if enough time has passed to try again
+        if self.last_failure_time and (time.time() - self.last_failure_time) > self.recovery_timeout:
+            self.circuit_open = False
+            self.failure_count = 0
+            logger.info("Vector store circuit breaker half-open, attempting operation")
+            return True
+        
+        return False
 
     async def add_documents(self, contents: List[ProcessedContent]):
-        """Add documents to vector store"""
+        """Add documents to vector store with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Vector store circuit breaker open, skipping document addition")
+            return
+
         if self.collection is None or self.embedding_model is None:
             logger.warning("Vector store not available, skipping document addition")
+            self._record_failure()
             return
 
         try:
@@ -87,9 +128,11 @@ class VectorStore:
             )
 
             logger.info(f"Added {len(contents)} documents to vector store")
+            self._record_success()
 
         except Exception as e:
             logger.error(f"Error adding documents to vector store: {e}")
+            self._record_failure()
 
     async def search(self, query: str, n_results: int = 10) -> List[Dict[str, Any]]:
         """Search for similar documents"""
