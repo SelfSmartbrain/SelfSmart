@@ -336,7 +336,7 @@
                 <div class="logo-icon">AI</div>
                 <h1>Self-Learning Bot</h1>
             </div>
-            
+
             <div class="status-card">
                 <h3 style="margin-bottom: 15px; color: #333;">System Status</h3>
                 <div class="status-item">
@@ -403,7 +403,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateStatus();
-            setInterval(updateStatus, 10000); / 
+            setInterval(updateStatus, 10000); /
         });
 
         function updateStatus() {
@@ -423,18 +423,18 @@
         function sendMessage() {
             const input = document.getElementById('message-input');
             const message = input.value.trim();
-            
+
             if (!message) return;
 
             // Add user message to chat
             addMessage(message, 'user');
-            
+
             // Clear input
             input.value = '';
-            
+
             // Show typing indicator
             showTypingIndicator();
-            
+
             // Send to API
             fetch(`${API_BASE}/api/chat`, {
                 method: 'POST',
@@ -462,28 +462,28 @@
             const messagesContainer = document.getElementById('chat-messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
-            
+
             const avatar = document.createElement('div');
             avatar.className = 'message-avatar';
             avatar.textContent = sender === 'user' ? 'U' : 'AI';
-            
+
             const messageContent = document.createElement('div');
             messageContent.className = 'message-content';
             messageContent.textContent = content;
-            
+
             // Add sources if available
             if (sources && sources.length > 0) {
                 const sourcesDiv = document.createElement('div');
                 sourcesDiv.className = 'message-sources';
-                sourcesDiv.innerHTML = '<strong>Sources:</strong><br>' + 
+                sourcesDiv.innerHTML = '<strong>Sources:</strong><br>' +
                     sources.slice(0, 3).map(url => `<a href="${url}" target="_blank">${url}</a>`).join('<br>');
                 messageContent.appendChild(sourcesDiv);
             }
-            
+
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(messageContent);
             messagesContainer.appendChild(messageDiv);
-            
+
             // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
@@ -507,7 +507,7 @@
         function learnFromUrl() {
             const urlInput = document.getElementById('learn-url');
             const url = urlInput.value.trim();
-            
+
             if (!url) {
                 alert('Please enter a valid URL');
                 return;
@@ -531,13 +531,13 @@
                 button.disabled = false;
                 button.textContent = 'Learn from URL';
                 urlInput.value = '';
-                
+
                 if (data.result.successful > 0) {
                     addMessage(`I successfully learned from ${data.result.successful} URL(s)!`, 'bot');
                 } else {
                     addMessage(`I couldn't learn from that URL. Please try a different one.`, 'bot');
                 }
-                
+
                 updateStatus();
             })
             .catch(error => {
