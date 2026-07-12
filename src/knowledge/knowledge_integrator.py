@@ -135,9 +135,14 @@ class VectorStore:
             self._record_failure()
 
     async def search(self, query: str, n_results: int = 10) -> List[Dict[str, Any]]:
-        """Search for similar documents"""
+        """Search for similar documents with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Vector store circuit breaker open, returning empty results")
+            return []
+
         if self.collection is None or self.embedding_model is None:
             logger.warning("Vector store not available, returning empty results")
+            self._record_failure()
             return []
 
         try:
@@ -171,18 +176,28 @@ class VectorStore:
                     'distance': results['distances'][0][i]
                 })
 
+            logger.debug(f"Vector store search successful, returned {len(formatted_results)} results")
+            self._record_success()
             return formatted_results
 
         except Exception as e:
             logger.error(f"Error searching vector store: {e}")
+            self._record_failure()
             return []
 
     async def prune_old_data(self, days: int = 30, min_hits: int = 1):
         """
         Prune documents older than 'days' with fewer than 'min_hits'.
         Implements Fix #2: Indefinite Growth Problem.
+        With circuit breaker for fault tolerance.
         """
+        if not self._should_attempt_operation():
+            logger.warning("Vector store circuit breaker open, skipping prune operation")
+            return
+
         if self.collection is None:
+            logger.warning("Vector store not available, skipping prune operation")
+            self._record_failure()
             return
 
         try:
@@ -207,13 +222,22 @@ class VectorStore:
             if ids_to_delete:
                 self.collection.delete(ids=ids_to_delete)
                 logger.info(f"Pruned {len(ids_to_delete)} obsolete documents")
+            
+            self._record_success()
 
         except Exception as e:
             logger.error(f"Error pruning vector store: {e}")
+            self._record_failure()
 
     async def is_duplicate(self, content: str, threshold: float = 0.95) -> bool:
-        """Check if content is a semantic duplicate of an existing document"""
+        """Check if content is a semantic duplicate of an existing document with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Vector store circuit breaker open, assuming not duplicate")
+            return False
+
         if self.collection is None or self.embedding_model is None:
+            logger.warning("Vector store not available, assuming not duplicate")
+            self._record_failure()
             return False
 
         try:
@@ -231,17 +255,30 @@ class VectorStore:
                 similarity = 1.0 - results['distances'][0][0]
                 if similarity >= threshold:
                     logger.debug(f"Semantic duplicate detected (similarity: {similarity:.2f})")
+                    self._record_success()
                     return True
 
+            self._record_success()
             return False
         except Exception as e:
             logger.error(f"Error checking for semantic duplicate: {e}")
+            self._record_failure()
             return False
 
     async def get_stats(self) -> Dict[str, Any]:
-        """Get vector store statistics"""
+        """Get vector store statistics with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Vector store circuit breaker open, returning empty stats")
+            return {}
+
+        if self.collection is None or self.embedding_model is None:
+            logger.warning("Vector store not available, returning empty stats")
+            self._record_failure()
+            return {}
+
         try:
             count = self.collection.count()
+            self._record_success()
             return {
                 'total_documents': count,
                 'collection_name': self.collection_name,
@@ -249,11 +286,12 @@ class VectorStore:
             }
         except Exception as e:
             logger.error(f"Error getting vector store stats: {e}")
+            self._record_failure()
             return {}
 
 
 class GraphStore:
-    """Graph database for knowledge relationships"""
+    """Graph database for knowledge relationships with circuit breaker for fault tolerance"""
 
     def __init__(self, uri: str = "bolt://localhost:7687", user: str = "neo4j", password: str = "password"):
         """Initialize graph store"""
@@ -261,6 +299,12 @@ class GraphStore:
         self.user = user
         self.password = password
         self.driver = None
+        # Circuit breaker state
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.circuit_open = False
+        self.failure_threshold = 5
+        self.recovery_timeout = 60  # seconds
 
         try:
             self.driver = GraphDatabase.driver(uri, auth=(user, password))
@@ -268,14 +312,61 @@ class GraphStore:
             with self.driver.session() as session:
                 session.run("RETURN 1")
             logger.info("Graph store initialized")
+            
+            # Initialize circuit breaker attributes
+            self.failure_count = 0
+            self.last_failure_time = None
+            self.circuit_open = False
+            self.failure_threshold = 5
+            self.recovery_timeout = 60  # seconds
         except Exception as e:
             logger.warning(f"Could not connect to Neo4j: {e}")
             self.driver = None
+            
+            # Initialize circuit breaker attributes even if connection failed
+            self.failure_count = 0
+            self.last_failure_time = None
+            self.circuit_open = False
+            self.failure_threshold = 5
+            self.recovery_timeout = 60  # seconds
+            self._record_failure()
+
+    def _record_failure(self):
+        """Record a failure for circuit breaker"""
+        self.failure_count += 1
+        self.last_failure_time = time.time()
+        if self.failure_count >= self.failure_threshold:
+            self.circuit_open = True
+            logger.warning(f"Graph store circuit breaker opened after {self.failure_count} failures")
+
+    def _record_success(self):
+        """Record a success for circuit breaker"""
+        self.failure_count = 0
+        self.circuit_open = False
+
+    def _should_attempt_operation(self) -> bool:
+        """Check if we should attempt an operation based on circuit breaker state"""
+        if not self.circuit_open:
+            return True
+        
+        # Check if enough time has passed to try again
+        if self.last_failure_time and (time.time() - self.last_failure_time) > self.recovery_timeout:
+            self.circuit_open = False
+            self.failure_count = 0
+            logger.info("Graph store circuit breaker half-open, attempting operation")
+            return True
+        
+        return False
 
     async def add_entities(self, contents: List[ProcessedContent]):
-        """Add entities and relationships to graph"""
+        """Add entities and relationships to graph with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Graph store circuit breaker open, skipping add_entities")
+            return
+
         if not self.driver:
             logger.warning("Graph store not available")
+            self._record_failure()
             return
 
         try:
@@ -327,13 +418,21 @@ class GraphStore:
                         })
 
             logger.info(f"Added entities for {len(contents)} contents to graph store")
+            self._record_success()
 
         except Exception as e:
             logger.error(f"Error adding entities to graph store: {e}")
+            self._record_failure()
 
     async def query_related_content(self, content_id: str, depth: int = 2) -> List[Dict[str, Any]]:
-        """Query content related through entities and topics"""
+        """Query content related through entities and topics with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Graph store circuit breaker open, returning empty results")
+            return []
+
         if not self.driver:
+            logger.warning("Graph store not available, returning empty results")
+            self._record_failure()
             return []
 
         try:
@@ -362,10 +461,12 @@ class GraphStore:
                         'distance': record['distance']
                     })
 
+                self._record_success()
                 return results
 
         except Exception as e:
             logger.error(f"Error querying related content: {e}")
+            self._record_failure()
             return []
 
     async def get_stats(self) -> Dict[str, Any]:
@@ -392,18 +493,25 @@ class GraphStore:
 
 
 class DocumentStore:
-    """Document store for full-text search"""
+    """Document store for full-text search with circuit breaker for fault tolerance"""
 
     def __init__(self, hosts: List[str] = ["http://localhost:9200"]):
         """Initialize document store"""
         self.hosts = hosts
         self.client = None
         self.index_name = "learning_chatbot"
+        # Circuit breaker state
+        self.failure_count = 0
+        self.last_failure_time = None
+        self.circuit_open = False
+        self.failure_threshold = 5
+        self.recovery_timeout = 60  # seconds
 
         try:
             if elasticsearch is None:
                 logger.warning("Elasticsearch client not installed; DocumentStore disabled")
                 self.client = None
+                self._record_failure()
                 return
 
             self.client = elasticsearch.Elasticsearch(hosts)
@@ -433,18 +541,26 @@ class DocumentStore:
                             }
                         }
                     )
+                self._record_success()
             else:
                 logger.warning("Could not connect to Elasticsearch")
                 self.client = None
+                self._record_failure()
 
         except Exception as e:
             logger.warning(f"Could not connect to Elasticsearch: {e}")
             self.client = None
+            self._record_failure()
 
     async def index_documents(self, contents: List[ProcessedContent]):
-        """Index documents for full-text search"""
+        """Index documents for full-text search with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Document store circuit breaker open, skipping index operation")
+            return
+
         if not self.client:
             logger.warning("Document store not available")
+            self._record_failure()
             return
 
         try:
@@ -469,13 +585,21 @@ class DocumentStore:
                 )
 
             logger.info(f"Indexed {len(contents)} documents in document store")
+            self._record_success()
 
         except Exception as e:
             logger.error(f"Error indexing documents: {e}")
+            self._record_failure()
 
     async def search(self, query: str, size: int = 10) -> List[Dict[str, Any]]:
-        """Search documents using full-text search"""
+        """Search documents using full-text search with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Document store circuit breaker open, returning empty results")
+            return []
+
         if not self.client:
+            logger.warning("Document store not available, returning empty results")
+            self._record_failure()
             return []
 
         try:
@@ -505,19 +629,29 @@ class DocumentStore:
                     'source': hit['_source']
                 })
 
+            logger.debug(f"Document store search successful, returned {len(results)} results")
+            self._record_success()
             return results
 
         except Exception as e:
             logger.error(f"Error searching document store: {e}")
+            self._record_failure()
             return []
 
     async def get_stats(self) -> Dict[str, Any]:
-        """Get document store statistics"""
+        """Get document store statistics with circuit breaker"""
+        if not self._should_attempt_operation():
+            logger.warning("Document store circuit breaker open, returning not_connected status")
+            return {'status': 'not_connected'}
+
         if not self.client:
+            logger.warning("Document store not available")
+            self._record_failure()
             return {'status': 'not_connected'}
 
         try:
             count = self.client.count(index=self.index_name)['count']
+            self._record_success()
             return {
                 'total_documents': count,
                 'index_name': self.index_name,
@@ -525,6 +659,7 @@ class DocumentStore:
             }
         except Exception as e:
             logger.error(f"Error getting document store stats: {e}")
+            self._record_failure()
             return {'status': 'error', 'error': str(e)}
 
 
@@ -532,6 +667,7 @@ class KnowledgeIntegrator:
     """
     Main knowledge integrator that manages all knowledge stores
     and provides unified access to knowledge.
+    With circuit breaker protection for degraded mode operation.
     """
 
     def __init__(self):
@@ -567,7 +703,7 @@ class KnowledgeIntegrator:
         logger.info("Knowledge integrator initialized")
 
     async def batch_integrate(self, contents: List[ProcessedContent]):
-        """Integrate a batch of processed content into all knowledge stores"""
+        """Integrate a batch of processed content into all knowledge stores with circuit breaker awareness"""
         if not contents:
             return
 
