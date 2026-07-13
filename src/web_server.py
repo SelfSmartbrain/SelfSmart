@@ -15,12 +15,14 @@ from typing import List, Optional
 import uvicorn
 import asyncio
 import json
+import os
 from datetime import datetime
 
 from src.config.settings import get_settings
 from src.utils.logging import setup_logging, get_logger
 from src.utils.metrics import instrument_app
 from src.utils.auth import create_access_token, decode_access_token, verify_password, get_password_hash, Token, TokenData
+from src.utils.prompt_sanitizer import sanitize_user_message
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -172,12 +174,18 @@ instrument_app(app)
 
 # Middleware
 app.add_middleware(CorrelationIdMiddleware)
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    os.getenv("FRONTEND_URL", "http://localhost:3000"),
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID"],
 )
 
 
@@ -282,6 +290,7 @@ async def chat(request: ChatRequest, request_obj: Request, current_user: TokenDa
     Chat endpoint with LLM, RAG and User Authentication.
     """
     try:
+        sanitize_user_message(request.message)
         # Get or create conversation (verified by user_id)
         if request.conversation_id:
             conversation = await conversation_manager.get_conversation(request.conversation_id, user_id=current_user.user_id)
