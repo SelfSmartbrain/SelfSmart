@@ -1,4 +1,5 @@
 import { useChatStore } from "@/store/useChatStore";
+import { apiUrl } from "@/lib/api";
 
 export const useStreamingChat = () => {
   const { updateLastAssistantMessage, addMessage, setLoading, conversationId, setConversationId, fetchConversations } = useChatStore();
@@ -19,7 +20,7 @@ export const useStreamingChat = () => {
     let isNewConversation = !conversationId;
 
     try {
-      const response = await fetch('http://localhost:8000/api/chat/stream', {
+       const response = await fetch(apiUrl('/api/chat/stream'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
