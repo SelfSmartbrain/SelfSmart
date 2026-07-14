@@ -34,3 +34,32 @@ fine_tuned_model.zip
 .vscode/
 *.swp
 *.swo
+.env.backup
+
+# Secrets
+.env.backup
+.env.*.backup
+*.env.bak
+
+# Runtime artifacts
+*.pid
+*.log
+server.pid
+server.log
+backend_pid.txt
+backend_test.log
+
+# Backup files
+*.backup
+*.bak
+src/*.backup
+
+# Generated outputs
+analysis_report.json
+processed_data/
+validation_results/
+scientific_validation_results/
+test_validation_results/
+
+# Pip bootstrap
+get-pip.py
