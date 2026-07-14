@@ -7,7 +7,7 @@ import logging
 import uuid
 import structlog
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from pydantic import BaseModel, field_validator
@@ -17,6 +17,8 @@ import asyncio
 import json
 import os
 from datetime import datetime
+import time as _time_module
+_SERVER_START_TIME = _time_module.time()
 
 from src.config.settings import get_settings
 from src.utils.logging import setup_logging, get_logger
@@ -27,47 +29,14 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for FastAPI.
-    Handles startup/shutdown and model pre-warming.
-    """
-    logger.info("starting_up", app_name=settings.app_name)
-
-    # Pre-warm local model if enabled
-    global local_llm_client, use_local_llm
-    if use_local_llm:
-        logger.info("pre_warming_local_llm")
-        try:
-            local_llm_client = LocalLLMClient(
-                model_path="./model_checkpoints",
-                base_model_path="mistralai/Mistral-7B-v0.1"
-            )
-            local_llm_client.load_model()
-            logger.info("local_llm_ready")
-        except Exception as e:
-            logger.error("local_llm_prewarm_failed", error=str(e))
-            use_local_llm = False
-
-    yield
-
-    logger.info("shutting_down")
-
-limiter = Limiter(key_func=get_remote_address)
-
 app = FastAPI(
     title="SmartSelf AI",
     description="Intelligent Self-Learning Chatbot with LLM",
-    lifespan=lifespan
 )
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 from src.learning.continuous_learner import ContinuousLearner, LearningConfig
-...
 class UserCreate(BaseModel):
     email: str
     password: str
@@ -116,7 +85,7 @@ from src.llm.agent_tools import ToolExecutor
 from src.llm.conversation_manager import ConversationManager
 
 from src.llm_training.inference import LocalLLMClient
-from src.tasks.learning_tasks import run_learning_loop
+from src.tasks.learning_tasks import run_learning_loop, _run_learning_loop
 from src.tasks.training_tasks import run_model_training
 
 # Initialize settings
@@ -138,8 +107,6 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Correlation-ID"] = correlation_id
         return response
-
-from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -211,6 +178,10 @@ free_api_client = FreeAPIClient()
 conversation_manager = ConversationManager()
 rag_service = RAGService()
 tool_executor = ToolExecutor()
+
+# Learning task management
+_learning_active: bool = False
+_learning_task: Optional[asyncio.Task] = None
 
 # LLM clients
 llm_client: Optional[DeepSeekClient] = None
@@ -578,26 +549,105 @@ async def get_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/learning/start")
-async def start_learning():
-    """Start the continuous learning pipeline as a background task"""
+@app.get("/api/dashboard")
+async def get_dashboard_metrics(current_user: TokenData = Depends(get_current_user)):
+    """
+    Real-time dashboard metrics — replaces all hardcoded frontend demo data.
+    """
+    import json as _json
+    import time as _time_module
+
+    # --- Knowledge base ---
+    chunk_count = 0
+    rag_enabled = getattr(rag_service, "use_rag", False)
     try:
-        task = run_learning_loop.delay()
-        return {
-            "success": True,
-            "message": "Learning pipeline started in background",
-            "task_id": task.id
-        }
-    except Exception as e:
-        logger.error(f"Error starting learning: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        if rag_enabled and hasattr(rag_service, "knowledge_integrator"):
+            vi = rag_service.knowledge_integrator.vector_store
+            if vi:
+                chunk_count = vi.collection.count()
+    except Exception:
+        pass
+
+    # --- User feedback from JSONL log ---
+    feedback_path = settings.data_dir / "feedback.jsonl"
+    feedback_total, feedback_positive = 0, 0
+    if feedback_path.exists():
+        try:
+            with open(feedback_path) as fh:
+                for raw in fh:
+                    raw = raw.strip()
+                    if not raw:
+                        continue
+                    try:
+                        entry = _json.loads(raw)
+                        feedback_total += 1
+                        if entry.get("is_positive"):
+                            feedback_positive += 1
+                    except _json.JSONDecodeError:
+                        continue
+        except OSError:
+            pass
+
+    # --- Conversations for this user ---
+    conv_count = 0
+    try:
+        user_convs = await conversation_manager.get_user_conversations(
+            user_id=current_user.user_id, limit=9999
+        )
+        conv_count = len(user_convs) if user_convs else 0
+    except Exception:
+        pass
+
+    # --- Uptime ---
+    uptime = round(_time_module.time() - _SERVER_START_TIME, 1)
+
+    return {
+        "knowledge_base": {
+            "chunk_count": chunk_count,
+            "rag_enabled": rag_enabled,
+        },
+        "feedback": {
+            "total": feedback_total,
+            "positive": feedback_positive,
+            "satisfaction_rate": (
+                round(feedback_positive / feedback_total, 2)
+                if feedback_total > 0 else 0.0
+            ),
+        },
+        "conversations": {
+            "total": conv_count,
+        },
+        "system": {
+            "llm_provider": settings.llm_provider,
+            "uptime_seconds": uptime,
+            "version": settings.app_version,
+            "learning_active": _learning_active,
+        },
+    }
+
+
+@app.post("/api/learning/start")
+async def start_learning(current_user: TokenData = Depends(get_current_user)):
+    """Start the continuous learning pipeline."""
+    global _learning_active, _learning_task
+    if _learning_active and _learning_task and not _learning_task.done():
+        return {"success": False, "message": "Learning pipeline already running"}
+    _learning_active = True
+    _learning_task = asyncio.create_task(_run_learning_loop())
+    logger.info("learning_started", user=current_user.username)
+    return {"success": True, "message": "Learning pipeline started"}
 
 
 @app.post("/api/learning/stop")
-async def stop_learning():
-    """Stop the continuous learning pipeline by revoking the task"""
-    # In a more advanced setup, we'd use a Redis flag, but for now we'll revoke
-    return {"success": False, "message": "Manual stop via API requires task revocation logic"}
+async def stop_learning(current_user: TokenData = Depends(get_current_user)):
+    """Stop the active continuous learning background task."""
+    global _learning_active, _learning_task
+    if _learning_task and not _learning_task.done():
+        _learning_task.cancel()
+        _learning_active = False
+        logger.info("learning_stopped", user=current_user.username)
+        return {"success": True, "message": "Learning pipeline stopped"}
+    return {"success": False, "message": "No active learning task to stop"}
 
 
 @app.post("/api/learning/learn")
@@ -726,6 +776,55 @@ async def health_check():
     }
 
 
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """Detailed component health check for monitoring and alerting."""
+    components: dict = {}
+    overall_status = "ok"
+
+    # RAG / ChromaDB check
+    try:
+        if hasattr(rag_service, "vector_store") and rag_service.vector_store:
+            chunk_count = rag_service.vector_store.collection.count()
+        else:
+            chunk_count = -1
+        components["rag"] = {"status": "ok", "chunk_count": chunk_count}
+    except Exception as e:
+        components["rag"] = {"status": "error", "error": str(e)[:100]}
+        overall_status = "degraded"
+
+    # LLM API key check
+    if _llm_api_key_configured():
+        components["llm_api"] = {"status": "ok", "provider": settings.llm_provider}
+    else:
+        components["llm_api"] = {"status": "warning", "message": "No LLM API key configured"}
+        if overall_status == "ok":
+            overall_status = "degraded"
+
+    # Local LLM check
+    components["local_llm"] = {
+        "status": "ok" if (use_local_llm and local_llm_client is not None) else "not_loaded",
+        "enabled": use_local_llm
+    }
+
+    # Storage writability check
+    try:
+        probe = settings.data_dir / ".health_probe"
+        probe.touch()
+        probe.unlink()
+        components["storage"] = {"status": "ok", "data_dir": str(settings.data_dir)}
+    except Exception as e:
+        components["storage"] = {"status": "error", "error": str(e)[:100]}
+        overall_status = "error"
+
+    return {
+        "status": overall_status,
+        "timestamp": datetime.utcnow().isoformat(),
+        "uptime_seconds": round(_time_module.time() - _SERVER_START_TIME, 1),
+        "version": "1.0.0",
+        "components": components
+    }
 @app.get("/status")
 async def status():
     """System status endpoint"""
@@ -747,549 +846,19 @@ async def status():
     }
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def root():
-    """Root endpoint with ChatGPT-like interface"""
-    html_content = """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>SmartSelf AI - Intelligent Assistant</title>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-                background: #343541;
-                height: 100vh;
-                display: flex;
-            }
-
-            .sidebar {
-                width: 260px;
-                background: #202123;
-                display: flex;
-                flex-direction: column;
-                padding: 10px;
-                border-right: 1px solid #4d4d4f;
-            }
-
-            .new-chat-btn {
-                background: #40414f;
-                color: white;
-                border: 1px solid #565869;
-                padding: 12px;
-                border-radius: 5px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 20px;
-                transition: background 0.2s;
-            }
-
-            .new-chat-btn:hover {
-                background: #4d4d4f;
-            }
-
-            .conversations-list {
-                flex: 1;
-                overflow-y: auto;
-            }
-
-            .conversation-item {
-                padding: 12px;
-                color: #ececf1;
-                cursor: pointer;
-                border-radius: 5px;
-                margin-bottom: 5px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                transition: background 0.2s;
-            }
-
-            .conversation-item:hover {
-                background: #2a2b32;
-            }
-
-            .conversation-item.active {
-                background: #343541;
-            }
-
-            .main-content {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                background: #343541;
-            }
-
-            .chat-header {
-                padding: 20px;
-                border-bottom: 1px solid #4d4d4f;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .chat-header h2 {
-                color: white;
-                font-size: 18px;
-            }
-
-            .voice-btn {
-                background: #40414f;
-                color: white;
-                border: 1px solid #565869;
-                padding: 8px 16px;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: background 0.2s;
-            }
-
-            .voice-btn:hover {
-                background: #4d4d4f;
-            }
-
-            .voice-btn.recording {
-                background: #ef4444;
-                animation: pulse 1s infinite;
-            }
-
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.5; }
-            }
-
-            .chat-messages {
-                flex: 1;
-                overflow-y: auto;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .message {
-                display: flex;
-                gap: 15px;
-                max-width: 800px;
-                margin: 0 auto;
-                width: 100%;
-            }
-
-            .message.user {
-                justify-content: flex-end;
-            }
-
-            .message-avatar {
-                width: 30px;
-                height: 30px;
-                border-radius: 2px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 14px;
-                flex-shrink: 0;
-            }
-
-            .message.bot .message-avatar {
-                background: #19c37d;
-            }
-
-            .message.user .message-avatar {
-                background: #5436da;
-            }
-
-            .message-content {
-                padding: 12px 16px;
-                border-radius: 8px;
-                line-height: 1.6;
-                max-width: 70%;
-            }
-
-            .message.bot .message-content {
-                background: #444654;
-                color: #ececf1;
-            }
-
-            .message.user .message-content {
-                background: #5436da;
-                color: white;
-            }
-
-            .message-sources {
-                margin-top: 8px;
-                font-size: 12px;
-                color: #8e8ea0;
-                font-style: italic;
-            }
-
-            .chat-input {
-                padding: 20px;
-                border-top: 1px solid #4d4d4f;
-            }
-
-            .input-container {
-                max-width: 800px;
-                margin: 0 auto;
-                position: relative;
-            }
-
-            .chat-input textarea {
-                width: 100%;
-                background: #40414f;
-                color: white;
-                border: 1px solid #565869;
-                border-radius: 12px;
-                padding: 12px 45px 12px 12px;
-                font-size: 16px;
-                resize: none;
-                outline: none;
-                font-family: inherit;
-            }
-
-            .chat-input textarea:focus {
-                border-color: #19c37d;
-            }
-
-            .send-btn {
-                position: absolute;
-                right: 10px;
-                bottom: 10px;
-                background: #19c37d;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 6px;
-                cursor: pointer;
-                transition: background 0.2s;
-            }
-
-            .send-btn:hover {
-                background: #1a885d;
-            }
-
-            .send-btn:disabled {
-                background: #565869;
-                cursor: not-allowed;
-            }
-
-            .typing-indicator {
-                color: #8e8ea0;
-                font-style: italic;
-                display: none;
-            }
-
-            .typing-indicator.active {
-                display: block;
-            }
-
-            @media (max-width: 768px) {
-                .sidebar {
-                    display: none;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="sidebar">
-            <button class="new-chat-btn" onclick="newChat()">
-                <span>+</span>
-                <span>New Chat</span>
-            </button>
-            <div class="conversations-list" id="conversationsList">
-                <!-- Conversations will be loaded here -->
-            </div>
-        </div>
-        <div class="main-content">
-            <div class="chat-header">
-                <h2>🤖 SmartSelf AI</h2>
-                <div>
-                    <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤 Voice</button>
-                    <button class="voice-btn" onclick="clearChat()" style="margin-left: 10px;">Clear</button>
-                </div>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <div class="message bot">
-                    <div class="message-avatar">🤖</div>
-                    <div class="message-content">
-                        Hello! I'm SmartSelf AI, an intelligent assistant that continuously learns from the internet. I can help you with a wide range of topics using advanced AI and my continuously growing knowledge base. How can I assist you today?
-                    </div>
-                </div>
-            </div>
-            <div class="typing-indicator" id="typingIndicator">SmartSelf AI is thinking...</div>
-            <div class="chat-input">
-                <div class="input-container">
-                    <textarea id="userInput" placeholder="Message SmartSelf AI..." rows="1" onkeydown="handleKeyDown(event)"></textarea>
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            let currentConversationId = null;
-            let isRecording = false;
-            let recognition = null;
-
-            // Initialize speech recognition
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.lang = 'en-US';
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    document.getElementById('userInput').value = transcript;
-                    stopRecording();
-                };
-
-                recognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
-                    stopRecording();
-                };
-
-                recognition.onend = () => {
-                    stopRecording();
-                };
-            }
-
-            function toggleVoice() {
-                if (!recognition) {
-                    alert('Speech recognition is not supported in your browser.');
-                    return;
-                }
-
-                if (isRecording) {
-                    stopRecording();
-                } else {
-                    startRecording();
-                }
-            }
-
-            function startRecording() {
-                isRecording = true;
-                recognition.start();
-                document.getElementById('voiceBtn').classList.add('recording');
-                document.getElementById('voiceBtn').textContent = '🔴 Stop';
-            }
-
-            function stopRecording() {
-                isRecording = false;
-                if (recognition) {
-                    recognition.stop();
-                }
-                document.getElementById('voiceBtn').classList.remove('recording');
-                document.getElementById('voiceBtn').textContent = '🎤 Voice';
-            }
-
-            function speak(text) {
-                if ('speechSynthesis' in window) {
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 1;
-                    utterance.pitch = 1;
-                    speechSynthesis.speak(utterance);
-                }
-            }
-
-            async function sendMessage() {
-                const input = document.getElementById('userInput');
-                const message = input.value.trim();
-
-                if (!message) return;
-
-                // Add user message to chat
-                addMessage(message, 'user');
-                input.value = '';
-
-                // Show typing indicator
-                document.getElementById('typingIndicator').classList.add('active');
-                document.getElementById('sendBtn').disabled = true;
-
-                try {
-                    const response = await fetch('/api/chat/stream', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: message,
-                            conversation_id: currentConversationId
-                        })
-                    });
-
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let botMessageContent = '';
-                    let botMessageDiv = null;
-                    let sources = [];
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        const chunk = decoder.decode(value);
-                        const lines = chunk.split('\\n');
-
-                        for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const data = JSON.parse(line.slice(6));
-
-                                    if (data.type === 'conversation_id') {
-                                        currentConversationId = data.id;
-                                        loadConversations();
-                                    } else if (data.type === 'chunk') {
-                                        if (!botMessageDiv) {
-                                            botMessageDiv = addMessage('', 'bot');
-                                        }
-                                        botMessageContent += data.content;
-                                        updateMessageContent(botMessageDiv, botMessageContent);
-                                    } else if (data.type === 'done') {
-                                        sources = data.sources || [];
-                                        if (botMessageDiv && sources.length > 0) {
-                                            addSources(botMessageDiv, sources);
-                                        }
-                                    } else if (data.type === 'error') {
-                                        console.error('Error:', data.error);
-                                    }
-                                } catch (e) {
-                                    console.error('Error parsing chunk:', e);
-                                }
-                            }
-                        }
-                    }
-
-                    // Speak the response
-                    if (botMessageContent) {
-                        speak(botMessageContent);
-                    }
-
-                } catch (error) {
-                    console.error('Error:', error);
-                    addMessage('Sorry, I encountered an error. Please try again.', 'bot');
-                } finally {
-                    document.getElementById('typingIndicator').classList.remove('active');
-                    document.getElementById('sendBtn').disabled = false;
-                }
-            }
-
-            function addMessage(content, role) {
-                const messagesDiv = document.getElementById('chatMessages');
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${role}`;
-
-                const avatar = role === 'bot' ? '🤖' : '👤';
-
-                messageDiv.innerHTML = `
-                    <div class="message-avatar">${avatar}</div>
-                    <div class="message-content">${content}</div>
-                `;
-
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-                return messageDiv;
-            }
-
-            function updateMessageContent(messageDiv, content) {
-                const contentDiv = messageDiv.querySelector('.message-content');
-                contentDiv.textContent = content;
-
-                const messagesDiv = document.getElementById('chatMessages');
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-
-            function addSources(messageDiv, sources) {
-                const contentDiv = messageDiv.querySelector('.message-content');
-                const sourcesDiv = document.createElement('div');
-                sourcesDiv.className = 'message-sources';
-                sourcesDiv.textContent = `Sources: ${sources.join(', ')}`;
-                contentDiv.appendChild(sourcesDiv);
-            }
-
-            function handleKeyDown(event) {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    sendMessage();
-                }
-            }
-
-            async function newChat() {
-                currentConversationId = null;
-                const messagesDiv = document.getElementById('chatMessages');
-                messagesDiv.innerHTML = `
-                    <div class="message bot">
-                        <div class="message-avatar">🤖</div>
-                        <div class="message-content">
-                            Hello! I'm SmartSelf AI, an intelligent assistant that continuously learns from the internet. I can help you with a wide range of topics using advanced AI and my continuously growing knowledge base. How can I assist you today?
-                        </div>
-                    </div>
-                `;
-            }
-
-            function clearChat() {
-                newChat();
-            }
-
-            async function loadConversations() {
-                try {
-                    const response = await fetch('/api/conversations');
-                    const conversations = await response.json();
-
-                    const listDiv = document.getElementById('conversationsList');
-                    listDiv.innerHTML = '';
-
-                    conversations.forEach(conv => {
-                        const item = document.createElement('div');
-                        item.className = 'conversation-item';
-                        if (conv.id === currentConversationId) {
-                            item.classList.add('active');
-                        }
-                        item.textContent = conv.title;
-                        item.onclick = () => loadConversation(conv.id);
-                        listDiv.appendChild(item);
-                    });
-                } catch (error) {
-                    console.error('Error loading conversations:', error);
-                }
-            }
-
-            async function loadConversation(conversationId) {
-                currentConversationId = conversationId;
-
-                try {
-                    const response = await fetch(`/api/conversations/${conversationId}`);
-                    const conversation = await response.json();
-
-                    const messagesDiv = document.getElementById('chatMessages');
-                    messagesDiv.innerHTML = '';
-
-                    conversation.messages.forEach(msg => {
-                        addMessage(msg.content, msg.role);
-                    });
-
-                    loadConversations();
-                } catch (error) {
-                    console.error('Error loading conversation:', error);
-                }
-            }
-
-            // Load conversations on page load
-            loadConversations();
-        </script>
-    </body>
-    </html>
-    """
-    return html_content
+    """API root — UI is served by the Next.js frontend on port 3000."""
+    from src.config.settings import get_settings
+    settings = get_settings()
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "status": "online",
+        "docs": "/docs",
+        "health": "/health",
+        "frontend": "http://localhost:3000",
+    }
 
 
 if __name__ == "__main__":
