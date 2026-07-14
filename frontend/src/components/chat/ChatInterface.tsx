@@ -42,10 +42,10 @@ export function ChatInterface() {
               <Send size={32} />
             </div>
             <h2 className="text-2xl font-bold mb-2">Welcome to SmartSelf AI</h2>
-            <p className="text-muted-foreground max-w-md">
-              Your autonomous learning assistant. Ask me anything about retail intelligence,
-              demand forecasting, or latest market trends.
-            </p>
+             <p className="text-muted-foreground max-w-md">
+               Your autonomous self-learning AI assistant. I grow smarter with every
+               conversation. Ask me anything.
+             </p>
           </div>
         ) : (
           <div className="flex flex-col divide-y">
