@@ -18,6 +18,7 @@ import json
 import os
 from datetime import datetime
 import time as _time_module
+from contextlib import asynccontextmanager
 _SERVER_START_TIME = _time_module.time()
 
 from src.config.settings import get_settings
@@ -28,6 +29,9 @@ from src.utils.prompt_sanitizer import sanitize_user_message
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from contextlib import asynccontextmanager
+
+limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="SmartSelf AI",
