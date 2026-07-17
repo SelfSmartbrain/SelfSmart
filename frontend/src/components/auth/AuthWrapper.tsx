@@ -5,6 +5,7 @@ import { Lock, Mail, User, Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiUrl } from "@/lib/api";
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
@@ -34,7 +35,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       : { email, password, full_name: fullName };
 
     try {
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
