@@ -6,6 +6,7 @@ import { Message } from "@/store/useChatStore";
 import { User, Bot, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from 'react';
+import { apiUrl } from "@/lib/api";
 
 interface ChatMessageProps {
   message: Message;
@@ -21,7 +22,7 @@ export function ChatMessage({ message, index, conversationId }: ChatMessageProps
     if (!conversationId) return;
 
     try {
-      await fetch('http://localhost:8000/api/feedback', {
+      await fetch(apiUrl('/api/feedback'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
