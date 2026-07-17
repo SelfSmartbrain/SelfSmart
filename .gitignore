@@ -37,7 +37,6 @@ fine_tuned_model.zip
 .env.backup
 
 # Secrets
-.env.backup
 .env.*.backup
 *.env.bak
 
@@ -56,10 +55,27 @@ src/*.backup
 
 # Generated outputs
 analysis_report.json
-processed_data/
 validation_results/
 scientific_validation_results/
 test_validation_results/
 
 # Pip bootstrap
 get-pip.py
+
+# IDE (additional)
+.cursor/
+
+# Uploads (user-generated content)
+uploads/
+
+# Notebooks (dev-only)
+notebooks/
+
+# Binary model files
+*.bin
+*.ggml
+*.onnx
+
+# Frontend build output
+frontend/.next/
+frontend/out/
