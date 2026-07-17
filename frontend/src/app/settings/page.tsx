@@ -5,6 +5,7 @@ import { Settings, Cpu, HardDrive, Shield, CheckCircle, AlertTriangle, Loader2, 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { apiUrl } from "@/lib/api";
 
 interface SystemStatus {
   status: string;
@@ -32,7 +33,7 @@ export default function SettingsPage() {
 
   const fetchStatus = async () => {
     try {
-      const response = await fetch("http://localhost:8000/status");
+      const response = await fetch(apiUrl("/status"));
       if (response.ok) {
         const data = await response.json();
         setStatus(data);
@@ -60,7 +61,7 @@ export default function SettingsPage() {
     const checkStatus = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:8000/api/tasks/${trainingTaskId}`, {
+        const response = await fetch(apiUrl(`/api/tasks/${trainingTaskId}`), {
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -89,7 +90,7 @@ export default function SettingsPage() {
     setTrainingStatus(null);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/training/start", {
+      const response = await fetch(apiUrl("/api/training/start"), {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`
