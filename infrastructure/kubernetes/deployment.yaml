@@ -1,42 +1,141 @@
+# ============================================
+# Namespace
+# ============================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: selfsmart
+---
+# ============================================
+# Deployment
+# ============================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: smartself-backend
+  name: selfsmart-backend
+  namespace: selfsmart
+  labels:
+    app: selfsmart-backend
+    version: "1.0.0"
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: smartself-backend
+      app: selfsmart-backend
   template:
     metadata:
       labels:
-        app: smartself-backend
+        app: selfsmart-backend
+        version: "1.0.0"
     spec:
       containers:
-      - name: backend
-        image: smartself-ai:latest
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: smartself-secrets
-              key: database_url
-        - name: REDIS_URL
-          valueFrom:
-            secretKeyRef:
-              name: smartself-secrets
-              key: redis_url
-        ports:
-        - containerPort: 8000
+        - name: backend
+          image: selfsmart-ai:1.0.0
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: selfsmart-secrets
+                  key: database-url
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: selfsmart-secrets
+                  key: jwt-secret-key
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: selfsmart-secrets
+                  key: redis-url
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
 ---
+# ============================================
+# Service
+# ============================================
 apiVersion: v1
 kind: Service
 metadata:
-  name: smartself-service
+  name: selfsmart-service
+  namespace: selfsmart
+  labels:
+    app: selfsmart-backend
 spec:
+  type: ClusterIP
   selector:
-    app: smartself-backend
+    app: selfsmart-backend
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8000
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+---
+# ============================================
+# Horizontal Pod Autoscaler
+# ============================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: selfsmart-backend-hpa
+  namespace: selfsmart
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: selfsmart-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# ============================================
+# Ingress
+# ============================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: selfsmart-ingress
+  namespace: selfsmart
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api.selfsmart.ai
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: selfsmart-service
+                port:
+                  number: 80
