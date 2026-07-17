@@ -76,6 +76,16 @@ ACTIVE_OBJECTIVES = Gauge(
     "Number of currently active objectives"
 )
 
+# LLM Metrics
+LLM_LATENCY = Histogram(
+    'llm_request_duration_seconds', 'LLM Request Latency',
+    ['provider', 'model']
+)
+TOKEN_USAGE = Counter(
+    'llm_token_usage_total', 'Total LLM Token Usage',
+    ['provider', 'model', 'token_type']  # token_type: prompt or completion
+)
+
 
 def setup_prometheus(app: FastAPI) -> None:
     """Mount Prometheus metrics endpoint on the FastAPI app."""
