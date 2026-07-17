@@ -12,8 +12,8 @@ import json
 from dataclasses import dataclass, field
 
 from src.config.settings import get_settings
-from src.utils.logging import get_logger
-from src.utils.metrics import LLM_LATENCY, TOKEN_USAGE
+from src.config.logging import get_logger
+from src.monitoring.prometheus import LLM_LATENCY, TOKEN_USAGE
 
 logger = get_logger(__name__)
 
