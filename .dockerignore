@@ -1,0 +1,64 @@
+# Version control
+.git
+.github
+.gitignore
+
+# Environment & secrets
+.env
+.env.*
+*.env
+.secrets.baseline
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/.next/
+
+# IDE
+.cursor/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data & models (download at runtime)
+data/
+training_data/
+processed_data/
+vector_store/
+model_checkpoints/
+models/
+uploads/
+logs/
+*.db
+*.sqlite3
+
+# Tests & docs
+tests/
+docs/
+notebooks/
+*.md
+!README.md
+
+# CI/CD
+.github/
+infrastructure/
+
+# Misc
+*.log
+*.pid
+*.backup
+*.bak
+scientific_validation_results/
+test_validation_results/
+validation_results/
