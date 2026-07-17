@@ -22,7 +22,7 @@ fi
 
 source .venv/bin/activate
 echo "Installing/Updating backend dependencies..."
-pip install -r requirements.txt --quiet
+pip install -e ".[dev]" --quiet
 
 # 2. Setup Frontend
 echo "⚛️ Setting up Frontend..."
@@ -40,7 +40,7 @@ echo "Starting FastAPI Backend on http://localhost:$BACKEND_PORT..."
 cd "$ROOT"
 export PYTHONPATH="$ROOT"
 # Using the specialized python3 path from run_server.sh to ensure compatibility
-/usr/bin/python3 -m src.web_server > logs/backend.log 2>&1 &
+python3 -m uvicorn src.api.main:app --host 0.0.0.0 --port "$BACKEND_PORT" > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Function to kill background process on exit
