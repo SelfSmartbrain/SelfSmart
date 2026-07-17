@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from src.llm.rag_service import RAGService
 from src.llm.gemini_client import GeminiClient, Message
-from src.utils.logging import get_logger
+from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
