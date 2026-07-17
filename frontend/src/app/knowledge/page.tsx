@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { apiUrl } from "@/lib/api";
 
 interface Stats {
   conversations?: any;
@@ -37,7 +38,7 @@ export default function KnowledgePage() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/stats", {
+      const response = await fetch(apiUrl("/api/stats"), {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -81,7 +82,7 @@ export default function KnowledgePage() {
     setTeachStatus(null);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/learning/learn", {
+      const response = await fetch(apiUrl("/api/learning/learn"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +121,7 @@ export default function KnowledgePage() {
     try {
       const token = localStorage.getItem("token");
       const endpoint = start ? "/api/learning/start" : "/api/learning/stop";
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`
