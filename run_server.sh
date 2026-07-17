@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
-# Run the API with the macOS CLT Python that has project deps (user site-packages).
-# If `python3 -m src.web_server` fails with "No module named 'fastapi'", your PATH
-# is picking Homebrew Python without those packages — use this script instead.
+# Run the SelfSmart API via uvicorn (src.api.main).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 export PYTHONPATH="$ROOT"
-exec /usr/bin/python3 -m src.web_server "$@"
+
+if [ -d ".venv" ]; then
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+fi
+
+exec python3 -m uvicorn src.api.main:app --host 0.0.0.0 --port "${PORT:-8000}" --reload "$@"
