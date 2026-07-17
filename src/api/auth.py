@@ -28,9 +28,9 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     settings = get_settings()
-    secret_key = settings.jwt_secret_key.get_secret_value()
-    if not secret_key or secret_key == "dev-secret-change-in-production":
-        raise ValueError("JWT_SECRET must be configured with a secure value in production")
+    secret_key = settings.secret_key
+    if settings.is_production and secret_key == "dev-secret-key-change-in-production":
+        raise ValueError("SECRET_KEY must be configured with a secure value in production")
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -46,9 +46,9 @@ async def get_current_user(
     api_key: Annotated[str | None, Header(alias="X-API-Key")] = None,
 ) -> User:
     settings = get_settings()
-    secret_key = settings.jwt_secret_key.get_secret_value()
-    if not secret_key or secret_key == "dev-secret-change-in-production":
-        raise ValueError("JWT_SECRET must be configured with a secure value")
+    secret_key = settings.secret_key
+    if settings.is_production and secret_key == "dev-secret-key-change-in-production":
+        raise ValueError("SECRET_KEY must be configured with a secure value")
     repo = UserRepository(db_session)
 
     if not token and not api_key:
