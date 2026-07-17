@@ -12,7 +12,7 @@ import time
 from src.llm.rag_service import RAGService
 from src.llm.gemini_client import GeminiClient
 from src.llm.rag_evaluator import RAGEvaluator, EvalCase
-from src.utils.logging import setup_logging, get_logger
+from src.config.logging import get_logger
 
 setup_logging()
 logger = get_logger(__name__)
