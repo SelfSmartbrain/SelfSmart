@@ -9,20 +9,28 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.api.middleware import setup_middleware
+from src.api.rate_limit import limiter
 from src.api.routes import (
     autonomous,
     benchmarks,
+    chat,
     cognition,
+    conversations,
     environment,
     failures,
+    feedback,
     goals,
     health,
     impact,
     knowledge,
+    learning,
+    legacy_auth,
     memory,
     meta,
     opportunities,
@@ -31,6 +39,7 @@ from src.api.routes import (
     reports,
     review,
     skills,
+    stats,
     strategies,
     swarm,
     tasks,
@@ -38,8 +47,10 @@ from src.api.routes import (
     vision,
     world_model,
 )
-from src.config.logging import get_logger
+from src.api.services import chat_runtime
+from src.config.logging import get_logger, setup_logging
 from src.config.settings import get_settings
+from src.monitoring.prometheus import setup_prometheus
 
 logger = get_logger(__name__)
 
@@ -48,20 +59,26 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Manage application lifecycle.
-    Initializes the AgentRuntime, EvolutionEngine, and a DB-watcher background
-    task on startup, and cleans them all up on shutdown.
+    Initializes the AgentRuntime, EvolutionEngine, chat runtime, and a DB-watcher
+    background task on startup, and cleans them all up on shutdown.
     """
     settings = get_settings()
+    setup_logging(
+        level="DEBUG" if settings.debug else "INFO",
+        json_format=settings.json_logs,
+    )
     logger.info("Starting up autonomous agent platform", env=settings.environment)
 
-    # ── Initialize the runtime ──────────────────────────────────────────────
+    await chat_runtime.prewarm_local_llm()
+
     from src.runtime.runtime_singleton import init_runtime, shutdown_runtime
+
     runtime = await init_runtime()
 
-    # ── Start EvolutionEngine (optional — skip gracefully if misconfigured) ──
     evolution_engine = None
     try:
         from src.evolution.evolution_engine import EvolutionConfig, EvolutionEngine
+
         evolution_engine = EvolutionEngine(
             config=EvolutionConfig(
                 generation_limit=100,
@@ -73,18 +90,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await evolution_engine.start()
         logger.info("EvolutionEngine started")
     except Exception as exc:
-        logger.warning("EvolutionEngine failed to start; continuing without evolution", error=str(exc))
+        logger.warning(
+            "EvolutionEngine failed to start; continuing without evolution", error=str(exc)
+        )
         evolution_engine = None
 
-    # ── Background task: sync DB objectives → ObjectiveManager every 10 s ──
     async def _db_watcher() -> None:
-        """Poll PostgreSQL for ACTIVE objectives and push them into the runtime."""
         from sqlalchemy import select
 
         from src.autonomy.objective_manager import Objective
         from src.db.enums import ObjectiveStatus
         from src.db.models import Objective as ObjectiveModel
-        from src.db.session import AsyncSessionLocal  # proper sessionmaker, not a generator
+        from src.db.session import AsyncSessionLocal
 
         seen: set[str] = set()
         while True:
@@ -101,30 +118,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                                 Objective.from_db_model(db_obj)
                             )
                             seen.add(db_obj.objective_id)
-                            logger.info(
-                                "Loaded objective from DB", id=db_obj.objective_id
-                            )
+                            logger.info("Loaded objective from DB", id=db_obj.objective_id)
             except asyncio.CancelledError:
-                raise  # propagate cancellation immediately
+                raise
             except Exception as exc:
                 logger.error("DB watcher error", error=str(exc))
             await asyncio.sleep(10)
 
     watcher_task = asyncio.create_task(_db_watcher(), name="db-objective-watcher")
-    # Run the execution loop as a long-lived background task (fire-and-forget).
-    # We do NOT await its result here because run() blocks until stopped.
     loop_task = asyncio.create_task(runtime.run(), name="agent-execution-loop")
 
     yield
 
-    # ── Cleanup — cancel tasks and await them to avoid ResourceWarning ──────
     logger.info("Shutting down autonomous agent platform")
     for task in (watcher_task, loop_task):
         task.cancel()
         try:
             await task
         except (asyncio.CancelledError, Exception):
-            pass  # expected on cancellation
+            pass
 
     if evolution_engine is not None:
         try:
@@ -141,20 +153,31 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.project_name,
-        description="Phase 1 AGI-Inspired Autonomous Agent Platform",
+        description="SelfSmart AI — Intelligent Self-Learning Chatbot & Agent Platform",
         version=settings.version,
         lifespan=lifespan,
         docs_url="/docs" if settings.environment != "production" else None,
         redoc_url="/redoc" if settings.environment != "production" else None,
     )
 
-    # Setup middleware (CORS, logging, error handling)
-    setup_middleware(app, settings)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-    # Include routers
+    setup_middleware(app, settings)
+    setup_prometheus(app)
+
     from src.api.routes import auth_routes
 
-    app.include_router(auth_routes.router, prefix="/api/v1/auth", tags=["Auth"])
+    # SelfSmart chat frontend routes (/api/*)
+    app.include_router(legacy_auth.router)
+    app.include_router(chat.router)
+    app.include_router(conversations.router)
+    app.include_router(feedback.router)
+    app.include_router(learning.router)
+    app.include_router(stats.router)
+
+    # Autonomous agent platform routes (/api/v1/*)
+    app.include_router(auth_routes.router, prefix="/api/v1/auth", tags=["Auth v1"])
     app.include_router(health.router)
     app.include_router(goals.router, prefix="/api/v1/goals", tags=["Goals"])
     app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["Tasks"])
@@ -183,10 +206,32 @@ def create_app() -> FastAPI:
     for router in versioned_routers:
         app.include_router(router, prefix="/api/v1")
 
+    @app.get("/")
+    async def root():
+        return {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "status": "online",
+            "docs": "/docs",
+            "health": "/health",
+        }
+
+    @app.get("/status")
+    async def status():
+        return {
+            "status": "online",
+            "app_name": settings.app_name,
+            "version": settings.app_version,
+            "debug": settings.debug,
+            "llm_provider": settings.llm_provider,
+            "llm_api_key_configured": chat_runtime.llm_api_key_configured(),
+        }
+
     @app.exception_handler(Exception)
-    async def global_exception_handler(request, exc):
-        """Catch-all exception handler to prevent leaking sensitive info."""
-        logger.error("Unhandled exception", path=request.url.path, error=str(exc))
+    async def global_exception_handler(request: Request, exc: Exception):
+        logger.error(
+            "unhandled_exception", path=request.url.path, error=str(exc), exc_info=True
+        )
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error. Please try again later."},
