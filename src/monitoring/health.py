@@ -39,8 +39,18 @@ async def check_postgres(session: AsyncSession) -> Dict[str, Any]:
 
 async def check_redis() -> Dict[str, Any]:
     """Check Redis connection."""
-    # Placeholder for actual Redis check
-    return {"status": "up", "latency_ms": 1.2}
+    import redis
+    from src.config.settings import get_settings
+    settings = get_settings()
+    start = time.time()
+    try:
+        r = redis.from_url(settings.redis_url)
+        r.ping()
+        latency = time.time() - start
+        return {"status": "up", "latency_ms": round(latency * 1000, 2)}
+    except Exception as e:
+        logger.error("Redis health check failed", error=str(e))
+        return {"status": "down", "error": str(e)[:100]}
 
 
 async def check_neo4j() -> Dict[str, Any]:
@@ -51,8 +61,24 @@ async def check_neo4j() -> Dict[str, Any]:
 
 async def check_qdrant() -> Dict[str, Any]:
     """Check Qdrant vector store connection."""
-    # Placeholder for actual Qdrant check
-    return {"status": "up", "latency_ms": 3.1}
+    import httpx
+    from src.config.settings import get_settings
+    settings = get_settings()
+    start = time.time()
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{settings.qdrant_endpoint}/healthz",
+                timeout=5
+            )
+            latency = time.time() - start
+            if resp.status_code == 200:
+                return {"status": "up", "latency_ms": round(latency * 1000, 2)}
+            else:
+                return {"status": "down", "error": f"HTTP {resp.status_code}"}
+    except Exception as e:
+        logger.error("Qdrant health check failed", error=str(e))
+        return {"status": "down", "error": str(e)[:100]}
 
 
 async def get_system_health(db_session: AsyncSession) -> Dict[str, Any]:
