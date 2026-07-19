@@ -1,0 +1,113 @@
+_format_version: "3.0"
+
+services:
+  - name: selfsmart-api
+    url: http://selfsmart-api:8000
+    routes:
+      - name: api-route
+        paths:
+          - /api
+        strip_path: false
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 1000
+          day: 10000
+          policy: redis
+          redis_host: redis
+          redis_port: 6379
+          redis_database: 2
+       
+      - name: cors
+        config:
+          origins:
+            - https://selfsmart.ai
+            - https://www.selfsmart.ai
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Accept-Version
+            - Content-Length
+            - Content-MD5
+            - Content-Type
+            - Date
+            - Authorization
+          exposed_headers:
+            - X-RateLimit-Limit
+            - X-RateLimit-Remaining
+            - X-RateLimit-Reset
+          max_age: 3600
+          credentials: true
+       
+      - name: jwt
+        config:
+          uri_param_names:
+            - jwt
+          claims_to_verify:
+            - exp
+       
+      - name: prometheus
+        config:
+          per_consumer: false
+       
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - X-Kong-Request-ID:$(uuid)
+       
+      - name: response-transformer
+        config:
+          add:
+            headers:
+              - X-Response-Time:$(latency)
+
+upstreams:
+  - name: selfsmart-api-upstream
+    targets:
+      - target: selfsmart-api:8000
+    healthchecks:
+      active:
+        type: http
+        http_path: /health
+        healthy:
+          interval: 10
+          successes: 2
+        unhealthy:
+          interval: 5
+          http_failures: 3
+      passive:
+        type: http
+        healthy:
+          http_statuses:
+            - 200
+            - 201
+          successes: 2
+        unhealthy:
+          http_statuses:
+            - 500
+            - 502
+            - 503
+            - 504
+          http_failures: 3
+    algorithm: round-robin
+    slots: 10
+
+consumers:
+  - username: anonymous
+    custom_id: anonymous
+
+plugins:
+  - name: rate-limiting
+    route: api-route
+    config:
+      minute: 20
+      hour: 500
+      day: 2000
+      policy: local

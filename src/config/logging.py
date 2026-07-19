@@ -1,104 +1,114 @@
 """
-Structured logging configuration using structlog.
-
-Provides JSON output for production and colored console output for development.
-Integrates with Python's standard logging to capture library logs.
+Structured logging configuration with correlation IDs.
 """
-
-from __future__ import annotations
 
 import logging
 import sys
-from typing import Literal
+import uuid
+from contextlib import contextmanager
+from typing import Optional, Generator
+from datetime import datetime
 
 import structlog
+from prometheus_client import Counter
+
+from src.config.settings import get_settings
+
+# Metrics
+LOG_ERRORS = Counter(
+    "log_errors_total",
+    "Total log errors",
+    ["level", "module"]
+)
 
 
 def setup_logging(
     level: str = "INFO",
-    log_format: Literal["json", "console"] = "json",
+    json_format: bool = False,
 ) -> None:
-    """
-    Configure structured logging for the application.
-
-    Args:
-        level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-        log_format: Output format — 'json' for production, 'console' for development.
-    """
-    # Shared processors for both formats
-    shared_processors: list[structlog.types.Processor] = [
-        structlog.contextvars.merge_contextvars,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.ExtraAdder(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.UnicodeDecoder(),
-    ]
-
-    if log_format == "json":
-        # Production: JSON Lines output
-        renderer: structlog.types.Processor = structlog.processors.JSONRenderer()
-        formatter = structlog.stdlib.ProcessorFormatter(
+    """Configure structured logging."""
+    settings = get_settings()
+    
+    # Configure standard logging
+    logging.basicConfig(
+        format="%(message)s",
+        stream=sys.stdout,
+        level=getattr(logging, level.upper()),
+    )
+    
+    # Configure structlog
+    if json_format:
+        # JSON format for production
+        structlog.configure(
             processors=[
-                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                renderer,
+                structlog.contextvars.merge_contextvars,
+                structlog.processors.add_log_level,
+                structlog.processors.TimeStamper(fmt="iso"),
+                structlog.processors.JSONRenderer(),
             ],
-            foreign_pre_chain=shared_processors,
+            wrapper_class=structlog.make_filtering_bound_logger(
+                getattr(logging, level.upper())
+            ),
+            context_class=dict,
+            logger_factory=structlog.PrintLoggerFactory(),
+            cache_logger_on_first_use=True,
         )
     else:
-        # Development: colored console output
-        renderer = structlog.dev.ConsoleRenderer(
-            colors=True,
-            exception_formatter=structlog.dev.plain_traceback,
-        )
-        formatter = structlog.stdlib.ProcessorFormatter(
+        # Console format for development
+        structlog.configure(
             processors=[
-                structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-                renderer,
+                structlog.contextvars.merge_contextvars,
+                structlog.processors.add_log_level,
+                structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S"),
+                structlog.dev.ConsoleRenderer(),
             ],
-            foreign_pre_chain=shared_processors,
+            wrapper_class=structlog.make_filtering_bound_logger(
+                getattr(logging, level.upper())
+            ),
+            context_class=dict,
+            logger_factory=structlog.PrintLoggerFactory(),
+            cache_logger_on_first_use=True,
         )
 
-    # Configure root handler
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(formatter)
 
-    root_logger = logging.getLogger()
-    root_logger.handlers.clear()
-    root_logger.addHandler(handler)
-    root_logger.setLevel(getattr(logging, level.upper()))
-
-    # Suppress noisy library loggers
-    for noisy_logger in [
-        "httpcore",
-        "httpx",
-        "urllib3",
-        "asyncio",
-        "sqlalchemy.engine",
-    ]:
-        logging.getLogger(noisy_logger).setLevel(logging.WARNING)
-
-    # Configure structlog
-    structlog.configure(
-        processors=[
-            *shared_processors,
-            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-        ],
-        logger_factory=structlog.stdlib.LoggerFactory(),
-        wrapper_class=structlog.stdlib.BoundLogger,
-        cache_logger_on_first_use=True,
-    )
-
-
-def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
-    """
-    Get a structured logger instance.
-
-    Args:
-        name: Logger name (typically __name__).
-
-    Returns:
-        A bound structlog logger.
-    """
+def get_logger(name: str) -> structlog.stdlib.BoundLogger:
+    """Get a structured logger."""
     return structlog.get_logger(name)
+
+
+@contextmanager
+def log_context(
+    correlation_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+    **kwargs
+) -> Generator[None, None, None]:
+    """Context manager for adding log context."""
+    if correlation_id is None:
+        correlation_id = str(uuid.uuid4())
+    
+    context = {
+        "correlation_id": correlation_id,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+    
+    if user_id:
+        context["user_id"] = user_id
+    
+    context.update(kwargs)
+    
+    with structlog.contextvars.bind_contextvars(**context):
+        try:
+            yield
+        finally:
+            # Clean up context
+            for key in context.keys():
+                structlog.contextvars.unbind_contextvars(key)
+
+
+class LoggerMixin:
+    """Mixin for adding logging to classes."""
+    
+    @property
+    def logger(self) -> structlog.stdlib.BoundLogger:
+        """Get logger for this class."""
+        return get_logger(self.__class__.__name__)

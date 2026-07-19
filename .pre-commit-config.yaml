@@ -1,17 +1,16 @@
 # Pre-commit hooks for SelfSmart AI
-# Install with: pip install pre-commit
-# Run with: pre-commit install
+# Install with: pip install pre-commit && pre-commit install
 
 repos:
   # Detect generic secrets
-    - repo: https://github.com/Yelp/detect-secrets
-      rev: v1.5.0
-      hooks:
-        - id: detect-secrets
-          args: ['--baseline', '.secrets.baseline']
-          exclude: package-lock.json|package\.json|yarn\.lock|pnpm-lock\.yaml|.env|.env.*|.secrets.baseline
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: 'package-lock.json|package\.json|yarn\.lock|pnpm-lock\.yaml|\.secrets\.baseline'
 
-  # General Python checks
+  # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -20,6 +19,32 @@ repos:
       - id: check-yaml
         args: ['--allow-multiple-documents']
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ['--maxkb=1024']
       - id: check-merge-conflict
       - id: check-toml
+
+  # Ruff - fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # MyPy - static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, pydantic]
+        args: [--ignore-missing-imports]
+
+  # Frontend ESLint
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: Frontend ESLint
+        entry: bash -c 'cd frontend && npx eslint --max-warnings 0 src/'
+        language: system
+        files: '^frontend/.*\.(ts|tsx)$'
+        pass_filenames: false

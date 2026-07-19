@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: selfsmart-api
+  namespace: selfsmart
+  labels:
+    app: selfsmart-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: selfsmart-api
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: selfsmart
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+  selector:
+    app: postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: selfsmart
+  labels:
+    app: qdrant
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6333
+    targetPort: 6333
+    protocol: TCP
+    name: http
+  - port: 6334
+    targetPort: 6334
+    protocol: TCP
+    name: grpc
+  selector:
+    app: qdrant
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: selfsmart
+  labels:
+    app: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+  selector:
+    app: redis

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: selfsmart-config
+  namespace: selfsmart
+data:
+  ENV: "production"
+  DEBUG: "false"
+  JSON_LOGS: "true"
+  CORS_ORIGINS: "https://selfsmart.ai,https://www.selfsmart.ai"
+  LLM_PROVIDER: "gemini"
+  GEMINI_MODEL: "gemini-1.5-pro"
+  DATABASE_URL: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)"
+  QDRANT_URL: "http://qdrant:6333"
+  REDIS_URL: "redis://redis:6379/0"
+  MAX_CONCURRENT_CRAWLS: "10"
+  CRAWL_RATE_LIMIT: "1"
+  DAILY_CRAWL_LIMIT: "1000"
+  MIN_QUALITY_SCORE: "0.3"

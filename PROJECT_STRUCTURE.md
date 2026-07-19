@@ -1,137 +1,143 @@
-# SmartSelf AI - Professional Project Structure
+# SelfSmart AI — Project Structure
 
-## Overview
-This document outlines the professional project structure for SmartSelf AI following senior software engineering best practices.
+This document reflects the **actual** project structure as of the production-readiness audit.
 
-## Directory Structure
+## Root Layout
 
 ```
-smartself/
-├── src/                           # Source code
-│   ├── __init__.py
-│   ├── main.py                    # Application entry point
-│   ├── config/                    # Configuration management
-│   │   ├── __init__.py
-│   │   └── settings.py
-│   ├── chatbot/                   # Core chatbot logic
-│   │   ├── __init__.py
-│   │   ├── chatbot.py
-│   │   └── interfaces.py
-│   ├── learning/                  # Learning systems
-│   │   ├── __init__.py
-│   │   ├── continuous_learner.py
-│   │   └── learning_pipeline.py
-│   ├── knowledge/                 # Knowledge management
-│   │   ├── __init__.py
-│   │   ├── knowledge_base.py
-│   │   └── vector_store.py
-│   ├── api/                       # API integrations
-│   │   ├── __init__.py
-│   │   ├── free_api_client.py
-│   │   └── api_manager.py
-│   ├── crawler/                   # Web crawling
-│   │   ├── __init__.py
-│   │   ├── web_crawler.py
-│   │   └── rss_crawler.py
-│   ├── processor/                 # Content processing
-│   │   ├── __init__.py
-│   │   └── content_processor.py
-│   └── utils/                     # Utilities
-│       ├── __init__.py
-│       ├── logging.py
-│       └── helpers.py
-├── tests/                         # Test suite
-│   ├── __init__.py
+selfsmart/
+├── .github/workflows/ci.yml          # GitHub Actions CI/CD
+├── .dockerignore                     # Docker build exclusions
+├── .env                              # Local environment (git-ignored)
+├── .env.example                      # Template for .env
+├── .pre-commit-config.yaml           # Pre-commit hooks
+├── alembic/                          # Database migrations
+├── alembic.ini                       # Alembic config
+├── Dockerfile                        # Production multi-stage build
+├── docker-compose.yml                # Local stack (Postgres, Qdrant, Redis, etc.)
+├── infrastructure/
+│   └── kubernetes/deployment.yaml    # K8s manifests (Deployment, Service, HPA, Ingress, etc.)
+├── frontend/                         # Next.js 16 + React 19 + Tailwind
+│   ├── src/
+│   │   ├── app/                      # App Router (pages, layouts, error boundaries)
+│   │   ├── components/               # Shared UI components
+│   │   ├── hooks/                    # Custom React hooks
+│   │   ├── lib/                      # Utilities (apiUrl helper)
+│   │   └── store/                    # Zustand state
+│   ├── package.json                  # Pinned exact versions
+│   └── .env.local.example            # Frontend env template
+├── modelx_voice/                     # Voice assistant package
+├── pyproject.toml                    # Single source of truth for deps (prod + dev + training + voice)
+├── README.md
+├── sdk/
+│   └── python/                       # SelfSmart SDK (pip install -e sdk/python)
+│       ├── pyproject.toml
+│       └── selfsmart_sdk/
+│           ├── __init__.py
+│           └── client.py
+├── scripts/                          # Build / helper scripts
+│   ├── build_dataset.py
+│   └── ...
+├── src/                              # Backend source (Python 3.12)
+│   ├── api/                          # FastAPI application
+│   │   ├── main.py                   # create_app() — sole entry point
+│   │   ├── routes/                   # API route modules
+│   │   │   ├── auth_routes.py
+│   │   │   ├── chat.py
+│   │   │   ├── conversations.py
+│   │   │   ├── feedback.py
+│   │   │   ├── health.py
+│   │   │   ├── learning.py
+│   │   │   ├── legacy_auth.py
+│   │   │   └── stats.py
+│   │   ├── deps/                     # Dependency injection
+│   │   ├── middleware/               # CORS, correlation-id, logging
+│   │   ├── rate_limit/               # slowapi limiter
+│   │   ├── schemas/                  # Pydantic request/response models
+│   │   └── services/                 # Shared runtime services
+│   ├── cli/                          # Typer CLI commands
+│   ├── config/                       # Configuration
+│   │   ├── logging.py                # Structured logging (structlog)
+│   │   └── settings.py               # Pydantic Settings (required SECRET_KEY)
+│   ├── db/                           # Database layer (SQLAlchemy 2.0 async)
+│   │   ├── models/                   # ORM models
+│   │   ├── repositories/             # Repository pattern
+│   │   └── session.py                # AsyncSessionLocal + engine
+│   ├── learning/                     # Continuous learning pipeline
+│   ├── llm/                          # LLM providers (DeepSeek, Gemini, OpenRouter, Local)
+│   ├── rag/                          # RAG service + vector integration
+│   ├── monitoring/                   # Prometheus metrics + health checks
+│   ├── utils/                        # Shared utilities (auth, sanitizer, datetime)
+│   └── workers/                      # Celery beat / task definitions
+├── tests/                            # Pytest suite
+│   ├── api/test_endpoints.py         # API integration tests
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/
-├── docs/                          # Documentation
-│   ├── architecture.md
-│   ├── api.md
-│   └── deployment.md
-├── config/                        # Configuration files
-│   └── .env.example
-├── data/                          # Data storage
-│   ├── knowledge/
-│   ├── cache/
-│   └── uploads/
-├── frontend/                      # Frontend application
-│   ├── src/
-│   ├── public/
-│   └── package.json
-├── scripts/                       # Utility scripts
-│   ├── setup.sh
-│   └── migrate.sh
-├── requirements.txt               # Python dependencies
-├── requirements-dev.txt           # Development dependencies
-├── Dockerfile                     # Docker configuration
-├── docker-compose.yml             # Docker Compose configuration
-├── .gitignore                     # Git ignore rules
-├── .env.example                   # Environment variables template
-└── README.md                      # Main documentation
+└── web_server.py.archived            # Old monolith (retired)
 ```
 
-## Design Principles
+## Key Architectural Notes
 
-1. **Separation of Concerns**: Each module has a single, well-defined responsibility
-2. **Dependency Injection**: Components receive dependencies rather than creating them
-3. **Interface-Based Design**: Clear interfaces between components
-4. **Testability**: All components are easily testable in isolation
-5. **Scalability**: Structure supports horizontal and vertical scaling
-6. **Maintainability**: Code is organized for easy maintenance and updates
+| Area | Decision |
+|------|----------|
+| **Entry Point** | `src/api/main.py:create_app()` — used by Dockerfile, `run_server.sh`, `start_project.sh` |
+| **Auth** | JWT (HS256) via `src/utils/auth.py`; `SECRET_KEY` required at startup |
+| **Database** | Async SQLAlchemy 2.0 + asyncpg; migrations via Alembic |
+| **Vector DB** | Qdrant (primary) + ChromaDB fallback |
+| **Queue** | Celery + Redis (broker + results) |
+| **LLM Providers** | OpenRouter, DeepSeek, Gemini, Local (MLX) via unified interface |
+| **Frontend** | Next.js 16 App Router, React 19, TypeScript, Tailwind CSS |
+| **State** | Zustand (client) + TanStack Query (server) |
+| **Build** | `pip install -e ".[dev]"` / `npm ci` in `frontend/` |
 
-## Module Responsibilities
+## Directory Descriptions
 
-### src/main.py
-- Application entry point
-- Dependency injection container setup
-- Application lifecycle management
+| Path | Purpose |
+|------|---------|
+| `src/api/routes/` | All HTTP endpoints organized by domain (chat, conversations, learning, stats, health, auth) |
+| `src/api/deps/legacy_auth.py` | `get_current_user` dependency for `/api/*` endpoints |
+| `src/config/settings.py` | Pydantic Settings with production validation (`validate_production()`) |
+| `src/db/session.py` | Single async DB session factory; no sync layer |
+| `src/monitoring/health.py` | Real dependency probes (Postgres, Redis, Qdrant) |
+| `src/utils/auth.py` | JWT create/decode, password hashing, `TokenData` model |
+| `frontend/src/lib/api.ts` | `apiUrl(path)` helper — single source for backend URL |
+| `frontend/src/app/*/error.tsx` | Next.js error boundaries per route segment |
+| `infrastructure/kubernetes/` | Production K8s manifests with HPA, PDB, NetworkPolicy, ServiceMonitor |
 
-### src/config/
-- Configuration management
-- Environment variable handling
-- Settings validation
+## Commands
 
-### src/chatbot/
-- Core chatbot logic
-- Conversation management
-- Response generation
+```bash
+# Local development
+./start_project.sh              # Sets up venv, installs deps, runs migrations, starts API + Frontend
+./run_server.sh                 # Runs API only (src.api.main:app)
 
-### src/learning/
-- Continuous learning pipeline
-- Knowledge acquisition
-- Learning scheduling
+# Docker
+docker compose up -d            # Full stack (API, Postgres, Qdrant, Redis, Neo4j, Prometheus, Grafana)
 
-### src/knowledge/
-- Knowledge base management
-- Vector store operations
-- Semantic search
+# Testing
+pytest tests/ -v --cov=src --cov=modelx_voice
+cd frontend && npm test
 
-### src/api/
-- External API integrations
-- API client management
-- Rate limiting and caching
+# Linting
+ruff check src/ modelx_voice/
+black --check src/ modelx_voice/
+mypy src/ --ignore-missing-imports
+cd frontend && npm run lint
 
-### src/crawler/
-- Web crawling functionality
-- RSS feed processing
-- Content extraction
+# Database
+alembic upgrade head
+alembic revision --autogenerate -m "description"
+```
 
-### src/processor/
-- Content processing and cleaning
-- Text normalization
-- Feature extraction
+## Deprecated / Archived
 
-### src/utils/
-- Logging utilities
-- Helper functions
-- Common utilities
+- `src/web_server.py` → archived as `src/web_server.py.archived` (was the monolith entry point)
+- `src/config/database.py` → removed (sync DB layer)
+- `src/utils/logging.py` → removed (duplicate of `src/config/logging.py`)
+- `src/utils/metrics.py` → removed (duplicate of `src/monitoring/prometheus.py`)
+- `requirements*.txt` → removed (all deps in `pyproject.toml`)
 
-## Migration Plan
+---
 
-1. Create new directory structure
-2. Move existing code to appropriate modules
-3. Update imports and dependencies
-4. Consolidate configuration
-5. Update documentation
-6. Verify all functionality
+*Updated during production-readiness audit. Keep this file in sync with actual repo structure.*

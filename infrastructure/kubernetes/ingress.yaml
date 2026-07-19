@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: selfsmart-ingress
+  namespace: selfsmart
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/hsts: "max-age=31536000; includeSubDomains; preload"
+    nginx.ingress.kubernetes.io/frame-deny: "true"
+    nginx.ingress.kubernetes.io/content-type-nosniff: "true"
+    nginx.ingress.kubernetes.io/x-xss-protection: "1; mode=block"
+    nginx.ingress.kubernetes.io/referrer-policy: "strict-origin-when-cross-origin"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/limit-rps: "50"
+    nginx.ingress.kubernetes.io/limit-burst: "100"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - selfsmart.ai
+    - www.selfsmart.ai
+    secretName: selfsmart-tls
+  rules:
+  - host: selfsmart.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: selfsmart-api
+            port:
+              number: 80
+  - host: www.selfsmart.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: selfsmart-api
+            port:
+              number: 80

@@ -1,12 +1,13 @@
 """
-SmartSelf AI Python SDK
-A lightweight, typed client for integrating SmartSelf AI into your applications.
+SelfSmart AI Python SDK
+A lightweight, typed client for integrating SelfSmart AI into your applications.
 """
 
 import requests
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
-class SmartSelfClient:
+
+class SelfSmartClient:
     def __init__(self, base_url: str, api_token: Optional[str] = None):
         self.base_url = base_url.rstrip('/')
         self.session = requests.Session()
