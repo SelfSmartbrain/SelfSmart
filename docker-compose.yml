@@ -9,6 +9,44 @@
 
 services:
   # ---------------------------------------------------------------------------
+  # Database Migrations (run once on startup)
+  # ---------------------------------------------------------------------------
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-migrations
+    env_file: .env
+    environment:
+      - POSTGRES_HOST=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["bash", "/scripts/run-migrations.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-migrations
+    env_file: .env
+    environment:
+      - POSTGRES_HOST=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["bash", "/scripts/run-migrations.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+    restart: "no"
+
+# ---------------------------------------------------------------------------
   # Application API Server
   # ---------------------------------------------------------------------------
   api:
@@ -30,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
     volumes:
       - workspace_data:/app/workspace
     restart: unless-stopped
