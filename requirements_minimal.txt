@@ -1,9 +1,0 @@
-# Minimal requirements for SmartSelf AI
-fastapi
-uvicorn
-pydantic
-pydantic-settings
-aiohttp
-beautifulsoup4
-schedule
-python-dotenv
