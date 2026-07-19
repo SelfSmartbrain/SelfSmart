@@ -300,11 +300,28 @@ class DecisionAuditor:
             check.message = "No constraints defined - check passed"
             return check
         
-        # In production, this would check if the selected action violates constraints
-        # For now, we assume constraints are respected
-        check.passed = True
-        check.message = f"Decision respects {len(constraints)} constraints"
-        check.severity = "info"
+        violations = []
+        selected_option = decision_data.get("selected_option_id")
+        options = decision_data.get("options", [])
+        selected = next((opt for opt in options if opt.get("id") == selected_option), None)
+        
+        # Verify selected option against explicit constraints
+        if selected:
+            # Example hard constraints checks
+            action_type = selected.get("action_type", "")
+            if "no_destructive_actions" in constraints and action_type in ["delete", "drop", "truncate"]:
+                violations.append(f"Destructive action '{action_type}' attempted in violation of constraints.")
+            if "require_human_approval" in constraints and not selected.get("human_approved", False):
+                violations.append("Human approval required but not found.")
+                
+        if violations:
+            check.passed = False
+            check.severity = "critical"
+            check.message = f"Constraint violations: {', '.join(violations)}"
+        else:
+            check.passed = True
+            check.message = f"Decision respects {len(constraints)} constraints"
+            check.severity = "info"
         
         return check
     
