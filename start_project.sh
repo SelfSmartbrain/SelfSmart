@@ -24,6 +24,10 @@ source .venv/bin/activate
 echo "Installing/Updating backend dependencies..."
 pip install -e ".[dev]" --quiet
 
+# Run database migrations
+echo "Running database migrations..."
+alembic upgrade head
+
 # 2. Setup Frontend
 echo "⚛️ Setting up Frontend..."
 cd "$ROOT/frontend"
