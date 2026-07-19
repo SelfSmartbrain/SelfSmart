@@ -11,11 +11,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
 from src.api.middleware import setup_middleware
-from src.api.rate_limit import limiter
+from src.api.middleware_rate_limit import RateLimitMiddleware
+from src.api.middleware_security import SecurityHeadersMiddleware, RequestSizeLimitMiddleware, TimeoutMiddleware
 from src.api.routes import (
     autonomous,
     benchmarks,
@@ -160,11 +159,22 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.environment != "production" else None,
     )
 
-    app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    # Remove old slowapi middleware
+    # app.state.limiter = limiter
+    # app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    # app.add_middleware(SlowAPIMiddleware)
 
+    # Add new distributed rate limiting middleware
     setup_middleware(app, settings)
     setup_prometheus(app)
+    
+    # Add security middleware (should be added early)
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(RequestSizeLimitMiddleware, max_size=10 * 1024 * 1024)
+    app.add_middleware(TimeoutMiddleware, timeout=60.0)
+    
+    # Add rate limiting middleware after CORS
+    app.add_middleware(RateLimitMiddleware)
 
     from src.api.routes import auth_routes
 
