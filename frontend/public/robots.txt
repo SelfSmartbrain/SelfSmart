@@ -1,0 +1,11 @@
+# SelfSmart AI - Robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://selfsmart.ai/sitemap.xml
+
+# Disallow admin/private routes
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
