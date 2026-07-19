@@ -814,7 +814,7 @@ async def health_detailed():
     if _llm_api_key_configured():
         components["llm_api"] = {"status": "ok", "provider": settings.llm_provider}
     else:
-        components["llm_api"] = {"status": "warning", "message": "No LLM API key configured"}
+        components["llm_api"] = {"status": "warning"}
         if overall_status == "ok":
             overall_status = "degraded"
 
