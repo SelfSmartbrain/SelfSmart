@@ -1,20 +1,25 @@
-# 🚀 SmartShelf AI Chat Service - Production Deployment Guide
+# 🚀 SelfSmart AI - Production Deployment Guide
 
 ## 📋 Overview
 
-This guide covers deploying the SmartShelf AI Chat Service to production environments with enterprise-grade configuration, monitoring, and security.
+This guide covers deploying the SelfSmart AI platform to production environments with enterprise-grade configuration, monitoring, and security.
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Nginx Proxy   │────│  SmartShelf AI  │────│   Redis Cache   │
-│   (Port 80/443) │    │  (Port 8001)    │    │  (Port 6379)    │
+│   Nginx/Ingress │────│  SelfSmart API  │────│   PostgreSQL    │
+│   (Port 80/443) │    │  (Port 8000)    │    │   (Port 5432)   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
+                    ┌─────────────────┐    ┌─────────────────┐
+                    │     Redis       │    │     Qdrant      │
+                    │   (Port 6379)   │    │   (Port 6333)   │
+                    └─────────────────┘    └─────────────────┘
+                              │
                     ┌─────────────────┐
-                    │ Persistent Data │
-                    │   (Volumes)     │
+                    │   Frontend      │
+                    │  (Next.js 3000) │
                     └─────────────────┘
 ```
 
@@ -26,52 +31,42 @@ This guide covers deploying the SmartShelf AI Chat Service to production environ
 ```bash
 # 1. Clone and setup
 git clone <your-repo>
-cd smartshelf-ai
+cd selfsmart
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env with your API keys
+# Edit .env with your API keys and strong passwords
 
 # 3. Deploy
-./scripts/deploy-production.sh
+docker compose up -d
 ```
 
-### Option 2: Cloud Platform Deployment
+### Option 2: Kubernetes (Production)
 
-#### Render (Easiest)
-1. Connect your GitHub repository to Render
-2. Set environment variables in Render dashboard
+```bash
+# Apply manifests
+kubectl apply -f infrastructure/kubernetes/
+
+# Check status
+kubectl get pods -n selfsmart
+kubectl get svc -n selfsmart
+```
+
+### Option 3: Cloud Platform Deployment
+
+#### Render / Fly.io / Railway
+1. Connect your GitHub repository
+2. Set environment variables in dashboard
 3. Deploy automatically
 
-#### AWS ECS/Fargate
+#### AWS ECS / Google Cloud Run / Azure Container Apps
 ```bash
-# Build and push to ECR
-aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-west-2.amazonaws.com
-docker build -f Dockerfile.prod -t smartshelf-chat .
-docker tag smartshelf-chat:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/smartshelf-chat:latest
-docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/smartshelf-chat:latest
+# Build and push
+docker build -t selfsmart-ai .
+docker tag selfsmart-ai:latest <registry>/selfsmart-ai:latest
+docker push <registry>/selfsmart-ai:latest
 
-# Deploy with ECS
-aws ecs create-service --cluster smartshelf --service-name chat-service --task-definition smartshelf-chat
-```
-
-#### Google Cloud Run
-```bash
-# Build and deploy
-gcloud builds submit --tag gcr.io/PROJECT-ID/smartshelf-chat
-gcloud run deploy smartshelf-chat --image gcr.io/PROJECT-ID/smartshelf-chat --platform managed
-```
-
-#### Azure Container Instances
-```bash
-# Create resource group and deploy
-az group create --name smartshelf-rg --location eastus
-az container create \
-  --resource-group smartshelf-rg \
-  --name smartshelf-chat \
-  --image smartshelf-chat:latest \
-  --ports 8001 \
-  --environment-variables OPENAI_API_KEY=$OPENAI_API_KEY DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY
+# Deploy via platform CLI
 ```
 
 ## 🔧 Configuration
@@ -79,13 +74,31 @@ az container create \
 ### Required Environment Variables
 
 ```bash
-# API Keys (Required - use one)
-OPENAI_API_KEY=sk-your-openai-key
-DEEPSEEK_API_KEY=sk-your-deepseek-key
-
-# Service Configuration
+# Application
+APP_NAME="SelfSmart AI"
+ENV=production
 DEBUG=false
-LOG_LEVEL=info
+JSON_LOGS=true
+SECRET_KEY=<generate-with-python3-c-import-secrets-print-secrets-token-hex-32>
+
+# LLM Provider (choose one)
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_key
+# DEEPSEEK_API_KEY=your_deepseek_key
+# OPENROUTER_API_KEY=your_openrouter_key
+
+# Database
+DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
+
+# Vector Database
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
+
+# Cache
+REDIS_URL=redis://localhost:6379/0
+
+# Security
+CORS_ORIGINS=https://yourdomain.com
 ```
 
 ### Optional Configuration
@@ -100,64 +113,65 @@ MAX_WORKERS=4
 REQUEST_TIMEOUT=60
 
 # Security
-CORS_ORIGINS=https://yourdomain.com
 RATE_LIMIT_PER_MINUTE=60
+
+# Monitoring
+PROMETHEUS_ENABLED=true
+SENTRY_DSN=
 ```
 
 ## 📦 Docker Deployment
 
 ### Build Production Image
 ```bash
-docker build -f Dockerfile.prod -t smartshelf-chat:latest .
+docker build -t selfsmart-ai:latest .
 ```
 
 ### Run with Docker Compose
 ```bash
 # Production deployment
-docker-compose -f docker-compose.prod.yml up -d
+docker compose up -d
 
 # Check status
-docker-compose -f docker-compose.prod.yml ps
+docker compose ps
 
 # View logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose logs -f api
 ```
 
 ### Manual Docker Run
 ```bash
 docker run -d \
-  --name smartshelf-chat \
-  -p 8001:8001 \
-  -e OPENAI_API_KEY=$OPENAI_API_KEY \
-  -e DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY \
+  --name selfsmart-api \
+  -p 8000:8000 \
+  -e DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/db \
+  -e SECRET_KEY=your-secret-key \
+  -e GEMINI_API_KEY=your-key \
   -v $(pwd)/data:/app/data \
-  smartshelf-chat:latest
+  selfsmart-ai:latest
 ```
 
 ## 🔒 Security Configuration
 
 ### SSL/TLS Setup
 
-1. **Generate SSL certificates:**
+1. **Let's Encrypt (recommended):**
 ```bash
-# Using Let's Encrypt
 certbot certonly --standalone -d yourdomain.com
 
-# Copy certificates to nginx directory
+# Copy to nginx
 cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem nginx/cert.pem
 cp /etc/letsencrypt/live/yourdomain.com/privkey.pem nginx/key.pem
 ```
 
-2. **Self-signed certificates (for development):**
+2. **Self-signed (development):**
 ```bash
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout nginx/key.pem \
   -out nginx/cert.pem
 ```
 
-### Security Headers
-
-The Nginx configuration includes:
+### Security Headers (configured in nginx/ingress)
 - HTTPS enforcement with HSTS
 - XSS protection
 - Content type protection
@@ -165,47 +179,45 @@ The Nginx configuration includes:
 - Referrer policy
 
 ### Rate Limiting
-
-- Chat endpoints: 5 requests/second
-- API endpoints: 10 requests/second
+- Auth endpoints: 3-5 requests/minute
+- Chat endpoints: 20 requests/minute
 - Configurable per IP address
 
 ## 📊 Monitoring & Health Checks
 
 ### Health Endpoints
-
-- **Service Health**: `GET /health`
-- **Nginx Health**: `GET /health` (port 80/443)
-- **Docker Health**: Built-in container health checks
+- **Liveness**: `GET /health` - basic service status
+- **Readiness**: `GET /health/ready` - dependency connectivity
+- **Detailed**: `GET /health/detailed` - component status
 
 ### Monitoring Setup
 
-#### Prometheus Metrics (Optional)
-```yaml
-# Add to docker-compose.prod.yml
-prometheus:
-  image: prom/prometheus
-  ports:
-    - "9090:9090"
-  volumes:
-    - ./prometheus.yml:/etc/prometheus/prometheus.yml
+#### Prometheus + Grafana (included in docker-compose)
+```bash
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3001 (admin / GRAFANA_PASSWORD)
 ```
+
+#### Metrics Available
+- HTTP request rate, latency, errors
+- Database connection pool
+- Redis memory/operations
+- Celery queue depth
+- LLM API call metrics
 
 #### Log Aggregation
 ```bash
 # View application logs
-docker-compose -f docker-compose.prod.yml logs smartshelf-chat
+docker compose logs -f api
 
-# View nginx logs
-docker-compose -f docker-compose.prod.yml logs nginx
+# Structured JSON logs (when JSON_LOGS=true)
+docker compose logs api | jq .
 ```
 
 ## 🚀 Performance Optimization
 
-### Resource Allocation
-
+### Resource Allocation (Docker Compose)
 ```yaml
-# In docker-compose.prod.yml
 deploy:
   resources:
     limits:
@@ -216,48 +228,81 @@ deploy:
       memory: 1G
 ```
 
-### Scaling
-
-#### Horizontal Scaling
-```bash
-# Scale to multiple instances
-docker-compose -f docker-compose.prod.yml up -d --scale smartshelf-chat=3
+### Kubernetes Resources
+```yaml
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
 ```
 
-#### Load Balancing
-Nginx automatically load balances between multiple instances.
+### Horizontal Scaling
+```bash
+# Docker Compose
+docker compose up -d --scale api=3
+
+# Kubernetes (HPA configured)
+kubectl autoscale deployment selfsmart-backend --cpu-percent=70 --min=2 --max=10
+```
 
 ### Caching
-
-Redis cache is included for:
-- Session storage
-- Response caching
-- Rate limiting data
+- Redis: Session storage, rate limiting, response caching
+- Application-level: In-memory LLM response cache
 
 ## 🔄 CI/CD Pipeline
 
-### GitHub Actions Example
-
+### GitHub Actions (`.github/workflows/ci.yml`)
 ```yaml
-name: Deploy Production
+name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev]"
+      - run: ruff check src/ modelx_voice/
+      - run: black --check src/ modelx_voice/
+      - run: mypy src/ --ignore-missing-imports
+      - run: pytest tests/ -v --cov=src --cov=modelx_voice
 
-      - name: Build and push Docker image
-        run: |
-          docker build -f Dockerfile.prod -t smartshelf-chat .
-          docker push ${{ secrets.DOCKER_REGISTRY }}/smartshelf-chat
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
 
-      - name: Deploy to production
-        run: |
-          curl -X POST ${{ secrets.DEPLOY_WEBHOOK }}
+  build:
+    needs: [test, frontend]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t selfsmart-ai .
+      - run: docker push registry/selfsmart-ai:latest
 ```
 
 ## 🛠️ Troubleshooting
@@ -265,37 +310,44 @@ jobs:
 ### Common Issues
 
 1. **Import Errors**
-   - Check Python dependencies in requirements.txt
-   - Verify all files are copied correctly
+   - Check Python dependencies in `pyproject.toml`
+   - Verify all files copied correctly in Docker
 
 2. **API Key Issues**
-   - Ensure OPENAI_API_KEY or DEEPSEEK_API_KEY is set
+   - Ensure `SECRET_KEY`, `GEMINI_API_KEY` (or `DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`) are set
    - Check for typos in environment variables
 
 3. **Network Issues**
    - Check firewall settings
    - Verify proxy configuration
-   - Test with curl: `curl http://localhost:8001/health`
+   - Test with: `curl http://localhost:8000/health`
 
-4. **Memory Issues**
-   - Increase memory limits in docker-compose
-   - Monitor with `docker stats`
+4. **Database Connection**
+   - Verify `DATABASE_URL` format: `postgresql+asyncpg://user:pass@host:5432/db`
+   - Run migrations: `alembic upgrade head`
+
+5. **Memory Issues**
+   - Increase memory limits in docker-compose/k8s
+   - Monitor with `docker stats` or `kubectl top pods`
 
 ### Debug Commands
 
 ```bash
 # Check container status
 docker ps
+kubectl get pods -n selfsmart
 
 # View logs
-docker logs smartshelf-chat
+docker logs selfsmart-api
+kubectl logs -n selfsmart deployment/selfsmart-backend
 
 # Enter container for debugging
-docker exec -it smartshelf-chat bash
+docker exec -it selfsmart-api bash
+kubectl exec -it -n selfsmart deployment/selfsmart-backend -- bash
 
 # Test API endpoints
-curl http://localhost:8001/health
-curl -X POST http://localhost:8001/chat -H "Content-Type: application/json" -d '{"query":"test"}'
+curl http://localhost:8000/health
+curl -X POST http://localhost:8000/api/auth/login -H "Content-Type: application/json" -d '{"email":"test@test.com","password":"pass"}'
 ```
 
 ## 📱 API Access
@@ -304,8 +356,8 @@ Once deployed, your service will be available at:
 
 - **Main API**: `https://yourdomain.com`
 - **Health Check**: `https://yourdomain.com/health`
-- **API Docs**: `https://yourdomain.com/docs`
-- **Direct Chat**: `https://yourdomain.com/chat`
+- **API Docs**: `https://yourdomain.com/docs` (disabled in production)
+- **Frontend**: `https://yourdomain.com` (served by Next.js)
 
 ### API Usage Examples
 
@@ -313,46 +365,51 @@ Once deployed, your service will be available at:
 # Health check
 curl https://yourdomain.com/health
 
-# Chat with AI
-curl -X POST "https://yourdomain.com/chat" \
+# Register user
+curl -X POST "https://yourdomain.com/api/auth/register" \
   -H "Content-Type: application/json" \
-  -d '{"query": "What products do you recommend?"}'
+  -d '{"email": "user@example.com", "password": "SecureP@ss123"}'
 
-# Product suggestions
-curl -X POST "https://yourdomain.com/products/chat" \
+# Login
+curl -X POST "https://yourdomain.com/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"query": "Recommend electronics"}'
+  -d '{"email": "user@example.com", "password": "SecureP@ss123"}'
+
+# Chat (requires Bearer token)
+curl -X POST "https://yourdomain.com/api/chat" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"message": "Hello, SelfSmart AI!"}'
 ```
 
 ## 🎯 Best Practices
 
 1. **Environment Management**
-   - Use separate .env files for each environment
+   - Use separate `.env` files for each environment
    - Never commit API keys to version control
+   - Rotate secrets periodically
 
 2. **Security**
    - Always use HTTPS in production
    - Implement rate limiting
    - Monitor logs for suspicious activity
+   - Keep dependencies updated
 
 3. **Performance**
-   - Monitor resource usage
+   - Monitor resource usage (CPU, memory, disk)
    - Implement caching strategies
-   - Use CDN for static assets
+   - Use CDN for static assets (Next.js handles this)
 
 4. **Reliability**
-   - Set up health checks
+   - Set up health checks and alerts
    - Configure automatic restarts
-   - Implement backup strategies
+   - Implement backup strategies for PostgreSQL/Qdrant
 
-## 📞 Support
-
-For deployment issues:
-1. Check the troubleshooting section
-2. Review container logs
-3. Verify environment configuration
-4. Test API endpoints manually
+5. **Observability**
+   - Enable structured JSON logging
+   - Set up Prometheus + Grafana dashboards
+   - Configure alerting for error rates, latency, resource usage
 
 ---
 
-**🎉 Your SmartShelf AI Chat Service is now ready for global production deployment!**
+**🎉 Your SelfSmart AI platform is now ready for production deployment!**
