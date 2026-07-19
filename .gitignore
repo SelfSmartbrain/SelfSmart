@@ -1,6 +1,7 @@
 # Environment and secrets
 .env
 .env.local
+.env.*.local
 *.env
 .secrets.baseline
 
@@ -14,12 +15,29 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+pip-wheel-metadata/
 
 # Node
 node_modules/
 frontend/node_modules/
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# Logs
 logs/
+*.log
+*.pid
+server.pid
+server.log
+backend_pid.txt
+backend_test.log
+
+# Data (download at runtime)
 data/
 training_data/
 processed_data/
@@ -27,31 +45,7 @@ vector_store/
 model_checkpoints/
 models/
 fine_tuned_model.zip
-*.log
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-.env.backup
-
-# Secrets
-.env.*.backup
-*.env.bak
-
-# Runtime artifacts
-*.pid
-*.log
-server.pid
-server.log
-backend_pid.txt
-backend_test.log
-
-# Backup files
-*.backup
-*.bak
-src/*.backup
+uploads/
 
 # Generated outputs
 analysis_report.json
@@ -59,14 +53,17 @@ validation_results/
 scientific_validation_results/
 test_validation_results/
 
+# Backup files
+*.backup
+*.bak
+*.backup.*
+
+# Runtime artifacts
+*.pid
+*.log
+
 # Pip bootstrap
 get-pip.py
-
-# IDE (additional)
-.cursor/
-
-# Uploads (user-generated content)
-uploads/
 
 # Notebooks (dev-only)
 notebooks/
@@ -79,3 +76,19 @@ notebooks/
 # Frontend build output
 frontend/.next/
 frontend/out/
+
+# Uploads (user-generated content)
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE - duplicate entries removed
+# .cursor/ (already listed above)
+
+# Uploads - duplicate removed
+# uploads/ (already listed above)
+
+# processed_data - duplicate removed
+# processed_data/ (already listed above)
