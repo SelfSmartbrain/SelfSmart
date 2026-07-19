@@ -49,6 +49,7 @@ docs/
 notebooks/
 *.md
 !README.md
+!LICENSE
 
 # CI/CD
 .github/
