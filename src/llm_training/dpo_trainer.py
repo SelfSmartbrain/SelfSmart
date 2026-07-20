@@ -140,8 +140,7 @@ class DPOTrainerManager:
             num_train_epochs=3,
             max_length=512,
             max_prompt_length=256,
-            opt=optim,
-            remove_unused_columns=False,
+            optim=optim,
             logging_steps=1,
             save_strategy="epoch",
             report_to="none"
