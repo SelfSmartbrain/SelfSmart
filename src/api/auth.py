@@ -74,11 +74,14 @@ async def get_current_user(
     
     # API Key authentication
     if api_key:
-        api_key_hash = get_password_hash(api_key)
-        user_db = await repo.get_by_api_key(api_key_hash)
-        if user_db is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
-        return User(id=user_db.id, email=user_db.email)
+        # Fetch all users that have an API key set
+        stmt = select(User).where(User.api_key_hash.isnot(None))
+        result = await self.session.execute(stmt)
+        users = result.scalars().all()
+        for user in users:
+            if verify_password(api_key, user.api_key_hash):
+                return User(id=user.id, email=user.email)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
     
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
