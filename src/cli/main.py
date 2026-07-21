@@ -629,11 +629,10 @@ def cognitive():
 @click.pass_context
 def status(ctx):
     """Get cognitive kernel status."""
-    console.print("[cyan]Cognitive Kernel Status[/cyan]")
-    console.print("State: Active")
-    console.print("Available Attention: 0.75")
-    console.print("Active Tasks: 3")
-    console.print("Memory Consolidations: 12")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    result = client.get_cognitive_status()
+    formatter.output(result, output_format)
 
 
 @cognitive.command()
@@ -642,10 +641,14 @@ def status(ctx):
 @click.pass_context
 def reason(ctx, query, limit):
     """Perform reasoning on a query."""
-    console.print(f"[cyan]Reasoning:[/cyan] {query}")
-    console.print(f"Mode: System 2 (deliberative)")
-    console.print(f"Confidence: 0.78")
-    console.print(f"Steps: 4")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "query": query,
+        "limit": limit
+    }
+    result = client.cognitive_reason(data)
+    formatter.output(result, output_format)
 
 
 @cognitive.command()
@@ -654,10 +657,14 @@ def reason(ctx, query, limit):
 @click.pass_context
 def attend(ctx, task, priority):
     """Allocate attention to a task."""
-    console.print(f"[cyan]Allocating attention:[/cyan] {task}")
-    console.print(f"Priority: {priority}")
-    console.print(f"Mode: Focused")
-    console.print(f"Duration: 10s")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "task": task,
+        "priority": priority
+    }
+    result = client.cognitive_attend(data)
+    formatter.output(result, output_format)
 
 
 # ---------------------------------------------------------------------------
@@ -677,25 +684,24 @@ def society():
 @click.pass_context
 def create(ctx, name, purpose):
     """Create a new agent society."""
-    console.print(f"[green]✓[/green] Created society: {name}")
-    console.print(f"Purpose: {purpose}")
-    console.print("Members: 0")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "name": name,
+        "purpose": purpose
+    }
+    result = client.create_society(data)
+    formatter.output(result, output_format)
 
 
 @society.command()
 @click.pass_context
 def list(ctx):
     """List all societies."""
-    table = Table(title="Agent Societies")
-    table.add_column("ID", style="cyan")
-    table.add_column("Name", style="magenta")
-    table.add_column("Members", style="green")
-    table.add_column("Status", style="yellow")
-    
-    table.add_row("soc_001", "Research Team", "5", "active")
-    table.add_row("soc_002", "Development Squad", "3", "active")
-    
-    console.print(table)
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    result = client.list_societies()
+    formatter.output(result, output_format)
 
 
 @society.command()
@@ -704,7 +710,14 @@ def list(ctx):
 @click.pass_context
 def add_agent(ctx, society_id, agent_id):
     """Add an agent to a society."""
-    console.print(f"[green]✓[/green] Added agent {agent_id} to society {society_id}")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "society_id": society_id,
+        "agent_id": agent_id
+    }
+    result = client.add_agent_to_society(data)
+    formatter.output(result, output_format)
 
 
 # ---------------------------------------------------------------------------
@@ -722,12 +735,10 @@ def identity():
 @click.pass_context
 def status(ctx):
     """Get identity status."""
-    console.print("[cyan]Identity Status[/cyan]")
-    console.print("Name: ModelX")
-    console.print("Version: 1.0")
-    console.print("State: Stable")
-    console.print("Skills: 15")
-    console.print("Knowledge Domains: 8")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    result = client.identity_status()
+    formatter.output(result, output_format)
 
 
 @identity.command()
@@ -736,25 +747,24 @@ def status(ctx):
 @click.pass_context
 def create_mission(ctx, title, description):
     """Create a new mission."""
-    console.print(f"[green]✓[/green] Created mission: {title}")
-    console.print(f"Description: {description}")
-    console.print("Status: Draft")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "title": title,
+        "description": description
+    }
+    result = client.identity_create_mission(data)
+    formatter.output(result, output_format)
 
 
 @identity.command()
 @click.pass_context
 def missions(ctx):
     """List all missions."""
-    table = Table(title="Missions")
-    table.add_column("ID", style="cyan")
-    table.add_column("Title", style="magenta")
-    table.add_column("Progress", style="green")
-    table.add_column("Status", style="yellow")
-    
-    table.add_row("mis_001", "AI Safety Research", "0.65", "active")
-    table.add_row("mis_002", "Code Optimization", "0.30", "active")
-    
-    console.print(table)
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    result = client.identity_list_missions()
+    formatter.output(result, output_format)
 
 
 # ---------------------------------------------------------------------------
@@ -774,9 +784,14 @@ def research():
 @click.pass_context
 def create_program(ctx, title, domain):
     """Create a research program."""
-    console.print(f"[green]✓[/green] Created research program: {title}")
-    console.print(f"Domain: {domain}")
-    console.print("Status: Draft")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "title": title,
+        "domain": domain
+    }
+    result = client.research_create_program(data)
+    formatter.output(result, output_format)
 
 
 @research.command()
@@ -785,24 +800,24 @@ def create_program(ctx, title, domain):
 @click.pass_context
 def schedule(ctx, program_id, frequency):
     """Schedule a research program."""
-    console.print(f"[green]✓[/green] Scheduled program {program_id}")
-    console.print(f"Frequency: {frequency}")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "program_id": program_id,
+        "frequency": frequency
+    }
+    result = client.research_schedule_program(data)
+    formatter.output(result, output_format)
 
 
 @research.command()
 @click.pass_context
 def list(ctx):
     """List all research programs."""
-    table = Table(title="Research Programs")
-    table.add_column("ID", style="cyan")
-    table.add_column("Title", style="magenta")
-    table.add_column("Domain", style="green")
-    table.add_column("Status", style="yellow")
-    
-    table.add_row("prog_001", "AI Alignment", "Safety", "active")
-    table.add_row("prog_002", "Neural Architecture", "ML", "active")
-    
-    console.print(table)
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    result = client.research_list()
+    formatter.output(result, output_format)
 
 
 # ---------------------------------------------------------------------------
@@ -821,21 +836,23 @@ def develop():
 @click.pass_context
 def analyze(ctx, component):
     """Analyze a component for improvements."""
-    console.print(f"[cyan]Analyzing:[/cyan] {component}")
-    console.print("Findings: 3")
-    console.print("Suggestions: 5")
-    console.print("Risk Level: Safe")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "component": component
+    }
+    result = client.develop_analyze(data)
+    formatter.output(result, output_format)
 
 
 @develop.command()
 @click.pass_context
 def optimize(ctx):
     """Analyze repository for optimization opportunities."""
-    console.print("[cyan]Repository Optimization Analysis[/cyan]")
-    console.print("Structure: 2 opportunities")
-    console.print("Dependencies: 1 opportunity")
-    console.print("Documentation: 3 opportunities")
-    console.print("Testing: 2 opportunities")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    result = client.develop_optimize()
+    formatter.output(result, output_format)
 
 
 @develop.command()
@@ -843,11 +860,13 @@ def optimize(ctx):
 @click.pass_context
 def improve(ctx, safety_level):
     """Generate improvement plan."""
-    console.print(f"[cyan]Generating improvement plan[/cyan]")
-    console.print(f"Safety Level: {safety_level}")
-    console.print("Changes: 5")
-    console.print("Estimated Impact: Moderate")
-    console.print("Requires Approval: Yes")
+    client = ctx.obj["client"]
+    output_format = ctx.obj["output"]
+    data = {
+        "safety_level": safety_level
+    }
+    result = client.develop_improve(data)
+    formatter.output(result, output_format)
 
 
 # ---------------------------------------------------------------------------
