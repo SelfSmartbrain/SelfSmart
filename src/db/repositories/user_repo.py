@@ -1,6 +1,6 @@
 from uuid import UUID
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models import User
@@ -30,3 +30,15 @@ class UserRepository(BaseRepository[User]):
         stmt = select(User).where(User.api_key_hash == api_key_hash)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def update_refresh_token(self, user_id: UUID, refresh_token_hash: Optional[str]) -> None:
+        """Update the refresh token hash for a user."""
+        stmt = update(User).where(User.id == user_id).values(refresh_token_hash=refresh_token_hash)
+        await self.session.execute(stmt)
+        await self.session.flush()
+
+    async def update_password(self, user_id: UUID, hashed_password: str) -> None:
+        """Update the password hash for a user."""
+        stmt = update(User).where(User.id == user_id).values(hashed_password=hashed_password)
+        await self.session.execute(stmt)
+        await self.session.flush()
