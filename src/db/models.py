@@ -744,7 +744,7 @@ class Skill(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=_generate_uuid7)
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    steps: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=False)
     task_types: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False)
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
