@@ -2529,9 +2529,9 @@ class ObjectiveCheckpoint(Base):
         ForeignKey("objectives.id", ondelete="CASCADE"), nullable=False, index=True
     )
     checkpoint_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    state_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    progress_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    state_snapshot: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    progress_snapshot: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
