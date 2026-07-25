@@ -1124,7 +1124,7 @@ class KnowledgeGraphNode(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=_generate_uuid7)
     label: Mapped[str] = mapped_column(String(255), nullable=False)
-    properties: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
