@@ -333,7 +333,7 @@ class Memory(Base):
         index=True,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     importance_score: Mapped[float] = mapped_column(
