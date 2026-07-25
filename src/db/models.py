@@ -1175,9 +1175,9 @@ class ResearchReflection(Base):
     quality_score: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     confidence_score: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     completion_percentage: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
-    lessons_learned: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    mistakes_found: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    improvement_suggestions: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    lessons_learned: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    mistakes_found: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    improvement_suggestions: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     reflection_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
