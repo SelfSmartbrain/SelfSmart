@@ -2263,7 +2263,7 @@ class AttentionRecord(Base):
     allocated_amount: Mapped[float] = mapped_column(Float, nullable=False)
     duration: Mapped[float] = mapped_column(Float, nullable=False)
     processing_mode: Mapped[str] = mapped_column(String(50), nullable=False)
-    cognitive_resources: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    cognitive_resources: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
