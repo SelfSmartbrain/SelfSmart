@@ -279,8 +279,8 @@ class Execution(Base):
         ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False
     )
     agent_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    input_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    output_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    input_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    output_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[ExecutionStatus] = mapped_column(
         Enum(ExecutionStatus, name="execution_status", create_constraint=True),
         nullable=False,
