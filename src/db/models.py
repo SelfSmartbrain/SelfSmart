@@ -2289,7 +2289,7 @@ class MemoryLink(Base):
     target_memory_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     link_type: Mapped[str] = mapped_column(String(50), nullable=False)
     strength: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
