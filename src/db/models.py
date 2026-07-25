@@ -1068,7 +1068,7 @@ class ResearchMilestone(Base):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    evidence: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
