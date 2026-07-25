@@ -569,7 +569,7 @@ class Strategy(Base):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    steps: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=False)
     source_session_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("sessions.id", ondelete="SET NULL"), nullable=True
     )
