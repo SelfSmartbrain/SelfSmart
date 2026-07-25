@@ -2428,7 +2428,7 @@ class CognitiveMetric(Base):
         nullable=False,
     )
     value: Mapped[float] = mapped_column(Float, nullable=False)
-    context: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    context: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
