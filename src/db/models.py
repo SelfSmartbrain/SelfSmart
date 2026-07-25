@@ -913,7 +913,7 @@ class PerformanceMetric(Base):
         nullable=False,
     )
     value: Mapped[float] = mapped_column(Float, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     recorded_at: Mapped[datetime] = mapped_column(
