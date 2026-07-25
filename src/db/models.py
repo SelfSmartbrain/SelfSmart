@@ -1143,7 +1143,7 @@ class KnowledgeGraphEdge(Base):
         ForeignKey("kg_nodes.id", ondelete="CASCADE"), nullable=False
     )
     relationship_type: Mapped[str] = mapped_column(String(255), nullable=False)
-    properties: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
