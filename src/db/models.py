@@ -2092,7 +2092,7 @@ class DirectorAgent(Base):
     current_sub_orchestrators: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     active_goals_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_goals_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
