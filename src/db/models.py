@@ -1270,7 +1270,7 @@ class ResearchStrategyExecution(Base):
     cost_score: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     execution_time: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     token_usage: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    execution_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    execution_metadata: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
