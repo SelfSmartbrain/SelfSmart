@@ -73,12 +73,12 @@ def _generate_uuid7() -> UUID:
 class Base(DeclarativeBase):
     """Shared declarative base for all ORM models.
 
-    Provides a ``type_annotation_map`` so that ``Mapped[dict[str, Any]]``
+    Provides a ``type_annotation_map`` so that ``Mapped[Dict[str, Any]]``
     automatically resolves to PostgreSQL JSONB.
     """
 
     type_annotation_map = {
-        dict[str, Any]: JSONB,
+        Dict[str, Any]: JSONB,
     }
 
 
