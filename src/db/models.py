@@ -833,7 +833,7 @@ class ExperienceRecord(Base):
         ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False
     )
     task_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    strategy_used: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    strategy_used: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     outcome: Mapped[str] = mapped_column(Text, nullable=False)
     score: Mapped[float] = mapped_column(Float, nullable=False)
     context_summary: Mapped[str] = mapped_column(Text, nullable=False)
