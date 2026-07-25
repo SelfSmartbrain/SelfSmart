@@ -384,7 +384,7 @@ class KnowledgeDocument(Base):
         nullable=False,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     chunk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
