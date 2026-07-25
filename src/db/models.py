@@ -997,7 +997,7 @@ class GoalTree(Base):
     goal_id: Mapped[UUID] = mapped_column(
         ForeignKey("generated_goals.id", ondelete="CASCADE"), nullable=False
     )
-    structure: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    structure: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
