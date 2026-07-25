@@ -2357,11 +2357,11 @@ class AgentIdentity(Base):
         nullable=False,
         default=AgentStatus.IDLE,
     )
-    capabilities: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    capabilities: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     reputation: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     core_values: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     personality_traits: Mapped[dict[str, float] | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
