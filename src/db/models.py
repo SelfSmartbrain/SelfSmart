@@ -2461,7 +2461,7 @@ class Objective(Base):
         nullable=False,
         default=ObjectiveStatus.ACTIVE,
     )
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
