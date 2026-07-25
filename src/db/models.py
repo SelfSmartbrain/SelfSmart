@@ -2395,11 +2395,11 @@ class MissionState(Base):
         nullable=False,
         default=MissionStatus.DRAFT,
     )
-    goals: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    goals: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    results: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    results: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
