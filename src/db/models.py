@@ -947,7 +947,7 @@ class KnowledgeGap(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     importance: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.5")
     confidence: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.5")
-    source_context: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    source_context: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     is_resolved: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
