@@ -2032,7 +2032,7 @@ class VisualElement(Base):
     bbox_y2: Mapped[int] = mapped_column(Integer, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     text_content: Mapped[str | None] = mapped_column(Text, nullable=True)
-    attributes: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    attributes: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationships
