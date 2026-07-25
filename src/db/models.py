@@ -221,7 +221,7 @@ class Task(Base):
     dependencies: Mapped[list[UUID] | None] = mapped_column(
         ARRAY(String), nullable=True
     )
-    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
