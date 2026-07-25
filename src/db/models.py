@@ -2320,12 +2320,12 @@ class ResearchProgram(Base):
         nullable=False,
         default=ProgramStatus.DRAFT,
     )
-    hypotheses: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
-    experiments: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    hypotheses: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    experiments: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     insights: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
