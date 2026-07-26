@@ -11,7 +11,7 @@ All models use:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 import uuid6
@@ -73,12 +73,12 @@ def _generate_uuid7() -> UUID:
 class Base(DeclarativeBase):
     """Shared declarative base for all ORM models.
 
-    Provides a ``type_annotation_map`` so that ``Mapped[dict[str, Any]]``
+    Provides a ``type_annotation_map`` so that ``Mapped[Dict[str, Any]]``
     automatically resolves to PostgreSQL JSONB.
     """
 
     type_annotation_map = {
-        dict[str, Any]: JSONB,
+        Dict[str, Any]: JSONB,
     }
 
 
@@ -151,7 +151,7 @@ class Session(Base):
         default=SessionStatus.PENDING,
         index=True,
     )
-    context: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    context: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -221,7 +221,7 @@ class Task(Base):
     dependencies: Mapped[list[UUID] | None] = mapped_column(
         ARRAY(String), nullable=True
     )
-    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(
@@ -279,8 +279,8 @@ class Execution(Base):
         ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False
     )
     agent_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    input_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    output_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    input_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    output_data: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     status: Mapped[ExecutionStatus] = mapped_column(
         Enum(ExecutionStatus, name="execution_status", create_constraint=True),
         nullable=False,
@@ -333,7 +333,7 @@ class Memory(Base):
         index=True,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     importance_score: Mapped[float] = mapped_column(
@@ -384,7 +384,7 @@ class KnowledgeDocument(Base):
         nullable=False,
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     chunk_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -421,7 +421,7 @@ class KnowledgeChunk(Base):
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     embedding_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -569,7 +569,7 @@ class Strategy(Base):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    steps: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=False)
     source_session_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("sessions.id", ondelete="SET NULL"), nullable=True
     )
@@ -631,7 +631,7 @@ class StrategyExecution(Base):
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tokens_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -744,7 +744,7 @@ class Skill(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=_generate_uuid7)
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    steps: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=False)
     task_types: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False)
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -795,7 +795,7 @@ class SkillExecution(Base):
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     tokens_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -833,7 +833,7 @@ class ExperienceRecord(Base):
         ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False
     )
     task_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    strategy_used: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    strategy_used: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     outcome: Mapped[str] = mapped_column(Text, nullable=False)
     score: Mapped[float] = mapped_column(Float, nullable=False)
     context_summary: Mapped[str] = mapped_column(Text, nullable=False)
@@ -913,7 +913,7 @@ class PerformanceMetric(Base):
         nullable=False,
     )
     value: Mapped[float] = mapped_column(Float, nullable=False)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     recorded_at: Mapped[datetime] = mapped_column(
@@ -947,7 +947,7 @@ class KnowledgeGap(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     importance: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.5")
     confidence: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.5")
-    source_context: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    source_context: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     is_resolved: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -997,7 +997,7 @@ class GoalTree(Base):
     goal_id: Mapped[UUID] = mapped_column(
         ForeignKey("generated_goals.id", ondelete="CASCADE"), nullable=False
     )
-    structure: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    structure: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -1068,7 +1068,7 @@ class ResearchMilestone(Base):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    evidence: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -1124,7 +1124,7 @@ class KnowledgeGraphNode(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=_generate_uuid7)
     label: Mapped[str] = mapped_column(String(255), nullable=False)
-    properties: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -1143,7 +1143,7 @@ class KnowledgeGraphEdge(Base):
         ForeignKey("kg_nodes.id", ondelete="CASCADE"), nullable=False
     )
     relationship_type: Mapped[str] = mapped_column(String(255), nullable=False)
-    properties: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    properties: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -1175,9 +1175,9 @@ class ResearchReflection(Base):
     quality_score: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     confidence_score: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     completion_percentage: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
-    lessons_learned: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    mistakes_found: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    improvement_suggestions: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    lessons_learned: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    mistakes_found: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    improvement_suggestions: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     reflection_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -1270,7 +1270,7 @@ class ResearchStrategyExecution(Base):
     cost_score: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     execution_time: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     token_usage: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
-    execution_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    execution_metadata: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -1294,7 +1294,7 @@ class CognitiveSkill(Base):
     usage_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     success_rate: Mapped[float] = mapped_column(Float, nullable=False, server_default="0.0")
     average_duration: Mapped[float | None] = mapped_column(Float, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -1349,7 +1349,7 @@ class BenchmarkRun(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
 
     metrics: Mapped[list[BenchmarkMetric]] = relationship(
         back_populates="run", cascade="all, delete-orphan", lazy="selectin"
@@ -2032,7 +2032,7 @@ class VisualElement(Base):
     bbox_y2: Mapped[int] = mapped_column(Integer, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     text_content: Mapped[str | None] = mapped_column(Text, nullable=True)
-    attributes: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    attributes: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationships
@@ -2062,7 +2062,7 @@ class InteractionLog(Base):
     text_input: Mapped[str | None] = mapped_column(Text, nullable=True)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     # Relationships
@@ -2092,7 +2092,7 @@ class DirectorAgent(Base):
     current_sub_orchestrators: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     active_goals_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_goals_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -2120,13 +2120,13 @@ class SwarmGoal(Base):
     priority: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     estimated_complexity: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     required_capabilities: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
-    resource_requirements: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    resource_requirements: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending") # pending, planning, executing, completed, failed
     sub_task_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     completed_sub_tasks: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -2159,7 +2159,7 @@ class SubOrchestrator(Base):
     avg_task_duration: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     success_rate: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -2192,10 +2192,10 @@ class SwarmSubTask(Base):
     actual_duration: Mapped[int] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending") # pending, assigned, executing, completed, failed
     progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column("metadata", JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -2231,8 +2231,8 @@ class CognitiveTask(Base):
     priority: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     requires_attention: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     attention_allocated: Mapped[float] = mapped_column(Float, nullable=True)
-    cognitive_resources: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    cognitive_resources: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -2263,7 +2263,7 @@ class AttentionRecord(Base):
     allocated_amount: Mapped[float] = mapped_column(Float, nullable=False)
     duration: Mapped[float] = mapped_column(Float, nullable=False)
     processing_mode: Mapped[str] = mapped_column(String(50), nullable=False)
-    cognitive_resources: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    cognitive_resources: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -2289,7 +2289,7 @@ class MemoryLink(Base):
     target_memory_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     link_type: Mapped[str] = mapped_column(String(50), nullable=False)
     strength: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -2320,12 +2320,12 @@ class ResearchProgram(Base):
         nullable=False,
         default=ProgramStatus.DRAFT,
     )
-    hypotheses: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
-    experiments: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    hypotheses: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    experiments: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     insights: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -2357,11 +2357,11 @@ class AgentIdentity(Base):
         nullable=False,
         default=AgentStatus.IDLE,
     )
-    capabilities: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    capabilities: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     reputation: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     core_values: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     personality_traits: Mapped[dict[str, float] | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -2395,11 +2395,11 @@ class MissionState(Base):
         nullable=False,
         default=MissionStatus.DRAFT,
     )
-    goals: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    goals: Mapped[list[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    results: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    results: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -2428,7 +2428,7 @@ class CognitiveMetric(Base):
         nullable=False,
     )
     value: Mapped[float] = mapped_column(Float, nullable=False)
-    context: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    context: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -2461,7 +2461,7 @@ class Objective(Base):
         nullable=False,
         default=ObjectiveStatus.ACTIVE,
     )
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -2503,7 +2503,7 @@ class ObjectiveProgress(Base):
     )
     status: Mapped[str] = mapped_column(String(100), nullable=False)
     detail: Mapped[str] = mapped_column(Text, nullable=True)
-    result: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -2529,9 +2529,9 @@ class ObjectiveCheckpoint(Base):
         ForeignKey("objectives.id", ondelete="CASCADE"), nullable=False, index=True
     )
     checkpoint_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    state_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    progress_snapshot: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
-    metadata_: Mapped[dict[str, Any] | None] = mapped_column(
+    state_snapshot: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    progress_snapshot: Mapped[Dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    metadata_: Mapped[Dict[str, Any] | None] = mapped_column(
         "metadata", JSONB, nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
