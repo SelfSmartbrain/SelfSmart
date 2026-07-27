@@ -11,8 +11,7 @@ import {
   BookOpen,
   ExternalLink,
   PlusCircle,
-  Trash2,
-  LogOut
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatStore } from "@/store/useChatStore";
@@ -38,12 +37,7 @@ export function Sidebar() {
 
   useEffect(() => {
     fetchConversations();
-
-    // Refresh conversations when auth changes
-    const handleAuthChange = () => fetchConversations();
-    window.addEventListener("auth-changed", handleAuthChange);
-    return () => window.removeEventListener("auth-changed", handleAuthChange);
-  }, []);
+  }, [fetchConversations]);
 
   return (
     <div className="flex flex-col w-64 border-r bg-card text-card-foreground h-full overflow-hidden">
@@ -143,13 +137,6 @@ export function Sidebar() {
           <ExternalLink className="w-4 h-4 shrink-0" />
           Documentation
         </Link>
-        <button
-          onClick={() => window.dispatchEvent(new Event("logout-trigger"))}
-          className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-md transition-colors w-full text-left cursor-pointer"
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          Log Out
-        </button>
       </div>
     </div>
   );

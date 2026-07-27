@@ -83,34 +83,28 @@ export default function DashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchDashboard = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Not authenticated — please log in.");
-      setLoading(false);
-      return;
-    }
-    try {
-      const res = await fetch(apiUrl("/api/dashboard"), {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error(`Backend returned HTTP ${res.status}`);
-      const json: DashboardData = await res.json();
-      setData(json);
-      setError(null);
-      setLastUpdated(new Date());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+   
   useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch(apiUrl("/api/dashboard"));
+        if (!res.ok) throw new Error(`Backend returned HTTP ${res.status}`);
+        const json: DashboardData = await res.json();
+        setData(json);
+        setError(null);
+        setLastUpdated(new Date());
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load dashboard");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchDashboard();
     const interval = setInterval(fetchDashboard, 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, []);  
+   
 
   const satisfactionPct = data
     ? Math.round(data.feedback.satisfaction_rate * 100)

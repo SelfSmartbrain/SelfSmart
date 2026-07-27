@@ -1,6 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthWrapper } from '@/components/auth/AuthWrapper';
-import { apiUrl } from '@/lib/api';
 
 // Mock the apiUrl function
 vi.mock('@/lib/api', () => ({
