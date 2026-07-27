@@ -23,24 +23,21 @@ class ResearchDirector:
 
     async def evaluate_goal_for_track(self, goal: GeneratedGoal) -> ResearchTrack | None:
         """
-        Evaluate an autonomously generated goal and, if it meets priority thresholds, 
+        Evaluate an autonomously generated goal and, if it meets priority thresholds,
         create a new Research Track for it.
         """
         logger.info(f"Director evaluating goal: {goal.title} (Curiosity: {goal.curiosity_score})")
-        
+
         # Simple threshold heuristic
         if goal.curiosity_score < 0.4:
             logger.info("Goal rejected by Director: Curiosity score too low.")
             return None
-            
+
         # Create a Research Track
         track = await self.track_repo.create(
-            goal_id=goal.id,
-            title=f"Track: {goal.title}",
-            status="active",
-            progress_percentage=0.0
+            goal_id=goal.id, title=f"Track: {goal.title}", status="active", progress_percentage=0.0
         )
-        
+
         logger.info(f"Created Research Track {track.id} for Goal {goal.id}")
         return track
 

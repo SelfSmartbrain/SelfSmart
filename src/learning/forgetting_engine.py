@@ -1,10 +1,10 @@
-'''forgetting_engine.py
+"""forgetting_engine.py
 
 Engine that prunes low‑utility memories based on a simple utility score.
 
 Current implementation uses a placeholder heuristic: keep only the most recent N entries
 or those with a non‑null ``outcome`` indicating a meaningful event.
-'''
+"""
 
 from typing import List
 import logging
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from ..memory.episodic_memory import EpisodicMemory
 
 logger = logging.getLogger(__name__)
+
 
 class ForgettingEngine:
     def __init__(self, db_session: Session, retain_limit: int = 1000):
@@ -33,9 +34,15 @@ class ForgettingEngine:
             )
             keep_ids = [id_[0] for id_ in keep_ids]
             # Delete others
-            deleted_count = self.db.query(EpisodicMemory).filter(~EpisodicMemory.id.in_(keep_ids)).delete(synchronize_session=False)
+            deleted_count = (
+                self.db.query(EpisodicMemory)
+                .filter(~EpisodicMemory.id.in_(keep_ids))
+                .delete(synchronize_session=False)
+            )
             self.db.commit()
-            logger.info(f"ForgettingEngine: retained {len(keep_ids)} episodes, pruned {deleted_count} others")
+            logger.info(
+                f"ForgettingEngine: retained {len(keep_ids)} episodes, pruned {deleted_count} others"
+            )
         except Exception as e:
             self.db.rollback()
             logger.error(f"ForgettingEngine: error during pruning: {e}")

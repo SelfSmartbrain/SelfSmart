@@ -25,7 +25,10 @@ class Neo4jClient:
             try:
                 self._driver = AsyncGraphDatabase.driver(
                     self.settings.neo4j_uri,
-                    auth=(self.settings.neo4j_user, self.settings.neo4j_password.get_secret_value()),
+                    auth=(
+                        self.settings.neo4j_user,
+                        self.settings.neo4j_password.get_secret_value(),
+                    ),
                 )
                 # Verify connectivity
                 await self._driver.verify_connectivity()
@@ -43,7 +46,7 @@ class Neo4jClient:
 
     def session(self) -> AsyncSession:
         """Get an async Neo4j session.
-        
+
         Usage:
             async with client.session() as session:
                 result = await session.run("MATCH (n) RETURN n LIMIT 1")
@@ -52,11 +55,13 @@ class Neo4jClient:
             raise RuntimeError("Neo4j client not initialized. Call initialize() first.")
         return self._driver.session()
 
-    async def execute_query(self, query: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    async def execute_query(
+        self, query: str, parameters: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
         """Utility method to execute a query and fetch all results as a list of dicts."""
         if parameters is None:
             parameters = {}
-            
+
         async with self.session() as session:
             try:
                 result = await session.run(query, parameters)

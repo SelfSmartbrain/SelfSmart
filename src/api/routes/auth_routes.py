@@ -16,21 +16,23 @@ from src.db.repositories.user_repo import UserRepository
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
 
-    @field_validator('password')
+    @field_validator("password")
     def password_complexity(cls, v):
         if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError("Password must be at least 8 characters long")
         if not any(c.isupper() for c in v):
-            raise ValueError('Password must contain at least one uppercase letter')
+            raise ValueError("Password must contain at least one uppercase letter")
         if not any(c.islower() for c in v):
-            raise ValueError('Password must contain at least one lowercase letter')
+            raise ValueError("Password must contain at least one lowercase letter")
         if not any(c.isdigit() for c in v):
-            raise ValueError('Password must contain at least one digit')
+            raise ValueError("Password must contain at least one digit")
         return v
+
 
 class Token(BaseModel):
     access_token: str
@@ -38,36 +40,42 @@ class Token(BaseModel):
     token_type: str
     user: User
 
+
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
+
 
 class UserResponse(BaseModel):
     id: str
     email: str
     is_active: bool
 
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(min_length=8)
 
-    @field_validator('new_password')
+    @field_validator("new_password")
     def new_password_complexity(cls, v):
         if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError("Password must be at least 8 characters long")
         if not any(c.isupper() for c in v):
-            raise ValueError('Password must contain at least one uppercase letter')
+            raise ValueError("Password must contain at least one uppercase letter")
         if not any(c.islower() for c in v):
-            raise ValueError('Password must contain at least one lowercase letter')
+            raise ValueError("Password must contain at least one lowercase letter")
         if not any(c.isdigit() for c in v):
-            raise ValueError('Password must contain at least one digit')
+            raise ValueError("Password must contain at least one digit")
         return v
+
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+
 
 @router.post("/register", response_model=Token)
 async def register(
@@ -77,23 +85,30 @@ async def register(
     existing_user = await user_repo.get_by_email(user_data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     hashed_password = get_password_hash(user_data.password)
     new_user = await user_repo.create_user(email=user_data.email, hashed_password=hashed_password)
-    
-    access_token = create_access_token(data={"sub": new_user.email}, expires_delta=timedelta(minutes=15))
-    refresh_token = create_access_token(data={"sub": new_user.email}, expires_delta=timedelta(days=7))
-    
+
+    access_token = create_access_token(
+        data={"sub": new_user.email}, expires_delta=timedelta(minutes=15)
+    )
+    refresh_token = create_access_token(
+        data={"sub": new_user.email}, expires_delta=timedelta(days=7)
+    )
+
     # Store the hash of the refresh token
     hashed_refresh_token = get_password_hash(refresh_token)
-    await user_repo.update_refresh_token(user_id=new_user.id, refresh_token_hash=hashed_refresh_token)
-    
+    await user_repo.update_refresh_token(
+        user_id=new_user.id, refresh_token_hash=hashed_refresh_token
+    )
+
     return Token(
         access_token=access_token,
         refresh_token=refresh_token,
         token_type="bearer",
-        user=User(id=new_user.id, email=new_user.email)
+        user=User(id=new_user.id, email=new_user.email),
     )
+
 
 @router.post("/login", response_model=Token)
 async def login(
@@ -107,20 +122,27 @@ async def login(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    access_token = create_access_token(data={"sub": user_db.email}, expires_delta=timedelta(minutes=15))
-    refresh_token = create_access_token(data={"sub": user_db.email}, expires_delta=timedelta(days=7))
-    
+
+    access_token = create_access_token(
+        data={"sub": user_db.email}, expires_delta=timedelta(minutes=15)
+    )
+    refresh_token = create_access_token(
+        data={"sub": user_db.email}, expires_delta=timedelta(days=7)
+    )
+
     # Store the hash of the refresh token
     hashed_refresh_token = get_password_hash(refresh_token)
-    await user_repo.update_refresh_token(user_id=user_db.id, refresh_token_hash=hashed_refresh_token)
-    
+    await user_repo.update_refresh_token(
+        user_id=user_db.id, refresh_token_hash=hashed_refresh_token
+    )
+
     return Token(
         access_token=access_token,
         refresh_token=refresh_token,
         token_type="bearer",
-        user=User(id=user_db.id, email=user_db.email)
+        user=User(id=user_db.id, email=user_db.email),
     )
+
 
 @router.post("/refresh-token", response_model=TokenResponse)
 async def refresh_token(
@@ -133,31 +155,43 @@ async def refresh_token(
         payload = jwt.decode(request.refresh_token, settings.secret_key, algorithms=["HS256"])
         email: str = payload.get("sub")
         if email is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+            )
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
-    
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
     # Get the user
     user_db = await user_repo.get_by_email(email)
     if user_db is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    
+
     # Verify the refresh token hash
-    if not user_db.refresh_token_hash or not verify_password(request.refresh_token, user_db.refresh_token_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
-    
+    if not user_db.refresh_token_hash or not verify_password(
+        request.refresh_token, user_db.refresh_token_hash
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
+
     # Generate new access and refresh tokens
-    new_access_token = create_access_token(data={"sub": user_db.email}, expires_delta=timedelta(minutes=15))
-    new_refresh_token = create_access_token(data={"sub": user_db.email}, expires_delta=timedelta(days=7))
-    
+    new_access_token = create_access_token(
+        data={"sub": user_db.email}, expires_delta=timedelta(minutes=15)
+    )
+    new_refresh_token = create_access_token(
+        data={"sub": user_db.email}, expires_delta=timedelta(days=7)
+    )
+
     # Update the stored refresh token hash (rotate refresh token)
     new_hashed_refresh_token = get_password_hash(new_refresh_token)
-    await user_repo.update_refresh_token(user_id=user_db.id, refresh_token_hash=new_hashed_refresh_token)
-    
-    return TokenResponse(
-        access_token=new_access_token,
-        token_type="bearer"
+    await user_repo.update_refresh_token(
+        user_id=user_db.id, refresh_token_hash=new_hashed_refresh_token
     )
+
+    return TokenResponse(access_token=new_access_token, token_type="bearer")
+
 
 @router.post("/logout")
 async def logout(
@@ -169,13 +203,13 @@ async def logout(
     await user_repo.update_refresh_token(user_id=current_user.id, refresh_token_hash=None)
     return {"message": "Successfully logged out"}
 
+
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return UserResponse(
-        id=str(current_user.id),
-        email=current_user.email,
-        is_active=current_user.is_active
+        id=str(current_user.id), email=current_user.email, is_active=current_user.is_active
     )
+
 
 @router.post("/change-password")
 async def change_password(
@@ -186,13 +220,16 @@ async def change_password(
     # Verify the current password
     user_db = await user_repo.get_by_email(current_user.email)
     if not user_db or not verify_password(request.current_password, user_db.hashed_password):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect current password")
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect current password"
+        )
+
     # Update the password
     new_hashed_password = get_password_hash(request.new_password)
     await user_repo.update_password(user_id=user_db.id, hashed_password=new_hashed_password)
-    
+
     return {"message": "Password updated successfully"}
+
 
 @router.post("/forgot-password")
 async def forgot_password(

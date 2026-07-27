@@ -48,6 +48,7 @@ async def _llm_json(system: str, prompt: str, fallback: Any) -> Any:
         logger.warning("Evolution node LLM call failed", error=str(e))
     return fallback
 
+
 async def genome_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Generates an initial cognitive genome."""
     logger.info("Executing genome_generation node")
@@ -64,6 +65,7 @@ async def genome_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     )
     return {"genome_generated": True, "genome": genome, "genome_data": genome}
 
+
 async def mutation_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Applies mutations to an existing genome."""
     logger.info("Executing mutation_generation node")
@@ -76,6 +78,7 @@ async def mutation_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     )
     return {"mutated": True, "mutations": mutations}
 
+
 async def candidate_selection(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Selects the best candidates from a population."""
     logger.info("Executing candidate_selection node")
@@ -87,6 +90,7 @@ async def candidate_selection(state: Dict[str, Any]) -> Dict[str, Any]:
         fallback,
     )
     return {"candidates_selected": True, "selected_candidates": selected}
+
 
 async def evolution_cycle(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Manages a full evolution cycle."""
@@ -103,6 +107,7 @@ async def evolution_cycle(state: Dict[str, Any]) -> Dict[str, Any]:
     )
     return {"cycle_completed": True, "evolution_cycle": cycle}
 
+
 async def promotion_decision(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Decides if an architecture should be promoted."""
     logger.info("Executing promotion_decision node")
@@ -116,18 +121,26 @@ async def promotion_decision(state: Dict[str, Any]) -> Dict[str, Any]:
         f"Decide promotion from evolution cycle:\n{json.dumps(cycle, default=str)[:4000]}",
         fallback,
     )
-    promoted = bool(decision.get("promoted", fallback["promoted"])) if isinstance(decision, dict) else False
+    promoted = (
+        bool(decision.get("promoted", fallback["promoted"]))
+        if isinstance(decision, dict)
+        else False
+    )
     return {"promoted": promoted, "promotion_decision": decision}
+
 
 async def rollback_check(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Checks if a rollback is necessary based on fitness."""
     logger.info("Executing rollback_check node")
     regressions = state.get("regression_results", {})
-    rollback_needed = bool(regressions.get("regressions_found")) if isinstance(regressions, dict) else False
+    rollback_needed = (
+        bool(regressions.get("regressions_found")) if isinstance(regressions, dict) else False
+    )
     return {
         "rollback_needed": rollback_needed,
         "rollback_reason": "Regression detected" if rollback_needed else None,
     }
+
 
 async def fitness_tracking(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Tracks the fitness of architectures/genomes."""
@@ -142,6 +155,7 @@ async def fitness_tracking(state: Dict[str, Any]) -> Dict[str, Any]:
     history = list(state.get("fitness_history", []))
     history.append({"score": fitness_score, "promoted": state.get("promoted", False)})
     return {"fitness_tracked": True, "fitness_score": fitness_score, "fitness_history": history}
+
 
 async def generation_tracking(state: Dict[str, Any]) -> Dict[str, Any]:
     """LangGraph node: Tracks generational progress."""

@@ -69,7 +69,7 @@ async def create_checkpoint(
 ) -> TaskCheckpoint:
     """
     Create a checkpoint for a long-running task to enable resumption.
-    
+
     Args:
         async_session: SQLAlchemy async session
         agent_id: Agent identifier
@@ -80,7 +80,7 @@ async def create_checkpoint(
         progress: Task progress information
         metadata: Additional metadata
         parent_checkpoint_id: Previous checkpoint ID for chain
-        
+
     Returns:
         Created TaskCheckpoint object
     """
@@ -107,6 +107,7 @@ async def get_latest_checkpoint(
 ) -> Optional[TaskCheckpoint]:
     """Get the most recent checkpoint for a task"""
     from sqlalchemy import select
+
     result = await async_session.execute(
         select(TaskCheckpoint)
         .where(TaskCheckpoint.agent_id == agent_id)
@@ -124,6 +125,7 @@ async def get_checkpoint_chain(
 ) -> List[TaskCheckpoint]:
     """Get all checkpoints for a task in chronological order"""
     from sqlalchemy import select
+
     result = await async_session.execute(
         select(TaskCheckpoint)
         .where(TaskCheckpoint.agent_id == agent_id)
@@ -139,6 +141,7 @@ async def resume_from_checkpoint(
 ) -> Optional[TaskCheckpoint]:
     """Load a checkpoint for task resumption"""
     from sqlalchemy import select
+
     result = await async_session.execute(
         select(TaskCheckpoint).where(TaskCheckpoint.id == checkpoint_id)
     )
@@ -153,6 +156,7 @@ async def delete_old_checkpoints(
 ) -> int:
     """Clean up old checkpoints, keeping only the latest N"""
     from sqlalchemy import select, delete
+
     # Get IDs of checkpoints to keep
     result = await async_session.execute(
         select(TaskCheckpoint.id)
@@ -162,7 +166,7 @@ async def delete_old_checkpoints(
         .limit(keep_latest)
     )
     keep_ids = [row[0] for row in result.fetchall()]
-    
+
     if len(keep_ids) >= keep_latest:
         # Delete older checkpoints
         await async_session.execute(

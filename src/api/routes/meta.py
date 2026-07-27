@@ -59,10 +59,10 @@ async def get_metrics(
 ) -> Any:
     """Get aggregated system performance metrics."""
     from src.db.enums import MetricType
-    
+
     summary = {}
     for m_type in MetricType:
         avg = await analytics_repo.get_average_metric(user_id=current_user.id, metric_type=m_type)
         summary[m_type.value] = avg
-        
+
     return MetricResponse(metrics=summary)

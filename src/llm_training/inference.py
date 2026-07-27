@@ -11,9 +11,11 @@ import asyncio
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class LLMResponse:
     """Represents an LLM response"""
+
     content: str
     finish_reason: str
     usage: Dict[str, int]
@@ -36,7 +38,7 @@ class LocalLLMClient:
         model_path: str,
         base_model_path: Optional[str] = None,
         use_quantization: bool = True,
-        device: str = "auto"
+        device: str = "auto",
     ):
         """
         Initialize local LLM client.
@@ -59,10 +61,13 @@ class LocalLLMClient:
 
         try:
             import mlx_lm
+
             self.model, self.tokenizer = mlx_lm.load(self.model_path)
             logger.info("MLX Model loaded successfully")
         except ImportError:
-            logger.error("mlx-lm package is not installed. Please install it using `pip install mlx-lm`")
+            logger.error(
+                "mlx-lm package is not installed. Please install it using `pip install mlx-lm`"
+            )
             raise
 
     def generate(
@@ -72,7 +77,7 @@ class LocalLLMClient:
         temperature: float = 0.7,
         top_p: float = 0.9,
         top_k: int = 50,
-        do_sample: bool = True
+        do_sample: bool = True,
     ) -> LLMResponse:
         """
         Generate a response from the model.
@@ -86,11 +91,7 @@ class LocalLLMClient:
 
         # MLX generate
         generated_text = mlx_lm.generate(
-            self.model,
-            self.tokenizer,
-            prompt=prompt,
-            max_tokens=max_new_tokens,
-            verbose=False
+            self.model, self.tokenizer, prompt=prompt, max_tokens=max_new_tokens, verbose=False
         )
 
         # mlx_lm.generate returns just the generated text
@@ -98,11 +99,11 @@ class LocalLLMClient:
             content=generated_text.strip(),
             finish_reason="stop",
             usage={
-                "prompt_tokens": len(prompt) // 4, # rough estimate
+                "prompt_tokens": len(prompt) // 4,  # rough estimate
                 "completion_tokens": len(generated_text) // 4,
-                "total_tokens": (len(prompt) + len(generated_text)) // 4
+                "total_tokens": (len(prompt) + len(generated_text)) // 4,
             },
-            model=self.model_path
+            model=self.model_path,
         )
 
     async def generate_stream(
@@ -111,7 +112,7 @@ class LocalLLMClient:
         max_new_tokens: int = 512,
         temperature: float = 0.7,
         top_p: float = 0.9,
-        top_k: int = 50
+        top_k: int = 50,
     ) -> AsyncGenerator[str, None]:
         """
         Generate a streaming response from the model.
@@ -125,10 +126,7 @@ class LocalLLMClient:
 
         # mlx_lm.stream_generate yields chunks of text
         generator = mlx_lm.stream_generate(
-            self.model,
-            self.tokenizer,
-            prompt=prompt,
-            max_tokens=max_new_tokens
+            self.model, self.tokenizer, prompt=prompt, max_tokens=max_new_tokens
         )
 
         for chunk in generator:

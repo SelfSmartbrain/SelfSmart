@@ -1,14 +1,15 @@
-'''working_memory.py
+"""working_memory.py
 
 Implements a lightweight in‑memory store for the current task context and short‑term goals.
 
 The store is a simple dictionary with time‑based eviction. It is used by the
 Reasoning Engine to keep the most recent observations and intermediate
 variables.
-''' 
+"""
 
 import time
 from typing import Any, Dict
+
 
 class WorkingMemory:
     """Transient, volatile memory for the current execution step.

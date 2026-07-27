@@ -11,10 +11,24 @@ The Agent Society Runtime provides:
 - Internal Economy & Governance (Phase 14G)
 """
 
-from .society_runtime import SocietyRuntime, Society, SocietyStatus, SocietyRole, Collaboration, DelegationTask
+from .society_runtime import (
+    SocietyRuntime,
+    Society,
+    SocietyStatus,
+    SocietyRole,
+    Collaboration,
+    DelegationTask,
+)
 from .agent_registry import AgentRegistry, AgentInfo, AgentCapability, AgentStatus
 from .task_marketplace import TaskMarketplace, Task, Bid, TaskStatus
-from .knowledge_marketplace import KnowledgeMarketplace, KnowledgeItem, KnowledgeRating, KnowledgeSubscription, KnowledgeItemType, KnowledgeStatus
+from .knowledge_marketplace import (
+    KnowledgeMarketplace,
+    KnowledgeItem,
+    KnowledgeRating,
+    KnowledgeSubscription,
+    KnowledgeItemType,
+    KnowledgeStatus,
+)
 from .economy import (
     TokenSystem,
     Account,
@@ -57,19 +71,16 @@ __all__ = [
     "SocietyRole",
     "Collaboration",
     "DelegationTask",
-    
     # Agent Registry
     "AgentRegistry",
     "AgentInfo",
     "AgentCapability",
     "AgentStatus",
-    
     # Task Marketplace
     "TaskMarketplace",
     "Task",
     "Bid",
     "TaskStatus",
-    
     # Knowledge Marketplace
     "KnowledgeMarketplace",
     "KnowledgeItem",
@@ -77,7 +88,6 @@ __all__ = [
     "KnowledgeSubscription",
     "KnowledgeItemType",
     "KnowledgeStatus",
-    
     # Economy
     "TokenSystem",
     "Account",

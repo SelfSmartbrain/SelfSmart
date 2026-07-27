@@ -8,11 +8,12 @@ from src.capabilities.tool_spec_generator import ToolSpec
 
 logger = get_logger(__name__)
 
+
 class ToolCodeGenerator:
     """
     Generates raw python source code for tools based on a ToolSpec.
     """
-    
+
     def __init__(self, llm_client: Any):
         """
         Initialize with an LLM client capable of text generation.
@@ -25,7 +26,7 @@ class ToolCodeGenerator:
         """
         logger.info(f"Generating code for tool spec: {spec.name}")
         prompt = self._build_prompt(spec)
-        
+
         try:
             # Assumes llm_client has an async generate_text method
             response_text = await self.llm_client.generate_text(prompt)
@@ -56,16 +57,16 @@ class ToolCodeGenerator:
             text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
-        
+
         parsed = json.loads(text.strip())
-        
+
         required_keys = {"tool.py", "tests.py", "requirements.txt"}
         missing_keys = required_keys - set(parsed.keys())
         if missing_keys:
             raise ValueError(f"Missing expected file keys in LLM response: {missing_keys}")
-            
+
         return {
             "tool.py": parsed["tool.py"],
             "tests.py": parsed["tests.py"],
-            "requirements.txt": parsed["requirements.txt"]
+            "requirements.txt": parsed["requirements.txt"],
         }

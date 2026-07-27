@@ -15,7 +15,7 @@ from .validator import KnowledgeValidator
 __all__ = [
     "KnowledgeFitnessEngine",
     "FitnessConfig",
-    "BeliefPruner", 
+    "BeliefPruner",
     "PruningConfig",
     "KnowledgeValidator",
 ]

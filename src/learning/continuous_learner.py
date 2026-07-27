@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LearningConfig:
     """Configuration for continuous learning"""
+
     # Crawling settings
     max_concurrent_crawls: int = 10
     crawl_rate_limit: int = 1  # requests per second per domain
@@ -37,8 +38,8 @@ class LearningConfig:
 
     # Learning schedule
     real_time_interval: int = 300  # 5 minutes
-    hourly_interval: int = 3600    # 1 hour
-    daily_interval: int = 86400    # 24 hours
+    hourly_interval: int = 3600  # 1 hour
+    daily_interval: int = 86400  # 24 hours
 
     # Data sources
     rss_feeds: List[str] = None
@@ -64,13 +65,13 @@ class LearningConfig:
                 "stackoverflow.com",
                 "medium.com",
                 "dev.to",
-                "towardsdatascience.com"
+                "towardsdatascience.com",
             ]
 
         if self.api_endpoints is None:
             self.api_endpoints = [
                 "https://api.github.com/events",
-                "https://hacker-news.firebaseio.com/v0/newstories.json"
+                "https://hacker-news.firebaseio.com/v0/newstories.json",
             ]
 
         if self.file_directories is None:
@@ -83,6 +84,7 @@ class LearningConfig:
 @dataclass
 class LearningStats:
     """Statistics for learning progress"""
+
     total_urls_crawled: int = 0
     successful_crawls: int = 0
     content_processed: int = 0
@@ -305,7 +307,9 @@ class ContinuousLearner:
 
         return api_results
 
-    def _api_content_to_crawl_result(self, source: str, content: Dict[str, Any]) -> Optional[CrawlResult]:
+    def _api_content_to_crawl_result(
+        self, source: str, content: Dict[str, Any]
+    ) -> Optional[CrawlResult]:
         """Convert API content to CrawlResult format"""
         try:
             # Extract text content based on source type
@@ -314,18 +318,20 @@ class ContinuousLearner:
 
             if source == "wikipedia":
                 text_content = f"{content.get('title', '')}: {content.get('extract', '')}"
-                url = content.get('url', url)
+                url = content.get("url", url)
             elif source == "joke":
-                if 'joke' in content:
-                    text_content = content['joke']
-                elif 'setup' in content and 'punchline' in content:
+                if "joke" in content:
+                    text_content = content["joke"]
+                elif "setup" in content and "punchline" in content:
                     text_content = f"{content['setup']} - {content['punchline']}"
             elif source == "quote":
                 text_content = f'"{content.get("content", "")}" - {content.get("author", "")}'
             elif source == "advice":
-                text_content = content.get('advice', '')
+                text_content = content.get("advice", "")
             elif source == "activity":
-                text_content = f"Activity: {content.get('activity', '')} (Type: {content.get('type', '')})"
+                text_content = (
+                    f"Activity: {content.get('activity', '')} (Type: {content.get('type', '')})"
+                )
             elif source == "trivia":
                 text_content = f"Question: {content.get('question', '')} Answer: {content.get('correct_answer', '')}"
 
@@ -335,11 +341,11 @@ class ContinuousLearner:
             # Create CrawlResult
             return CrawlResult(
                 url=url,
-                title=content.get('title', source.replace('_', ' ').title()),
+                title=content.get("title", source.replace("_", " ").title()),
                 content=text_content,
                 metadata=content,
                 quality_score=0.8,  # Free APIs generally have good quality
-                source_type="api"
+                source_type="api",
             )
 
         except Exception as e:
@@ -354,10 +360,10 @@ class ContinuousLearner:
             "https://en.wikipedia.org/wiki/Main_Page",
             "https://github.com/trending",
             "https://stackoverflow.com/questions",
-            "https://news.ycombinator.com"
+            "https://news.ycombinator.com",
         ]
 
-        return urls[:self.config.daily_crawl_limit // 10]  # Limit hourly crawls
+        return urls[: self.config.daily_crawl_limit // 10]  # Limit hourly crawls
 
     async def _get_daily_urls(self) -> List[str]:
         """Get URLs for daily deep crawling"""
@@ -370,18 +376,18 @@ class ContinuousLearner:
                 f"https://{domain}",
                 f"https://{domain}/browse",
                 f"https://{domain}/trending",
-                f"https://{domain}/popular"
+                f"https://{domain}/popular",
             ]
             urls.extend(base_urls)
 
-        return urls[:self.config.daily_crawl_limit]
+        return urls[: self.config.daily_crawl_limit]
 
     async def _crawl_urls(self, urls: List[str]) -> List[CrawlResult]:
         """Crawl a list of URLs"""
         if self.web_crawler is None:
             self.web_crawler = WebCrawler(
                 max_concurrent=self.config.max_concurrent_crawls,
-                rate_limit=self.config.crawl_rate_limit
+                rate_limit=self.config.crawl_rate_limit,
             )
 
         async with self.web_crawler:
@@ -399,7 +405,8 @@ class ContinuousLearner:
 
         # Filter by quality threshold
         filtered_results = [
-            result for result in crawl_results
+            result
+            for result in crawl_results
             if result.quality_score >= self.config.min_quality_score
         ]
 
@@ -408,7 +415,8 @@ class ContinuousLearner:
 
         # Filter by relevance threshold
         relevant_content = [
-            content for content in processed_content
+            content
+            for content in processed_content
             if content.relevance_score >= self.config.min_relevance_score
         ]
 
@@ -425,7 +433,9 @@ class ContinuousLearner:
             for content in processed_content:
                 is_dup = False
                 if self.knowledge_integrator.vector_store:
-                    is_dup = await self.knowledge_integrator.vector_store.is_duplicate(content.content)
+                    is_dup = await self.knowledge_integrator.vector_store.is_duplicate(
+                        content.content
+                    )
 
                 if not is_dup:
                     final_content.append(content)
@@ -445,7 +455,9 @@ class ContinuousLearner:
         except Exception as e:
             logger.error(f"Error integrating knowledge: {e}")
 
-    def _update_stats(self, crawl_results: List[CrawlResult], processed_content: List[ProcessedContent]):
+    def _update_stats(
+        self, crawl_results: List[CrawlResult], processed_content: List[ProcessedContent]
+    ):
         """Update learning statistics"""
         self.stats.total_urls_crawled += len(crawl_results)
         self.stats.successful_crawls += len([r for r in crawl_results if r])
@@ -457,9 +469,8 @@ class ContinuousLearner:
         if processed_content:
             avg_quality = sum(c.quality_score for c in processed_content) / len(processed_content)
             self.stats.average_quality_score = (
-                (self.stats.average_quality_score * (self.stats.learning_sessions - 1) + avg_quality) /
-                self.stats.learning_sessions
-            )
+                self.stats.average_quality_score * (self.stats.learning_sessions - 1) + avg_quality
+            ) / self.stats.learning_sessions
 
             # Update top topics
             all_topics = []
@@ -470,20 +481,18 @@ class ContinuousLearner:
             for topic in all_topics:
                 topic_counts[topic] = topic_counts.get(topic, 0) + 1
 
-            self.stats.top_topics = sorted(
-                topic_counts.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )[:10]
+            self.stats.top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[
+                :10
+            ]
             self.stats.top_topics = [topic for topic, count in self.stats.top_topics]
 
         # Record learning session
         session_data = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'urls_crawled': len(crawl_results),
-            'content_processed': len(processed_content),
-            'quality_scores': [c.quality_score for c in processed_content],
-            'topics': list(set(all_topics)) if processed_content else []
+            "timestamp": datetime.utcnow().isoformat(),
+            "urls_crawled": len(crawl_results),
+            "content_processed": len(processed_content),
+            "quality_scores": [c.quality_score for c in processed_content],
+            "topics": list(set(all_topics)) if processed_content else [],
         }
 
         self.learning_history.append(session_data)
@@ -515,14 +524,14 @@ class ContinuousLearner:
             history_file = Path("learning_history.json")
 
             export_data = {
-                'stats': asdict(self.stats),
-                'history': self.learning_history,
-                'config': asdict(self.config),
-                'active_sources': list(self.active_sources),
-                'export_timestamp': datetime.utcnow().isoformat()
+                "stats": asdict(self.stats),
+                "history": self.learning_history,
+                "config": asdict(self.config),
+                "active_sources": list(self.active_sources),
+                "export_timestamp": datetime.utcnow().isoformat(),
             }
 
-            with open(history_file, 'w') as f:
+            with open(history_file, "w") as f:
                 json.dump(export_data, f, indent=2, default=str)
 
             logger.info(f"Learning history exported to {history_file}")
@@ -533,21 +542,24 @@ class ContinuousLearner:
     async def get_learning_report(self) -> Dict[str, Any]:
         """Generate comprehensive learning report"""
         return {
-            'current_stats': asdict(self.stats),
-            'is_running': self.is_running,
-            'active_sources_count': len(self.active_sources),
-            'recent_sessions': self.learning_history[-10:],
-            'component_stats': {
-                'crawler': self.web_crawler.get_crawl_stats() if self.web_crawler else None,
-                'processor': self.content_processor.get_processing_stats(),
-                'knowledge_integrator': await self.knowledge_integrator.get_stats()
+            "current_stats": asdict(self.stats),
+            "is_running": self.is_running,
+            "active_sources_count": len(self.active_sources),
+            "recent_sessions": self.learning_history[-10:],
+            "component_stats": {
+                "crawler": self.web_crawler.get_crawl_stats() if self.web_crawler else None,
+                "processor": self.content_processor.get_processing_stats(),
+                "knowledge_integrator": await self.knowledge_integrator.get_stats(),
             },
-            'learning_efficiency': {
-                'success_rate': self.stats.successful_crawls / max(self.stats.total_urls_crawled, 1),
-                'content_yield': self.stats.content_processed / max(self.stats.successful_crawls, 1),
-                'knowledge_yield': self.stats.knowledge_added / max(self.stats.content_processed, 1),
-                'average_quality': self.stats.average_quality_score
-            }
+            "learning_efficiency": {
+                "success_rate": self.stats.successful_crawls
+                / max(self.stats.total_urls_crawled, 1),
+                "content_yield": self.stats.content_processed
+                / max(self.stats.successful_crawls, 1),
+                "knowledge_yield": self.stats.knowledge_added
+                / max(self.stats.content_processed, 1),
+                "average_quality": self.stats.average_quality_score,
+            },
         }
 
     async def manual_learning_session(self, urls: List[str]) -> Dict[str, Any]:
@@ -561,28 +573,26 @@ class ContinuousLearner:
             self._update_stats(crawl_results, processed_content)
 
             return {
-                'success': True,
-                'urls_crawled': len(crawl_results),
-                'content_processed': len(processed_content),
-                'knowledge_added': len(processed_content),
-                'average_quality': sum(c.quality_score for c in processed_content) / max(len(processed_content), 1)
+                "success": True,
+                "urls_crawled": len(crawl_results),
+                "content_processed": len(processed_content),
+                "knowledge_added": len(processed_content),
+                "average_quality": sum(c.quality_score for c in processed_content)
+                / max(len(processed_content), 1),
             }
 
         except Exception as e:
             logger.error(f"Error in manual learning session: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def get_learning_progress(self) -> Dict[str, Any]:
         """Get current learning progress"""
         return {
-            'stats': asdict(self.stats),
-            'is_running': self.is_running,
-            'active_sources': list(self.active_sources),
-            'config': asdict(self.config),
-            'recent_activity': self.learning_history[-5:] if self.learning_history else []
+            "stats": asdict(self.stats),
+            "is_running": self.is_running,
+            "active_sources": list(self.active_sources),
+            "config": asdict(self.config),
+            "recent_activity": self.learning_history[-5:] if self.learning_history else [],
         }
 
 
@@ -597,15 +607,17 @@ class LearningScheduler:
 
     def add_task(self, task_func, priority: int = 0, delay: int = 0):
         """Add a learning task to the scheduler"""
-        self.tasks.append({
-            'func': task_func,
-            'priority': priority,
-            'delay': delay,
-            'next_run': datetime.utcnow() + timedelta(seconds=delay)
-        })
+        self.tasks.append(
+            {
+                "func": task_func,
+                "priority": priority,
+                "delay": delay,
+                "next_run": datetime.utcnow() + timedelta(seconds=delay),
+            }
+        )
 
         # Sort by priority
-        self.tasks.sort(key=lambda x: x['priority'], reverse=True)
+        self.tasks.sort(key=lambda x: x["priority"], reverse=True)
 
     async def start_scheduler(self):
         """Start the task scheduler"""
@@ -633,16 +645,16 @@ class LearningScheduler:
                 current_time = datetime.utcnow()
 
                 for task in self.tasks:
-                    if current_time >= task['next_run']:
+                    if current_time >= task["next_run"]:
                         # Execute task
                         try:
-                            if asyncio.iscoroutinefunction(task['func']):
-                                await task['func']
+                            if asyncio.iscoroutinefunction(task["func"]):
+                                await task["func"]
                             else:
-                                task['func']()
+                                task["func"]()
 
                             # Update next run time (simple: add delay)
-                            task['next_run'] = current_time + timedelta(seconds=task['delay'])
+                            task["next_run"] = current_time + timedelta(seconds=task["delay"])
 
                         except Exception as e:
                             logger.error(f"Error executing scheduled task: {e}")

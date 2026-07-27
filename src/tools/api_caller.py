@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 # Rate limiter
 # ---------------------------------------------------------------------------
 
+
 class _TokenBucketRateLimiter:
     """Simple async-compatible token-bucket rate limiter.
 
@@ -81,16 +82,19 @@ _PRIVATE_NETWORKS = [
     ipaddress.ip_network("fe80::/10"),
 ]
 
-_BLOCKED_HOSTNAMES = frozenset({
-    "localhost",
-    "metadata.google.internal",
-    "169.254.169.254",
-})
+_BLOCKED_HOSTNAMES = frozenset(
+    {
+        "localhost",
+        "metadata.google.internal",
+        "169.254.169.254",
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # Input schema
 # ---------------------------------------------------------------------------
+
 
 class APICallerInput(BaseModel):
     """Input schema for APICallerTool."""
@@ -124,6 +128,7 @@ class APICallerInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class APICallerTool(AgentTool):
     """Make HTTP requests to external APIs.

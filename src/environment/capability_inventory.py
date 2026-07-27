@@ -7,6 +7,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class Capability(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     name: str
@@ -17,8 +18,10 @@ class Capability(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class CapabilityInventory:
     """Inventory for internal capabilities available for mapping."""
+
     def __init__(self) -> None:
         self._capabilities: Dict[uuid.UUID, Capability] = {}
 
@@ -37,7 +40,7 @@ class CapabilityInventory:
         if category:
             return [c for c in self._capabilities.values() if c.category == category]
         return list(self._capabilities.values())
-        
+
     async def remove_capability(self, capability_id: uuid.UUID) -> bool:
         """Remove a capability from the inventory."""
         if capability_id in self._capabilities:

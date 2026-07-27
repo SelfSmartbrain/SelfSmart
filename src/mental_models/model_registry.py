@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class ModelEntry(BaseModel):
     """Serializable entry for model storage."""
+
     id: str
     name: str
     description: str
@@ -37,6 +38,7 @@ class ModelEntry(BaseModel):
 
 class ModelUsage(BaseModel):
     """Record of model usage."""
+
     model_id: str
     context: str
     success: bool
@@ -46,7 +48,7 @@ class ModelUsage(BaseModel):
 
 class ModelRegistry:
     """Registry for managing mental models."""
-    
+
     def __init__(self, storage_path: Optional[str] = None):
         self.models: Dict[str, MentalModel] = {}
         self.usage_history: List[ModelUsage] = []
@@ -54,13 +56,13 @@ class ModelRegistry:
         self.storage_path.mkdir(parents=True, exist_ok=True)
         self.index_path = self.storage_path / "index.json"
         self.usage_path = self.storage_path / "usage.json"
-        
+
         self._load_index()
         self._load_usage()
         self._load_prebuilt()
-        
+
         logger.info(f"ModelRegistry initialized with storage at {self.storage_path}")
-    
+
     def _load_index(self):
         """Load model index from storage."""
         if self.index_path.exists():
@@ -87,7 +89,7 @@ class ModelRegistry:
                 logger.info(f"Loaded {len(self.models)} models from index")
             except Exception as e:
                 logger.error(f"Failed to load model index: {e}")
-    
+
     def _save_index(self):
         """Save model index to storage."""
         try:
@@ -117,7 +119,7 @@ class ModelRegistry:
             logger.info("Saved model index")
         except Exception as e:
             logger.error(f"Failed to save model index: {e}")
-    
+
     def _load_usage(self):
         """Load usage history from storage."""
         if self.usage_path.exists():
@@ -125,13 +127,12 @@ class ModelRegistry:
                 with open(self.usage_path, "r") as f:
                     data = json.load(f)
                     self.usage_history = [
-                        ModelUsage(**usage_data)
-                        for usage_data in data.get("usage", [])
+                        ModelUsage(**usage_data) for usage_data in data.get("usage", [])
                     ]
                 logger.info(f"Loaded {len(self.usage_history)} usage records")
             except Exception as e:
                 logger.error(f"Failed to load usage history: {e}")
-    
+
     def _save_usage(self):
         """Save usage history to storage."""
         try:
@@ -143,7 +144,7 @@ class ModelRegistry:
                 json.dump(data, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save usage history: {e}")
-    
+
     def _load_prebuilt(self):
         """Load prebuilt mental models if not already present."""
         prebuilt = PrebuiltModels.get_all_prebuilt()
@@ -151,18 +152,18 @@ class ModelRegistry:
             if model.id not in self.models:
                 self.models[model.id] = model
         logger.info(f"Loaded {len(prebuilt)} prebuilt models")
-    
+
     def register_model(self, model: MentalModel) -> MentalModel:
         """Register a new mental model."""
         self.models[model.id] = model
         self._save_index()
         logger.info(f"Registered model: {model.name}")
         return model
-    
+
     def get_model(self, model_id: str) -> Optional[MentalModel]:
         """Retrieve a model by ID."""
         return self.models.get(model_id)
-    
+
     def find_model_by_name(self, name: str) -> Optional[MentalModel]:
         """Find a model by name."""
         name_lower = name.lower()
@@ -170,7 +171,7 @@ class ModelRegistry:
             if name_lower in model.name.lower():
                 return model
         return None
-    
+
     def list_models(
         self,
         model_type: Optional[ModelType] = None,
@@ -179,18 +180,18 @@ class ModelRegistry:
     ) -> List[MentalModel]:
         """List models with optional filters."""
         models = list(self.models.values())
-        
+
         if model_type:
             models = [m for m in models if m.model_type == model_type]
-        
+
         if domain:
             models = [m for m in models if m.domain == domain]
-        
+
         if min_success_rate > 0:
             models = [m for m in models if m.success_rate >= min_success_rate]
-        
+
         return sorted(models, key=lambda m: m.usage_count, reverse=True)
-    
+
     def record_usage(
         self,
         model_id: str,
@@ -201,7 +202,7 @@ class ModelRegistry:
         """Record usage of a mental model."""
         if model_id not in self.models:
             return False
-        
+
         usage = ModelUsage(
             model_id=model_id,
             context=context,
@@ -209,31 +210,31 @@ class ModelRegistry:
             notes=notes,
         )
         self.usage_history.append(usage)
-        
+
         # Update model stats
         model = self.models[model_id]
         model.usage_count += 1
-        
+
         # Update success rate with exponential moving average
         alpha = 0.1  # Learning rate
         new_success = 1.0 if success else 0.0
         model.success_rate = (1 - alpha) * model.success_rate + alpha * new_success
         model.updated_at = datetime.now(timezone.utc)
-        
+
         self._save_index()
         self._save_usage()
-        
+
         logger.info(f"Recorded usage for model {model_id}: success={success}")
         return True
-    
+
     def get_model_performance(self, model_id: str) -> Optional[Dict[str, Any]]:
         """Get performance statistics for a model."""
         if model_id not in self.models:
             return None
-        
+
         model = self.models[model_id]
         usages = [u for u in self.usage_history if u.model_id == model_id]
-        
+
         if not usages:
             return {
                 "model_id": model_id,
@@ -243,11 +244,11 @@ class ModelRegistry:
                 "recent_successes": 0,
                 "recent_failures": 0,
             }
-        
+
         recent_usages = usages[-20:]  # Last 20 uses
         recent_successes = sum(1 for u in recent_usages if u.success)
         recent_failures = len(recent_usages) - recent_successes
-        
+
         return {
             "model_id": model_id,
             "name": model.name,
@@ -257,16 +258,18 @@ class ModelRegistry:
             "recent_failures": recent_failures,
             "recent_success_rate": recent_successes / len(recent_usages) if recent_usages else 0.0,
         }
-    
-    def get_top_models(self, n: int = 10, model_type: Optional[ModelType] = None) -> List[MentalModel]:
+
+    def get_top_models(
+        self, n: int = 10, model_type: Optional[ModelType] = None
+    ) -> List[MentalModel]:
         """Get top N models by success rate."""
         models = list(self.models.values())
-        
+
         if model_type:
             models = [m for m in models if m.model_type == model_type]
-        
+
         return sorted(models, key=lambda m: m.success_rate, reverse=True)[:n]
-    
+
     def update_model(
         self,
         model_id: str,
@@ -279,7 +282,7 @@ class ModelRegistry:
         model = self.models.get(model_id)
         if not model:
             return None
-        
+
         if name is not None:
             model.name = name
         if description is not None:
@@ -288,30 +291,34 @@ class ModelRegistry:
             model.steps = steps
         if heuristics is not None:
             model.heuristics = heuristics
-        
+
         model.updated_at = datetime.now(timezone.utc)
         self._save_index()
         return model
-    
+
     def delete_model(self, model_id: str) -> bool:
         """Delete a model from the registry."""
         if model_id not in self.models:
             return False
-        
+
         del self.models[model_id]
         self._save_index()
         logger.info(f"Deleted model {model_id}")
         return True
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Get registry statistics."""
         type_counts = {}
         for model in self.models.values():
             type_counts[model.model_type.value] = type_counts.get(model.model_type.value, 0) + 1
-        
+
         total_usage = sum(m.usage_count for m in self.models.values())
-        avg_success = sum(m.success_rate for m in self.models.values()) / len(self.models) if self.models else 0.0
-        
+        avg_success = (
+            sum(m.success_rate for m in self.models.values()) / len(self.models)
+            if self.models
+            else 0.0
+        )
+
         return {
             "total_models": len(self.models),
             "total_usage": total_usage,

@@ -1,20 +1,28 @@
-'''semantic_memory.py
+"""semantic_memory.py
 
 Implements a semantic memory layer that stores concepts, facts, relationships, and theories.
 It uses Neo4j for graph storage and Qdrant for vector embeddings to enable similarity search.
-''' 
+"""
 
 from typing import List, Dict, Any
 from neo4j import GraphDatabase
 from qdrant_client import QdrantClient
 
+
 class SemanticMemory:
     """Interface for storing and retrieving semantic knowledge.
-    
+
     Nodes are stored in Neo4j; embeddings are stored in Qdrant for fast vector search.
     """
 
-    def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_password: str, qdrant_host: str = "localhost", qdrant_port: int = 6333):
+    def __init__(
+        self,
+        neo4j_uri: str,
+        neo4j_user: str,
+        neo4j_password: str,
+        qdrant_host: str = "localhost",
+        qdrant_port: int = 6333,
+    ):
         self.driver = GraphDatabase.driver(neo4j_uri, auth=(neo4j_user, neo4j_password))
         self.qdrant = QdrantClient(host=qdrant_host, port=qdrant_port)
         self.collection_name = "semantic_embeddings"
@@ -32,7 +40,9 @@ class SemanticMemory:
             cypher = f"CREATE (n:{label} $props)"
             session.run(cypher, props=properties)
 
-    def create_relationship(self, src_id: int, dst_id: int, rel_type: str, props: Dict[str, Any] = None) -> None:
+    def create_relationship(
+        self, src_id: int, dst_id: int, rel_type: str, props: Dict[str, Any] = None
+    ) -> None:
         with self.driver.session() as session:
             cypher = """
             MATCH (a), (b)
@@ -42,7 +52,9 @@ class SemanticMemory:
             session.run(cypher, src_id=src_id, dst_id=dst_id, props=props or {})
 
     # ------- Embedding operations (Qdrant) -------
-    def upsert_embedding(self, entity_id: str, vector: List[float], payload: Dict[str, Any] = None) -> None:
+    def upsert_embedding(
+        self, entity_id: str, vector: List[float], payload: Dict[str, Any] = None
+    ) -> None:
         self.qdrant.upsert(
             collection_name=self.collection_name,
             points=[

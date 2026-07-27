@@ -5,4 +5,3 @@ from __future__ import annotations
 from src.cli.main import cli
 
 __all__ = ["cli"]
-

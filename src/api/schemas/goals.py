@@ -30,7 +30,9 @@ class GoalCreate(BaseModel):
         min_length=10,
         max_length=5000,
         description="High-level goal description",
-        examples=["Research the latest advances in transformer architectures and summarize findings"],
+        examples=[
+            "Research the latest advances in transformer architectures and summarize findings"
+        ],
     )
     context: str | None = Field(
         default=None,

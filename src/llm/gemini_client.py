@@ -18,23 +18,28 @@ from src.monitoring.prometheus import LLM_LATENCY, TOKEN_USAGE
 
 logger = get_logger(__name__)
 
+
 @dataclass
 class Message:
     """Represents a conversation message"""
+
     role: str  # 'system', 'user', 'assistant'
     content: str
     timestamp: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class LLMResponse:
     """Represents an LLM response"""
+
     content: str
     finish_reason: str
     usage: Dict[str, int]
     model: str
     timestamp: datetime = field(default_factory=datetime.now)
     sources: List[str] = field(default_factory=list)
+
 
 class GeminiClient:
     """
@@ -63,8 +68,7 @@ class GeminiClient:
     async def __aenter__(self):
         timeout = aiohttp.ClientTimeout(total=self.timeout, connect=30)
         self.session = aiohttp.ClientSession(
-            timeout=timeout,
-            headers={'Content-Type': 'application/json'}
+            timeout=timeout, headers={"Content-Type": "application/json"}
         )
         return self
 
@@ -77,10 +81,7 @@ class GeminiClient:
         formatted = []
         for msg in messages:
             role = "user" if msg.role in ["user", "system"] else "model"
-            formatted.append({
-                "role": role,
-                "parts": [{"text": msg.content}]
-            })
+            formatted.append({"role": role, "parts": [{"text": msg.content}]})
         return formatted
 
     async def list_models(self) -> Dict[str, Any]:
@@ -99,13 +100,10 @@ class GeminiClient:
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=1, min=2, max=30),
         retry=retry_if_exception_type(Exception),
-        reraise=True
+        reraise=True,
     )
     async def chat(
-        self,
-        messages: List[Message],
-        temperature: float = 0.7,
-        max_tokens: int = 2048
+        self, messages: List[Message], temperature: float = 0.7, max_tokens: int = 2048
     ) -> LLMResponse:
         """Send chat completion request to Gemini"""
         if not self.session:
@@ -119,7 +117,7 @@ class GeminiClient:
             "generationConfig": {
                 "temperature": temperature,
                 "maxOutputTokens": max_tokens,
-            }
+            },
         }
 
         start_time = time.time()
@@ -133,20 +131,24 @@ class GeminiClient:
 
             data = await response.json()
             try:
-                content = data['candidates'][0]['content']['parts'][0]['text']
-                finish_reason = data['candidates'][0].get('finishReason', 'STOP')
+                content = data["candidates"][0]["content"]["parts"][0]["text"]
+                finish_reason = data["candidates"][0].get("finishReason", "STOP")
 
                 # Gemini usage metadata
-                usage_metadata = data.get('usageMetadata', {})
+                usage_metadata = data.get("usageMetadata", {})
                 if usage_metadata:
-                    TOKEN_USAGE.labels(provider="gemini", model=self.model, token_type="prompt").inc(usage_metadata.get("promptTokenCount", 0))
-                    TOKEN_USAGE.labels(provider="gemini", model=self.model, token_type="completion").inc(usage_metadata.get("candidatesTokenCount", 0))
+                    TOKEN_USAGE.labels(
+                        provider="gemini", model=self.model, token_type="prompt"
+                    ).inc(usage_metadata.get("promptTokenCount", 0))
+                    TOKEN_USAGE.labels(
+                        provider="gemini", model=self.model, token_type="completion"
+                    ).inc(usage_metadata.get("candidatesTokenCount", 0))
 
                 return LLMResponse(
                     content=content,
                     finish_reason=finish_reason,
                     usage=usage_metadata,
-                    model=self.model
+                    model=self.model,
                 )
             except (KeyError, IndexError) as e:
                 logger.error(f"Failed to parse Gemini response: {e}")
@@ -156,13 +158,10 @@ class GeminiClient:
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=1, min=2, max=30),
         retry=retry_if_exception_type(Exception),
-        reraise=True
+        reraise=True,
     )
     async def chat_stream(
-        self,
-        messages: List[Message],
-        temperature: float = 0.7,
-        max_tokens: int = 2048
+        self, messages: List[Message], temperature: float = 0.7, max_tokens: int = 2048
     ) -> AsyncGenerator[str, None]:
         """Stream chat completion response from Gemini"""
         if not self.session:
@@ -176,7 +175,7 @@ class GeminiClient:
             "generationConfig": {
                 "temperature": temperature,
                 "maxOutputTokens": max_tokens,
-            }
+            },
         }
 
         async with self.session.post(url, json=payload) as response:
@@ -185,14 +184,14 @@ class GeminiClient:
                 raise Exception(f"Gemini Stream API error {response.status}: {error_text}")
 
             async for line in response.content:
-                line = line.decode('utf-8').strip()
-                if line.startswith('data: '):
+                line = line.decode("utf-8").strip()
+                if line.startswith("data: "):
                     try:
                         data = json.loads(line[6:])
-                        if 'candidates' in data and len(data['candidates']) > 0:
-                            parts = data['candidates'][0].get('content', {}).get('parts', [])
+                        if "candidates" in data and len(data["candidates"]) > 0:
+                            parts = data["candidates"][0].get("content", {}).get("parts", [])
                             for part in parts:
-                                text = part.get('text', '')
+                                text = part.get("text", "")
                                 if text:
                                     yield text
                     except json.JSONDecodeError:

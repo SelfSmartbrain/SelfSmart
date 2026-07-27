@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class SemanticRetrievalInput(BaseModel):
     """Input schema for SemanticRetrievalTool."""
 
@@ -58,6 +59,7 @@ class SemanticRetrievalInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Lightweight embedding helper
 # ---------------------------------------------------------------------------
+
 
 class _EmbeddingService:
     """Minimal async wrapper around the OpenAI Embeddings API.
@@ -111,6 +113,7 @@ class _EmbeddingService:
 # Tool implementation
 # ---------------------------------------------------------------------------
 
+
 class SemanticRetrievalTool(AgentTool):
     """Query the Qdrant vector store for semantically relevant knowledge.
 
@@ -159,7 +162,10 @@ class SemanticRetrievalTool(AgentTool):
 
         settings = get_settings()
         log = logger.bind(
-            tool=self.name, query=query[:80], collection=collection, limit=limit,
+            tool=self.name,
+            query=query[:80],
+            collection=collection,
+            limit=limit,
         )
         log.debug("semantic_retrieval.start")
 
@@ -234,17 +240,12 @@ class SemanticRetrievalTool(AgentTool):
 
             # Extract content — try common field names
             content = (
-                payload.get("content")
-                or payload.get("text")
-                or payload.get("page_content")
-                or ""
+                payload.get("content") or payload.get("text") or payload.get("page_content") or ""
             )
 
             # Everything except the content field is metadata
             metadata = {
-                k: v
-                for k, v in payload.items()
-                if k not in {"content", "text", "page_content"}
+                k: v for k, v in payload.items() if k not in {"content", "text", "page_content"}
             }
 
             results.append(

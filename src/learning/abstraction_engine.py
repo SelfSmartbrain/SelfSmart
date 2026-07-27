@@ -1,8 +1,8 @@
-'''abstraction_engine.py
+"""abstraction_engine.py
 
 Engine that abstracts low‑level episodic events into higher‑level concepts.
 Uses sentence embeddings to group similar outcomes and generate abstract representations.
-'''
+"""
 
 from typing import List, Dict
 import logging
@@ -20,13 +20,14 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class AbstractionEngine:
     def __init__(self, db_session):
         self.db = db_session
         self.model = None
         if SentenceTransformer is not None:
             try:
-                self.model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+                self.model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
                 logger.info("AbstractionEngine: SentenceTransformer model loaded")
             except Exception as e:
                 logger.warning(f"Failed to load SentenceTransformer model: {e}")
@@ -48,7 +49,11 @@ class AbstractionEngine:
 
         try:
             # Filter out episodes with empty or None outcome
-            valid_episodes = [ep for ep in episodes if ep.outcome and isinstance(ep.outcome, str) and ep.outcome.strip()]
+            valid_episodes = [
+                ep
+                for ep in episodes
+                if ep.outcome and isinstance(ep.outcome, str) and ep.outcome.strip()
+            ]
             if not valid_episodes:
                 return [{"topic": "no_valid_outcomes", "count": len(episodes)}]
 
@@ -71,7 +76,7 @@ class AbstractionEngine:
                 # Start a new cluster with i
                 clusters.append([i])
                 used[i] = True
-                for j in range(i+1, len(valid_episodes)):
+                for j in range(i + 1, len(valid_episodes)):
                     if not used[j] and similarity_matrix[i][j].item() > similarity_threshold:
                         clusters[-1].append(j)
                         used[j] = True
@@ -85,11 +90,17 @@ class AbstractionEngine:
                 representative = cluster_outcomes[0]
                 # Create a simple summary: we can count and maybe take a common phrase?
                 # For now, we just return the representative and count.
-                abstracts.append({
-                    "topic": representative[:50] + "..." if len(representative) > 50 else representative,
-                    "count": len(cluster_indices),
-                    "examples": cluster_outcomes[:3]  # include up to 3 examples
-                })
+                abstracts.append(
+                    {
+                        "topic": (
+                            representative[:50] + "..."
+                            if len(representative) > 50
+                            else representative
+                        ),
+                        "count": len(cluster_indices),
+                        "examples": cluster_outcomes[:3],  # include up to 3 examples
+                    }
+                )
             return abstracts
         except Exception as e:
             logger.error(f"AbstractionEngine error: {e}")

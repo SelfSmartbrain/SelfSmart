@@ -14,18 +14,18 @@ MODELS = {
     "whisper": {
         "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin",
         "path": MODELS_DIR / "ggml-base.en.bin",
-        "size_mb": 142
+        "size_mb": 142,
     },
     "piper_model": {
         "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx",
         "path": MODELS_DIR / "piper" / "en_US-lessac-medium.onnx",
-        "size_mb": 54
+        "size_mb": 54,
     },
     "piper_config": {
         "url": "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json",
         "path": MODELS_DIR / "piper" / "en_US-lessac-medium.onnx.json",
-        "size_mb": 0.1
-    }
+        "size_mb": 0.1,
+    },
 }
 
 
@@ -40,6 +40,7 @@ def download_file(url: str, path: Path, size_mb: float):
     print(f"Downloading {path.name} ({size_mb:.1f} MB)...")
 
     try:
+
         def progress_hook(block_num, block_size, total_size):
             if total_size > 0:
                 percent = min(100, (block_num * block_size * 100) // total_size)

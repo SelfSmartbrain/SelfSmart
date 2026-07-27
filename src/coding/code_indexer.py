@@ -1,2 +1,3 @@
 class CodeIndexer:
-    def index(self, path): pass
+    def index(self, path):
+        pass

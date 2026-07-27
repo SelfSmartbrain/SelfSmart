@@ -18,8 +18,7 @@ from src.voice_assistant.server import app
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
@@ -36,11 +35,7 @@ def main():
 
     # Run server
     uvicorn.run(
-        "src.voice_assistant.server:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=False,
-        log_level="info"
+        "src.voice_assistant.server:app", host="0.0.0.0", port=8000, reload=False, log_level="info"
     )
 
 
@@ -53,7 +48,9 @@ def check_models():
     whisper_model = os.path.join(models_dir, "ggml-base.en.bin")
     if not os.path.exists(whisper_model):
         logger.info("Whisper model not found. Please download:")
-        logger.info("  wget -P models https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin")
+        logger.info(
+            "  wget -P models https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+        )
         logger.info("  Or run: python -m src.voice_assistant.download_models")
 
     # Piper voice
@@ -61,8 +58,12 @@ def check_models():
     if not os.path.exists(piper_model):
         logger.info("Piper voice not found. Please download:")
         logger.info("  mkdir -p models/piper")
-        logger.info("  wget -P models/piper https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx")
-        logger.info("  wget -P models/piper https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json")
+        logger.info(
+            "  wget -P models/piper https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx"
+        )
+        logger.info(
+            "  wget -P models/piper https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json"
+        )
 
 
 if __name__ == "__main__":

@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProcessedContent:
     """Processed content with metadata"""
+
     id: str
     title: str
     content: str
@@ -72,9 +73,7 @@ class ContentProcessor:
             # Load quality classification model
             model_name = "distilbert-base-uncased-finetuned-sst-2-english"
             self.quality_classifier = pipeline(
-                "sentiment-analysis",
-                model=model_name,
-                tokenizer=model_name
+                "sentiment-analysis", model=model_name, tokenizer=model_name
             )
             logger.info("Quality classifier loaded")
         except Exception as e:
@@ -83,15 +82,10 @@ class ContentProcessor:
 
         # Initialize TF-IDF vectorizer for deduplication
         self.tfidf_vectorizer = TfidfVectorizer(
-            max_features=1000,
-            stop_words='english',
-            ngram_range=(1, 2)
+            max_features=1000, stop_words="english", ngram_range=(1, 2)
         )
 
-    async def process_content_batch(
-        self,
-        crawl_results: List[Any]
-    ) -> List[ProcessedContent]:
+    async def process_content_batch(self, crawl_results: List[Any]) -> List[ProcessedContent]:
         """
         Process a batch of crawled content.
 
@@ -141,7 +135,7 @@ class ContentProcessor:
 
             # Language detection
             language = self._detect_language(cleaned_content)
-            if language != 'en':
+            if language != "en":
                 logger.debug(f"Non-English content detected: {language}")
                 # Could implement translation here
 
@@ -171,14 +165,14 @@ class ContentProcessor:
                 relevance_score=relevance_score,
                 language=language,
                 metadata={
-                    'source_url': crawl_result.url,
-                    'source_type': crawl_result.source_type,
-                    'original_metadata': crawl_result.metadata,
-                    'content_length': len(cleaned_content),
-                    'word_count': len(cleaned_content.split()),
-                    'processing_timestamp': datetime.utcnow().isoformat()
+                    "source_url": crawl_result.url,
+                    "source_type": crawl_result.source_type,
+                    "original_metadata": crawl_result.metadata,
+                    "content_length": len(cleaned_content),
+                    "word_count": len(cleaned_content.split()),
+                    "processing_timestamp": datetime.utcnow().isoformat(),
                 },
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
 
             self.processed_count += 1
@@ -194,25 +188,29 @@ class ContentProcessor:
             return ""
 
         # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"\s+", " ", text)
 
         # Remove special characters but keep punctuation
-        text = re.sub(r'[^\w\s\.\,\!\?\;\:\-\(\)]', '', text)
+        text = re.sub(r"[^\w\s\.\,\!\?\;\:\-\(\)]", "", text)
 
         # Remove multiple punctuation
-        text = re.sub(r'[\.]{2,}', '.', text)
-        text = re.sub(r'[\!]{2,}', '!', text)
-        text = re.sub(r'[\?]{2,}', '?', text)
+        text = re.sub(r"[\.]{2,}", ".", text)
+        text = re.sub(r"[\!]{2,}", "!", text)
+        text = re.sub(r"[\?]{2,}", "?", text)
 
         # Fix spacing around punctuation
-        text = re.sub(r'\s+([\.!\?,;:])', r'\1', text)
-        text = re.sub(r'([\.!\?,;:])\s+', r'\1 ', text)
+        text = re.sub(r"\s+([\.!\?,;:])", r"\1", text)
+        text = re.sub(r"([\.!\?,;:])\s+", r"\1 ", text)
 
         # Remove URLs
-        text = re.sub(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', '', text)
+        text = re.sub(
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+            "",
+            text,
+        )
 
         # Remove email addresses
-        text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '', text)
+        text = re.sub(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "", text)
 
         return text.strip()
 
@@ -220,7 +218,7 @@ class ContentProcessor:
         """Generate hash for content deduplication"""
         # Normalize content for hashing
         normalized = content.lower().strip()
-        normalized = re.sub(r'\s+', ' ', normalized)
+        normalized = re.sub(r"\s+", " ", normalized)
         return hashlib.md5(normalized.encode()).hexdigest()
 
     def _generate_content_id(self, url: str) -> str:
@@ -231,12 +229,12 @@ class ContentProcessor:
         """Detect content language"""
         try:
             if len(text) < 50:
-                return 'en'  # Default for short text
+                return "en"  # Default for short text
 
             language = detect(text)
             return language
         except:
-            return 'en'  # Default on error
+            return "en"  # Default on error
 
     async def _assess_quality(self, content: str) -> float:
         """Assess content quality using multiple metrics including noise detection"""
@@ -255,7 +253,7 @@ class ContentProcessor:
             quality_score += 0.1
 
         # Readability score
-        sentences = content.split('.')
+        sentences = content.split(".")
         avg_sentence_length = sum(len(s.split()) for s in sentences) / max(len(sentences), 1)
 
         if 10 <= avg_sentence_length <= 25:
@@ -271,8 +269,20 @@ class ContentProcessor:
             quality_score += 0.1
 
         # Content structure indicators
-        structure_indicators = ['however', 'therefore', 'because', 'although', 'moreover', 'furthermore', 'in conclusion', 'consequently', 'specifically']
-        structure_hits = sum(1 for indicator in structure_indicators if indicator in content.lower())
+        structure_indicators = [
+            "however",
+            "therefore",
+            "because",
+            "although",
+            "moreover",
+            "furthermore",
+            "in conclusion",
+            "consequently",
+            "specifically",
+        ]
+        structure_hits = sum(
+            1 for indicator in structure_indicators if indicator in content.lower()
+        )
         quality_score += min(structure_hits * 0.05, 0.2)
 
         # ML-based quality assessment (proxy via sentiment confidence/extremes)
@@ -280,7 +290,7 @@ class ContentProcessor:
             try:
                 result = self.quality_classifier(content[:512])
                 # Neutral/balanced content often has lower sentiment confidence
-                if result[0]['score'] < 0.9:
+                if result[0]["score"] < 0.9:
                     quality_score += 0.1
             except:
                 pass
@@ -290,7 +300,7 @@ class ContentProcessor:
     def _is_noise(self, content: str) -> bool:
         """Detect if content is likely noise (gibberish, code, or low-value boilerplate)"""
         # 1. Excessive special characters
-        special_chars = len(re.findall(r'[^\w\s]', content))
+        special_chars = len(re.findall(r"[^\w\s]", content))
         if special_chars / len(content) > 0.15:
             return True
 
@@ -312,7 +322,7 @@ class ContentProcessor:
             r"cookie policy",
             r"privacy policy",
             r"terms of service",
-            r"subscribe to our"
+            r"subscribe to our",
         ]
         hits = sum(1 for pattern in boilerplate if re.search(pattern, content, re.I))
         if hits >= 2:
@@ -326,14 +336,86 @@ class ContentProcessor:
 
         # Simple keyword-based topic extraction
         topic_keywords = {
-            'technology': ['technology', 'software', 'computer', 'programming', 'artificial intelligence', 'machine learning', 'data', 'algorithm'],
-            'business': ['business', 'company', 'market', 'economy', 'finance', 'investment', 'revenue', 'profit'],
-            'science': ['science', 'research', 'study', 'experiment', 'discovery', 'theory', 'hypothesis', 'analysis'],
-            'health': ['health', 'medicine', 'disease', 'treatment', 'patient', 'medical', 'healthcare', 'therapy'],
-            'education': ['education', 'learning', 'school', 'university', 'student', 'teacher', 'course', 'knowledge'],
-            'politics': ['politics', 'government', 'policy', 'election', 'democracy', 'political', 'vote', 'campaign'],
-            'sports': ['sports', 'game', 'player', 'team', 'competition', 'match', 'tournament', 'athlete'],
-            'entertainment': ['entertainment', 'movie', 'music', 'film', 'celebrity', 'show', 'performance', 'art']
+            "technology": [
+                "technology",
+                "software",
+                "computer",
+                "programming",
+                "artificial intelligence",
+                "machine learning",
+                "data",
+                "algorithm",
+            ],
+            "business": [
+                "business",
+                "company",
+                "market",
+                "economy",
+                "finance",
+                "investment",
+                "revenue",
+                "profit",
+            ],
+            "science": [
+                "science",
+                "research",
+                "study",
+                "experiment",
+                "discovery",
+                "theory",
+                "hypothesis",
+                "analysis",
+            ],
+            "health": [
+                "health",
+                "medicine",
+                "disease",
+                "treatment",
+                "patient",
+                "medical",
+                "healthcare",
+                "therapy",
+            ],
+            "education": [
+                "education",
+                "learning",
+                "school",
+                "university",
+                "student",
+                "teacher",
+                "course",
+                "knowledge",
+            ],
+            "politics": [
+                "politics",
+                "government",
+                "policy",
+                "election",
+                "democracy",
+                "political",
+                "vote",
+                "campaign",
+            ],
+            "sports": [
+                "sports",
+                "game",
+                "player",
+                "team",
+                "competition",
+                "match",
+                "tournament",
+                "athlete",
+            ],
+            "entertainment": [
+                "entertainment",
+                "movie",
+                "music",
+                "film",
+                "celebrity",
+                "show",
+                "performance",
+                "art",
+            ],
         }
 
         content_lower = content.lower()
@@ -349,7 +431,9 @@ class ContentProcessor:
                 doc = self.nlp(content[:100000])  # Limit length for performance
 
                 # Extract noun phrases as potential topics
-                noun_phrases = [chunk.text.lower() for chunk in doc.noun_chunks if len(chunk.text.split()) <= 3]
+                noun_phrases = [
+                    chunk.text.lower() for chunk in doc.noun_chunks if len(chunk.text.split()) <= 3
+                ]
 
                 # Count frequency of noun phrases
                 phrase_freq = {}
@@ -360,7 +444,7 @@ class ContentProcessor:
                 top_phrases = sorted(phrase_freq.items(), key=lambda x: x[1], reverse=True)[:5]
                 for phrase, freq in top_phrases:
                     if freq >= 2 and len(phrase) > 3:
-                        topics.append(phrase.replace(' ', '_'))
+                        topics.append(phrase.replace(" ", "_"))
 
             except Exception as e:
                 logger.warning(f"SpaCy topic extraction failed: {e}")
@@ -377,13 +461,15 @@ class ContentProcessor:
 
                 for ent in doc.ents:
                     if len(ent.text.strip()) > 2:  # Filter out very short entities
-                        entities.append({
-                            'text': ent.text,
-                            'label': ent.label_,
-                            'start': ent.start_char,
-                            'end': ent.end_char,
-                            'confidence': 1.0  # SpaCy doesn't provide confidence scores
-                        })
+                        entities.append(
+                            {
+                                "text": ent.text,
+                                "label": ent.label_,
+                                "start": ent.start_char,
+                                "end": ent.end_char,
+                                "confidence": 1.0,  # SpaCy doesn't provide confidence scores
+                            }
+                        )
 
             except Exception as e:
                 logger.warning(f"SpaCy entity extraction failed: {e}")
@@ -398,44 +484,52 @@ class ContentProcessor:
         entities = []
 
         # Email addresses
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         for match in re.finditer(email_pattern, content):
-            entities.append({
-                'text': match.group(),
-                'label': 'EMAIL',
-                'start': match.start(),
-                'end': match.end(),
-                'confidence': 0.8
-            })
+            entities.append(
+                {
+                    "text": match.group(),
+                    "label": "EMAIL",
+                    "start": match.start(),
+                    "end": match.end(),
+                    "confidence": 0.8,
+                }
+            )
 
         # URLs
-        url_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+        url_pattern = (
+            r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+        )
         for match in re.finditer(url_pattern, content):
-            entities.append({
-                'text': match.group(),
-                'label': 'URL',
-                'start': match.start(),
-                'end': match.end(),
-                'confidence': 0.9
-            })
+            entities.append(
+                {
+                    "text": match.group(),
+                    "label": "URL",
+                    "start": match.start(),
+                    "end": match.end(),
+                    "confidence": 0.9,
+                }
+            )
 
         # Dates
-        date_pattern = r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b'
+        date_pattern = r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b"
         for match in re.finditer(date_pattern, content):
-            entities.append({
-                'text': match.group(),
-                'label': 'DATE',
-                'start': match.start(),
-                'end': match.end(),
-                'confidence': 0.7
-            })
+            entities.append(
+                {
+                    "text": match.group(),
+                    "label": "DATE",
+                    "start": match.start(),
+                    "end": match.end(),
+                    "confidence": 0.7,
+                }
+            )
 
         return entities
 
     def _generate_summary(self, content: str) -> str:
         """Generate content summary"""
         # Simple extractive summarization
-        sentences = content.split('.')
+        sentences = content.split(".")
 
         # Filter sentences by length and importance
         important_sentences = []
@@ -443,7 +537,15 @@ class ContentProcessor:
             sentence = sentence.strip()
             if len(sentence) > 20 and len(sentence) < 200:
                 # Check for importance indicators
-                importance_words = ['important', 'significant', 'key', 'major', 'critical', 'essential', 'crucial']
+                importance_words = [
+                    "important",
+                    "significant",
+                    "key",
+                    "major",
+                    "critical",
+                    "essential",
+                    "crucial",
+                ]
                 if any(word in sentence.lower() for word in importance_words):
                     important_sentences.append(sentence)
 
@@ -452,7 +554,7 @@ class ContentProcessor:
             important_sentences = [s.strip() for s in sentences[:3] if len(s.strip()) > 20]
 
         # Create summary
-        summary = '. '.join(important_sentences[:3])
+        summary = ". ".join(important_sentences[:3])
         return summary if summary else content[:200] + "..." if len(content) > 200 else content
 
     def _calculate_relevance(self, topics: List[str], entities: List[Dict[str, Any]]) -> float:
@@ -468,8 +570,8 @@ class ContentProcessor:
             relevance_score += min(len(entities) * 0.05, 0.3)
 
         # High-value entity types
-        high_value_entities = ['PERSON', 'ORG', 'GPE', 'PRODUCT', 'EVENT']
-        high_value_count = sum(1 for e in entities if e.get('label') in high_value_entities)
+        high_value_entities = ["PERSON", "ORG", "GPE", "PRODUCT", "EVENT"]
+        high_value_count = sum(1 for e in entities if e.get("label") in high_value_entities)
         relevance_score += min(high_value_count * 0.1, 0.2)
 
         return min(1.0, relevance_score)
@@ -477,49 +579,54 @@ class ContentProcessor:
     def get_processing_stats(self) -> Dict[str, Any]:
         """Get content processing statistics"""
         return {
-            'processed_count': self.processed_count,
-            'duplicate_count': self.duplicate_count,
-            'duplicate_rate': self.duplicate_count / max(self.processed_count + self.duplicate_count, 1),
-            'unique_content_hashes': len(self.content_hashes),
-            'models_loaded': {
-                'spacy': self.nlp is not None,
-                'quality_classifier': self.quality_classifier is not None
-            }
+            "processed_count": self.processed_count,
+            "duplicate_count": self.duplicate_count,
+            "duplicate_rate": self.duplicate_count
+            / max(self.processed_count + self.duplicate_count, 1),
+            "unique_content_hashes": len(self.content_hashes),
+            "models_loaded": {
+                "spacy": self.nlp is not None,
+                "quality_classifier": self.quality_classifier is not None,
+            },
         }
 
     def export_processed_content(self, processed_contents: List[ProcessedContent], filename: str):
         """Export processed content to file"""
         export_data = []
         for content in processed_contents:
-            export_data.append({
-                'id': content.id,
-                'title': content.title,
-                'content': content.content,
-                'summary': content.summary,
-                'topics': content.topics,
-                'entities': content.entities,
-                'quality_score': content.quality_score,
-                'relevance_score': content.relevance_score,
-                'language': content.language,
-                'metadata': content.metadata,
-                'timestamp': content.timestamp.isoformat()
-            })
+            export_data.append(
+                {
+                    "id": content.id,
+                    "title": content.title,
+                    "content": content.content,
+                    "summary": content.summary,
+                    "topics": content.topics,
+                    "entities": content.entities,
+                    "quality_score": content.quality_score,
+                    "relevance_score": content.relevance_score,
+                    "language": content.language,
+                    "metadata": content.metadata,
+                    "timestamp": content.timestamp.isoformat(),
+                }
+            )
 
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(export_data, f, indent=2)
 
         logger.info(f"Exported {len(export_data)} processed content items to {filename}")
 
 
 # Utility functions for content processing
-def merge_similar_content(contents: List[ProcessedContent], similarity_threshold: float = 0.8) -> List[ProcessedContent]:
+def merge_similar_content(
+    contents: List[ProcessedContent], similarity_threshold: float = 0.8
+) -> List[ProcessedContent]:
     """Merge similar content items to reduce redundancy"""
     if not contents:
         return contents
 
     # Create TF-IDF vectors
     texts = [content.content for content in contents]
-    vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
+    vectorizer = TfidfVectorizer(max_features=1000, stop_words="english")
     tfidf_matrix = vectorizer.fit_transform(texts)
 
     # Calculate similarity matrix
@@ -534,9 +641,11 @@ def merge_similar_content(contents: List[ProcessedContent], similarity_threshold
             continue
 
         # Find similar items
-        similar_indices = [j for j in range(len(contents))
-                          if j != i and j not in used_indices
-                          and similarity_matrix[i][j] > similarity_threshold]
+        similar_indices = [
+            j
+            for j in range(len(contents))
+            if j != i and j not in used_indices and similarity_matrix[i][j] > similarity_threshold
+        ]
 
         if similar_indices:
             # Merge content
@@ -575,7 +684,7 @@ def merge_content_items(contents: List[ProcessedContent]) -> ProcessedContent:
     unique_entities = []
     seen_entities = set()
     for entity in all_entities:
-        entity_key = (entity['text'], entity['label'])
+        entity_key = (entity["text"], entity["label"])
         if entity_key not in seen_entities:
             unique_entities.append(entity)
             seen_entities.add(entity_key)
@@ -593,10 +702,10 @@ def merge_content_items(contents: List[ProcessedContent]) -> ProcessedContent:
         language=base.language,
         metadata={
             **base.metadata,
-            'merged_from': [c.id for c in contents[1:]],
-            'merge_count': len(contents)
+            "merged_from": [c.id for c in contents[1:]],
+            "merge_count": len(contents),
         },
-        timestamp=base.timestamp
+        timestamp=base.timestamp,
     )
 
     return merged_content

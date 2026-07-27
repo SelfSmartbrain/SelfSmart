@@ -9,15 +9,17 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class Incident(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     title: str
     description: str
     status: str = "open"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     resolved_at: Optional[datetime] = None
+
 
 class IncidentManager:
     def __init__(self):

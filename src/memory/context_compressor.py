@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class CompressionStrategy(Enum):
     """Compression strategies"""
+
     CLUSTER_SUMMARIZE = "cluster_summarize"
     IMPORTANCE_FILTER = "importance_filter"
     TEMPORAL_DECAY = "temporal_decay"
@@ -30,6 +31,7 @@ class CompressionStrategy(Enum):
 @dataclass
 class MemoryCluster:
     """A cluster of related memories"""
+
     cluster_id: int
     memories: List[Dict[str, Any]]
     centroid: List[float]
@@ -42,6 +44,7 @@ class MemoryCluster:
 @dataclass
 class CompressionResult:
     """Result of compression operation"""
+
     original_count: int
     compressed_count: int
     clusters: List[MemoryCluster]
@@ -81,12 +84,12 @@ class ContextCompressor:
     ) -> CompressionResult:
         """
         Compress working memories into summarized clusters.
-        
+
         Args:
             agent_id: Agent identifier
             working_memories: List of memory entries from working memory
             max_tokens: Target token budget after compression
-            
+
         Returns:
             CompressionResult with clusters and metrics
         """
@@ -103,8 +106,7 @@ class ContextCompressor:
 
         # Filter by importance
         important_memories = [
-            m for m in working_memories
-            if m.get("importance", 0.5) >= self.importance_threshold
+            m for m in working_memories if m.get("importance", 0.5) >= self.importance_threshold
         ]
 
         # Get embeddings for clustering
@@ -114,9 +116,9 @@ class ContextCompressor:
         clusters = await self._cluster_memories(important_memories, embeddings)
 
         # Summarize each cluster
-        summarized_clusters = await asyncio.gather(*[
-            self._summarize_cluster(cluster) for cluster in clusters
-        ])
+        summarized_clusters = await asyncio.gather(
+            *[self._summarize_cluster(cluster) for cluster in clusters]
+        )
 
         # Store summaries as long-term memories
         stored_ids = []
@@ -160,17 +162,18 @@ class ContextCompressor:
         """Generate embedding for text using the embedding service"""
         try:
             # Try to use the vector store's embedding service
-            if hasattr(self.vectors, 'embed_text'):
+            if hasattr(self.vectors, "embed_text"):
                 return await self.vectors.embed_text(text)
             # Try to use the memory fabric's embedding service
-            if hasattr(self.memory, 'embed_text'):
+            if hasattr(self.memory, "embed_text"):
                 return await self.memory.embed_text(text)
             # Try to use the LLM's embedding capability
-            if hasattr(self.llm, 'embed_text'):
+            if hasattr(self.llm, "embed_text"):
                 return await self.llm.embed_text(text)
             # Fallback: deterministic multi-hash embedding with broad dimensional coverage.
             # This is a last resort; production should use a real embedding model.
             import hashlib
+
             embedding = []
             for i in range(48):
                 hash_input = f"{text}__dim_{i}".encode()
@@ -189,63 +192,79 @@ class ContextCompressor:
     ) -> List[MemoryCluster]:
         """Cluster memories using K-Means on embeddings"""
         n_clusters = min(self.max_clusters, max(1, len(memories) // self.min_cluster_size))
-        
+
         if n_clusters == 1:
             # Single cluster
             centroid = np.mean(embeddings, axis=0).tolist()
-            return [MemoryCluster(
-                cluster_id=0,
-                memories=memories,
-                centroid=centroid,
-                timestamp_range=(
-                    min(m.get("timestamp", 0) for m in memories),
-                    max(m.get("timestamp", 0) for m in memories),
-                ),
-            )]
+            return [
+                MemoryCluster(
+                    cluster_id=0,
+                    memories=memories,
+                    centroid=centroid,
+                    timestamp_range=(
+                        min(m.get("timestamp", 0) for m in memories),
+                        max(m.get("timestamp", 0) for m in memories),
+                    ),
+                )
+            ]
 
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         labels = kmeans.fit_predict(embeddings)
 
         clusters = []
         for cluster_id in range(n_clusters):
-            cluster_memories = [memories[i] for i in range(len(memories)) if labels[i] == cluster_id]
+            cluster_memories = [
+                memories[i] for i in range(len(memories)) if labels[i] == cluster_id
+            ]
             if len(cluster_memories) >= self.min_cluster_size:
                 centroid = kmeans.cluster_centers_[cluster_id].tolist()
-                clusters.append(MemoryCluster(
-                    cluster_id=cluster_id,
-                    memories=cluster_memories,
-                    centroid=centroid,
-                    timestamp_range=(
-                        min(m.get("timestamp", 0) for m in cluster_memories),
-                        max(m.get("timestamp", 0) for m in cluster_memories),
-                    ),
-                ))
+                clusters.append(
+                    MemoryCluster(
+                        cluster_id=cluster_id,
+                        memories=cluster_memories,
+                        centroid=centroid,
+                        timestamp_range=(
+                            min(m.get("timestamp", 0) for m in cluster_memories),
+                            max(m.get("timestamp", 0) for m in cluster_memories),
+                        ),
+                    )
+                )
 
         # Handle outliers (memories in small clusters)
-        outlier_memories = [memories[i] for i in range(len(memories)) 
-                           if labels[i] not in [c.cluster_id for c in clusters]]
+        outlier_memories = [
+            memories[i]
+            for i in range(len(memories))
+            if labels[i] not in [c.cluster_id for c in clusters]
+        ]
         if outlier_memories:
-            centroid = np.mean([embeddings[i] for i in range(len(memories)) 
-                               if labels[i] not in [c.cluster_id for c in clusters]], axis=0).tolist()
-            clusters.append(MemoryCluster(
-                cluster_id=n_clusters,
-                memories=outlier_memories,
-                centroid=centroid,
-                timestamp_range=(
-                    min(m.get("timestamp", 0) for m in outlier_memories),
-                    max(m.get("timestamp", 0) for m in outlier_memories),
-                ),
-            ))
+            centroid = np.mean(
+                [
+                    embeddings[i]
+                    for i in range(len(memories))
+                    if labels[i] not in [c.cluster_id for c in clusters]
+                ],
+                axis=0,
+            ).tolist()
+            clusters.append(
+                MemoryCluster(
+                    cluster_id=n_clusters,
+                    memories=outlier_memories,
+                    centroid=centroid,
+                    timestamp_range=(
+                        min(m.get("timestamp", 0) for m in outlier_memories),
+                        max(m.get("timestamp", 0) for m in outlier_memories),
+                    ),
+                )
+            )
 
         return clusters
 
     async def _summarize_cluster(self, cluster: MemoryCluster) -> MemoryCluster:
         """Generate LLM summary for a memory cluster"""
         # Prepare memory texts
-        memory_texts = "\n---\n".join([
-            f"[{m.get('timestamp', 0)}] {m.get('content', '')}"
-            for m in cluster.memories
-        ])
+        memory_texts = "\n---\n".join(
+            [f"[{m.get('timestamp', 0)}] {m.get('content', '')}" for m in cluster.memories]
+        )
 
         prompt = f"""Summarize the following related memories into key insights.
 Preserve important facts, decisions, and outcomes.
@@ -258,7 +277,7 @@ Provide a concise summary (max 500 words) and extract key tags:"""
 
         try:
             response = await self.llm.ainvoke(prompt)
-            summary = response.content if hasattr(response, 'content') else str(response)
+            summary = response.content if hasattr(response, "content") else str(response)
         except Exception as e:
             logger.error(f"LLM summarization failed: {e}")
             summary = f"Cluster {cluster.cluster_id}: {len(cluster.memories)} memories (auto-summarization failed)"
@@ -278,15 +297,27 @@ Provide a concise summary (max 500 words) and extract key tags:"""
     def _extract_tags(self, text: str) -> List[str]:
         """Extract key tags from summary text"""
         # Simple implementation - could use NLP
-        keywords = ["decision", "error", "success", "config", "api", "database", 
-                   "auth", "deploy", "test", "bug", "feature", "refactor"]
+        keywords = [
+            "decision",
+            "error",
+            "success",
+            "config",
+            "api",
+            "database",
+            "auth",
+            "deploy",
+            "test",
+            "bug",
+            "feature",
+            "refactor",
+        ]
         found = [k for k in keywords if k.lower() in text.lower()]
         return found[:5]
 
     async def _store_summary(self, agent_id: str, cluster: MemoryCluster) -> str:
         """Store cluster summary as long-term semantic memory"""
         from src.memory.memory_fabric import MemoryEntry, MemoryType
-        
+
         entry = MemoryEntry(
             content=cluster.summary,
             memory_type=MemoryType.SEMANTIC,
@@ -361,18 +392,20 @@ class CompressionScheduler:
         """Check if compression needed and execute"""
         # Get working memory stats
         wm_stats = await self._get_working_memory_stats(agent_id)
-        
+
         if wm_stats["token_usage"] / wm_stats["max_tokens"] > self.trigger_threshold:
-            logger.info(f"Triggering compression for agent {agent_id} "
-                       f"({wm_stats['token_usage']}/{wm_stats['max_tokens']} tokens)")
-            
+            logger.info(
+                f"Triggering compression for agent {agent_id} "
+                f"({wm_stats['token_usage']}/{wm_stats['max_tokens']} tokens)"
+            )
+
             # Get working memories
             memories = await self._get_working_memories(agent_id)
-            
+
             # Compress
             await self.compressor.compress(agent_id, memories)
             return True
-        
+
         return False
 
     async def _get_working_memory_stats(self, agent_id: str) -> Dict[str, Any]:

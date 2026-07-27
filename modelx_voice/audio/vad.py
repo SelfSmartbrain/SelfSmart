@@ -27,8 +27,8 @@ class VoiceActivityDetector:
         if len(self._buffer) < self.frame_size:
             return False
 
-        frame = self._buffer[:self.frame_size]
-        self._buffer = self._buffer[self.frame_size:]
+        frame = self._buffer[: self.frame_size]
+        self._buffer = self._buffer[self.frame_size :]
 
         try:
             return self.vad.is_speech(frame.tobytes(), self.sample_rate)

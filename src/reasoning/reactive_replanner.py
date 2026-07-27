@@ -18,15 +18,17 @@ logger = logging.getLogger(__name__)
 
 class ReplanStrategy(Enum):
     """Re-planning strategies"""
-    INCREMENTAL = "incremental"      # Adjust remaining steps
-    FROM_CURRENT = "from_current"    # Re-plan from current state
-    FULL_REPLAN = "full_replan"      # Complete re-plan
-    GOAL_ADJUST = "goal_adjust"      # Adjust goal then re-plan
+
+    INCREMENTAL = "incremental"  # Adjust remaining steps
+    FROM_CURRENT = "from_current"  # Re-plan from current state
+    FULL_REPLAN = "full_replan"  # Complete re-plan
+    GOAL_ADJUST = "goal_adjust"  # Adjust goal then re-plan
 
 
 @dataclass
 class ReplanContext:
     """Context for re-planning"""
+
     plan_id: str
     current_step: int
     current_state: Dict[str, Any]
@@ -42,6 +44,7 @@ class ReplanContext:
 @dataclass
 class ReplanResult:
     """Result of re-planning"""
+
     success: bool
     new_plan_id: Optional[str] = None
     strategy_used: Optional[ReplanStrategy] = None
@@ -53,7 +56,7 @@ class ReplanResult:
 class ReactiveRePlanner:
     """
     Generates corrective plans when environmental drift is detected.
-    
+
     Strategies:
     - Incremental: Modify only affected remaining actions
     - From Current: Re-plan from current state to goal
@@ -86,25 +89,25 @@ class ReactiveRePlanner:
     ) -> ReplanResult:
         """
         Determine if re-planning needed and execute.
-        
+
         Args:
             context: Re-planning context with drift info
             strategy: Override default strategy
-            
+
         Returns:
             ReplanResult with new plan or error
         """
         strategy = strategy or self.default_strategy
-        
+
         # Check if any drift signals warrant re-planning
         if not self._should_replan(context.drift_signals):
             return ReplanResult(
                 success=True,
                 changes_summary="No significant drift requiring re-plan",
             )
-        
+
         logger.info(f"Re-planning for plan {context.plan_id} using {strategy.value} strategy")
-        
+
         try:
             if strategy == ReplanStrategy.INCREMENTAL:
                 result = await self._incremental_replan(context)
@@ -116,12 +119,12 @@ class ReactiveRePlanner:
                 result = await self._goal_adjust_replan(context)
             else:
                 result = await self._replan_from_current(context)
-            
+
             # Record re-plan
             self._record_replan(context.plan_id, strategy, result)
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Re-planning failed: {e}")
             return ReplanResult(
@@ -133,15 +136,15 @@ class ReactiveRePlanner:
         """Determine if drift signals warrant re-planning"""
         if not drift_signals:
             return False
-        
+
         # Re-plan if any high-severity signal
         for signal in drift_signals:
-            severity = getattr(signal, 'severity', 0)
+            severity = getattr(signal, "severity", 0)
             if severity >= 0.5:
                 return True
-        
+
         # Or multiple medium signals
-        medium_count = sum(1 for s in drift_signals if getattr(s, 'severity', 0) >= 0.3)
+        medium_count = sum(1 for s in drift_signals if getattr(s, "severity", 0) >= 0.3)
         return medium_count >= 2
 
     async def _incremental_replan(self, context: ReplanContext) -> ReplanResult:
@@ -149,8 +152,8 @@ class ReactiveRePlanner:
         # Identify affected actions from drift signals
         affected = set()
         for signal in context.drift_signals:
-            affected.update(getattr(signal, 'affected_actions', []))
-        
+            affected.update(getattr(signal, "affected_actions", []))
+
         # Filter remaining actions to only affected ones
         new_remaining = []
         for action in context.remaining_actions:
@@ -160,14 +163,14 @@ class ReactiveRePlanner:
                 new_remaining.append(new_action)
             else:
                 new_remaining.append(action)
-        
+
         # Create updated plan
         new_plan = await self._create_updated_plan(
             context,
             new_remaining,
             "Incremental adjustment of affected actions",
         )
-        
+
         return ReplanResult(
             success=True,
             new_plan_id=new_plan.plan_id if new_plan else None,
@@ -187,20 +190,20 @@ class ReactiveRePlanner:
             "constraints": context.constraints,
             "replan_reason": "Environmental drift detected",
         }
-        
+
         # Generate new plan from current state
         new_plan = await self.planner.create_plan(
             goal=context.original_goal,
             context=replan_context,
             strategy="hierarchical",
         )
-        
+
         if not new_plan:
             return ReplanResult(
                 success=False,
                 error="Planner failed to generate new plan",
             )
-        
+
         return ReplanResult(
             success=True,
             new_plan_id=new_plan.plan_id,
@@ -213,7 +216,7 @@ class ReactiveRePlanner:
         """Complete re-plan with drift-informed context"""
         # Use LLM to analyze drift and adjust planning approach
         drift_summary = self._summarize_drift(context.drift_signals)
-        
+
         enhanced_context = {
             **context.metadata,
             "current_state": context.current_state,
@@ -224,19 +227,19 @@ class ReactiveRePlanner:
             "lessons_learned": await self._extract_lessons(context),
             "replan_reason": "Significant environmental drift requiring full re-plan",
         }
-        
+
         new_plan = await self.planner.create_plan(
             goal=context.original_goal,
             context=enhanced_context,
             strategy="hierarchical",
         )
-        
+
         if not new_plan:
             return ReplanResult(
                 success=False,
                 error="Planner failed to generate new plan",
             )
-        
+
         return ReplanResult(
             success=True,
             new_plan_id=new_plan.plan_id,
@@ -249,7 +252,7 @@ class ReactiveRePlanner:
         """Adjust goal based on drift, then re-plan"""
         # Use LLM to determine adjusted goal
         drift_summary = self._summarize_drift(context.drift_signals)
-        
+
         prompt = f"""The original goal may need adjustment due to environmental drift.
 
 Original Goal: {context.original_goal}
@@ -265,19 +268,19 @@ If partially achievable, provide a modified scope.
 If obsolete, provide a new relevant goal.
 
 Adjusted Goal:"""
-        
+
         try:
             response = await self.llm.ainvoke(prompt)
-            adjusted_goal = response.content if hasattr(response, 'content') else str(response)
+            adjusted_goal = response.content if hasattr(response, "content") else str(response)
             adjusted_goal = adjusted_goal.strip()
         except Exception as e:
             logger.error(f"Goal adjustment failed: {e}")
             adjusted_goal = context.original_goal
-        
+
         if adjusted_goal == context.original_goal:
             # No adjustment needed, fall back to from_current
             return await self._replan_from_current(context)
-        
+
         # Re-plan with adjusted goal
         enhanced_context = {
             **context.metadata,
@@ -288,19 +291,19 @@ Adjusted Goal:"""
             "original_goal": context.original_goal,
             "goal_adjustment_reason": drift_summary,
         }
-        
+
         new_plan = await self.planner.create_plan(
             goal=adjusted_goal,
             context=enhanced_context,
             strategy="hierarchical",
         )
-        
+
         if not new_plan:
             return ReplanResult(
                 success=False,
                 error="Planner failed to generate plan for adjusted goal",
             )
-        
+
         return ReplanResult(
             success=True,
             new_plan_id=new_plan.plan_id,
@@ -324,10 +327,10 @@ Resources: {context.resources}
 Constraints: {context.constraints}
 
 Provide updated action parameters:"""
-        
+
         try:
             response = await self.llm.ainvoke(prompt)
-            adapted = response.content if hasattr(response, 'content') else str(response)
+            adapted = response.content if hasattr(response, "content") else str(response)
             # Parse adapted action (simplified)
             return {**action, "adapted": True, "adaptation_note": adapted}
         except Exception:
@@ -355,31 +358,31 @@ Provide updated action parameters:"""
         """Summarize drift signals for context"""
         if not drift_signals:
             return "No drift signals"
-        
+
         summaries = []
         for signal in drift_signals:
-            dtype = getattr(signal, 'drift_type', 'unknown')
-            desc = getattr(signal, 'description', '')
-            severity = getattr(signal, 'severity', 0)
+            dtype = getattr(signal, "drift_type", "unknown")
+            desc = getattr(signal, "description", "")
+            severity = getattr(signal, "severity", 0)
             summaries.append(f"[{dtype.value} sev={severity:.2f}] {desc}")
-        
+
         return "; ".join(summaries)
 
     async def _extract_lessons(self, context: ReplanContext) -> List[str]:
         """Extract lessons from drift for future planning"""
         lessons = []
-        
+
         for signal in context.drift_signals:
-            dtype = getattr(signal, 'drift_type', None)
+            dtype = getattr(signal, "drift_type", None)
             if dtype:
                 lessons.append(f"Monitor for {dtype.value} in similar contexts")
-        
+
         # Add resource lessons
         if context.resources:
             for resource, amount in context.resources.items():
                 if amount < 10:  # Arbitrary low threshold
                     lessons.append(f"Resource {resource} tends to deplete faster than expected")
-        
+
         return lessons
 
     def _record_replan(
@@ -389,15 +392,17 @@ Provide updated action parameters:"""
         result: ReplanResult,
     ) -> None:
         """Record re-plan in history"""
-        self._replan_history.append({
-            "original_plan_id": original_plan_id,
-            "new_plan_id": result.new_plan_id,
-            "strategy": strategy.value,
-            "success": result.success,
-            "changes_summary": result.changes_summary,
-            "timestamp": datetime.now().timestamp(),
-            "error": result.error,
-        })
+        self._replan_history.append(
+            {
+                "original_plan_id": original_plan_id,
+                "new_plan_id": result.new_plan_id,
+                "strategy": strategy.value,
+                "success": result.success,
+                "changes_summary": result.changes_summary,
+                "timestamp": datetime.now().timestamp(),
+                "error": result.error,
+            }
+        )
 
     def get_replan_history(self, plan_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get re-planning history"""
@@ -433,7 +438,7 @@ class ReplanningCoordinator:
         """Start integrated drift monitoring with auto-replan"""
         # Register with drift detector
         await self.drift_detector.start_monitoring(plan_id, get_state_func, get_context_func)
-        
+
         # Store callback
         self._active_monitors[plan_id] = {
             "on_replan": on_replan,
@@ -449,11 +454,13 @@ class ReplanningCoordinator:
     ) -> Optional[Any]:
         """Check for drift and re-plan if needed"""
         # Check drift
-        signals = await self.drift_detector.check_drift(plan_id, current_step, current_state, context)
-        
+        signals = await self.drift_detector.check_drift(
+            plan_id, current_step, current_state, context
+        )
+
         if not signals:
             return None
-        
+
         # Build replan context
         replan_context = ReplanContext(
             plan_id=plan_id,
@@ -467,19 +474,19 @@ class ReplanningCoordinator:
             constraints=context.get("constraints", []),
             metadata=context,
         )
-        
+
         # Re-plan
         result = await self.replanner.maybe_replan(replan_context)
-        
+
         if result.success and result.new_plan_id:
             # Notify callback
             monitor = self._active_monitors.get(plan_id)
             if monitor and monitor["on_replan"]:
                 await monitor["on_replan"](result.new_plan_id, result)
-            
+
             logger.info(f"Auto-replan executed for {plan_id}: {result.changes_summary}")
             return result
-        
+
         return None
 
     async def stop_monitoring_plan(self, plan_id: str) -> None:

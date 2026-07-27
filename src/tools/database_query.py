@@ -76,6 +76,7 @@ _STACKED_QUERY_RE = re.compile(
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class DatabaseQueryInput(BaseModel):
     """Input schema for DatabaseQueryTool."""
 
@@ -94,6 +95,7 @@ class DatabaseQueryInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class DatabaseQueryTool(AgentTool):
     """Execute read-only SQL queries against PostgreSQL.
@@ -187,13 +189,11 @@ class DatabaseQueryTool(AgentTool):
 
         # --- Get connection from pool ---
         pool = await self._get_pool()
-        
+
         async with pool.acquire() as conn:
             try:
                 # Set a statement-level timeout
-                await conn.execute(
-                    f"SET statement_timeout = {self._statement_timeout_ms}"
-                )
+                await conn.execute(f"SET statement_timeout = {self._statement_timeout_ms}")
 
                 # Apply LIMIT safety net if not already present
                 effective_query = self._apply_limit(query)
@@ -202,9 +202,7 @@ class DatabaseQueryTool(AgentTool):
                 if params:
                     # asyncpg uses $1, $2, ... for positional params.
                     # We convert named params to positional.
-                    effective_query, positional = self._named_to_positional(
-                        effective_query, params
-                    )
+                    effective_query, positional = self._named_to_positional(effective_query, params)
                     rows = await conn.fetch(effective_query, *positional)
                 else:
                     rows = await conn.fetch(effective_query)
@@ -311,9 +309,7 @@ class DatabaseQueryTool(AgentTool):
         return query
 
     @staticmethod
-    def _named_to_positional(
-        query: str, params: dict[str, Any]
-    ) -> tuple[str, list[Any]]:
+    def _named_to_positional(query: str, params: dict[str, Any]) -> tuple[str, list[Any]]:
         """Convert ``:name``-style named parameters to ``$N`` positional style.
 
         Args:

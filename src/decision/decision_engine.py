@@ -25,6 +25,7 @@ logger = get_logger(__name__)
 
 class DecisionStatus(str, Enum):
     """Status of a decision."""
+
     PENDING = "pending"
     EVALUATING = "evaluating"
     DECIDED = "decided"
@@ -36,6 +37,7 @@ class DecisionStatus(str, Enum):
 @dataclass
 class DecisionContext:
     """Context in which a decision is made."""
+
     current_state: Dict[str, Any] = field(default_factory=dict)
     available_resources: Dict[str, Any] = field(default_factory=dict)
     constraints: List[str] = field(default_factory=list)
@@ -48,6 +50,7 @@ class DecisionContext:
 @dataclass
 class DecisionOption:
     """A potential decision option."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     description: str = ""
     action: Dict[str, Any] = field(default_factory=dict)
@@ -59,7 +62,7 @@ class DecisionOption:
     benefits: List[str] = field(default_factory=list)
     drawbacks: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -79,6 +82,7 @@ class DecisionOption:
 @dataclass
 class Decision:
     """A strategic decision."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     query: str = ""
     context: DecisionContext = field(default_factory=DecisionContext)
@@ -92,7 +96,7 @@ class Decision:
     executed_at: Optional[datetime] = None
     outcome: Optional[Dict[str, Any]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -120,7 +124,7 @@ class Decision:
 
 class DecisionEngine:
     """Core decision engine for strategic decision-making."""
-    
+
     def __init__(
         self,
         option_generator: Optional[OptionGenerator] = None,
@@ -134,7 +138,7 @@ class DecisionEngine:
         self.decision_memory = decision_memory or DecisionMemory()
         self.active_decisions: Dict[str, Decision] = {}
         logger.info("DecisionEngine initialized")
-    
+
     def make_decision(
         self,
         query: str,
@@ -143,10 +147,10 @@ class DecisionEngine:
     ) -> Decision:
         """Make a strategic decision given a query and context."""
         logger.info(f"Making decision for query: {query}")
-        
+
         context = context or DecisionContext()
         decision = Decision(query=query, context=context)
-        
+
         # Generate options
         options = self.option_generator.generate_options(
             query=query,
@@ -154,7 +158,7 @@ class DecisionEngine:
             num_options=num_options,
         )
         decision.options = options
-        
+
         # Evaluate options
         decision.status = DecisionStatus.EVALUATING
         for option in decision.options:
@@ -166,7 +170,7 @@ class DecisionEngine:
             option.risk_score = evaluation["risk_score"]
             option.confidence = evaluation["confidence"]
             option.expected_outcome = evaluation["expected_outcome"]
-        
+
         # Assess risks
         for option in decision.options:
             risk_assessment = self.risk_engine.assess_risk(
@@ -175,7 +179,7 @@ class DecisionEngine:
             )
             option.risk_score = risk_assessment["overall_risk"]
             option.metadata["risk_details"] = risk_assessment
-        
+
         # Select best option
         selected_option = self._select_best_option(decision.options, context)
         decision.selected_option_id = selected_option.id
@@ -183,14 +187,14 @@ class DecisionEngine:
         decision.confidence = selected_option.confidence
         decision.status = DecisionStatus.DECIDED
         decision.decided_at = datetime.now(timezone.utc)
-        
+
         # Store decision
         self.active_decisions[decision.id] = decision
         self.decision_memory.store_decision(decision)
-        
+
         logger.info(f"Decision made: {decision.id} -> {selected_option.id}")
         return decision
-    
+
     def _select_best_option(
         self,
         options: List[DecisionOption],
@@ -199,22 +203,22 @@ class DecisionEngine:
         """Select the best option based on utility and risk tolerance."""
         if not options:
             raise ValueError("No options to select from")
-        
+
         # Calculate adjusted score considering risk tolerance
         best_option = None
         best_score = -float("inf")
-        
+
         for option in options:
             # Adjust utility by risk based on risk tolerance
             risk_adjustment = option.risk_score * (1.0 - context.risk_tolerance)
             adjusted_score = option.utility_score - risk_adjustment
-            
+
             if adjusted_score > best_score:
                 best_score = adjusted_score
                 best_option = option
-        
+
         return best_option
-    
+
     def _generate_reasoning(
         self,
         selected_option: DecisionOption,
@@ -226,70 +230,70 @@ class DecisionEngine:
             f"Risk score: {selected_option.risk_score:.2f}",
             f"Confidence: {selected_option.confidence:.2f}",
         ]
-        
+
         if selected_option.benefits:
             reasoning_parts.append(f"Key benefits: {', '.join(selected_option.benefits[:3])}")
-        
+
         if selected_option.drawbacks:
             reasoning_parts.append(f"Considerations: {', '.join(selected_option.drawbacks[:2])}")
-        
+
         return ". ".join(reasoning_parts)
-    
+
     def execute_decision(self, decision_id: str) -> Dict[str, Any]:
         """Execute a selected decision."""
         if decision_id not in self.active_decisions:
             raise ValueError(f"Decision {decision_id} not found")
-        
+
         decision = self.active_decisions[decision_id]
-        
+
         if decision.status != DecisionStatus.DECIDED:
             raise ValueError(f"Decision {decision_id} not in decided state")
-        
+
         logger.info(f"Executing decision: {decision_id}")
-        
+
         # In a real implementation, this would execute the action
         decision.status = DecisionStatus.EXECUTED
         decision.executed_at = datetime.now(timezone.utc)
-        
+
         # Store execution
         self.decision_memory.update_decision(decision)
-        
+
         return {
             "decision_id": decision_id,
             "status": "executed",
             "executed_at": decision.executed_at.isoformat(),
         }
-    
+
     def record_outcome(self, decision_id: str, outcome: Dict[str, Any]) -> None:
         """Record the outcome of a decision."""
         if decision_id not in self.active_decisions:
             raise ValueError(f"Decision {decision_id} not found")
-        
+
         decision = self.active_decisions[decision_id]
         decision.outcome = outcome
-        
+
         # Update memory with outcome
         self.decision_memory.record_outcome(decision_id, outcome)
-        
+
         logger.info(f"Recorded outcome for decision: {decision_id}")
-    
+
     def get_decision(self, decision_id: str) -> Optional[Decision]:
         """Get a decision by ID."""
         return self.active_decisions.get(decision_id)
-    
+
     def list_decisions(self, status: Optional[DecisionStatus] = None) -> List[Decision]:
         """List all decisions, optionally filtered by status."""
         if status:
             return [d for d in self.active_decisions.values() if d.status == status]
         return list(self.active_decisions.values())
-    
+
     def get_decision_statistics(self) -> Dict[str, Any]:
         """Get statistics about decisions."""
         decisions = list(self.active_decisions.values())
-        
+
         if not decisions:
             return {"total_decisions": 0}
-        
+
         return {
             "total_decisions": len(decisions),
             "by_status": {

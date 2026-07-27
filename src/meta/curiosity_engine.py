@@ -17,7 +17,9 @@ class CuriosityEngine:
     def __init__(self, repo: BaseRepository[CuriosityScore]) -> None:
         self.repo = repo
 
-    def calculate_score(self, novelty: float, uncertainty: float, impact: float, importance: float) -> float:
+    def calculate_score(
+        self, novelty: float, uncertainty: float, impact: float, importance: float
+    ) -> float:
         """
         Calculate overall curiosity score.
         Formula: curiosity_score = novelty + uncertainty + impact + importance
@@ -34,22 +36,30 @@ class CuriosityEngine:
         importance = gap.get("importance", 0.5)
         confidence = gap.get("confidence", 0.5)
         uncertainty = 1.0 - confidence
-        
+
         # Heuristics for novelty and impact
         novelty = 0.8  # Assume new gaps are fairly novel
         impact = importance * 1.2  # High importance implies high impact
-        
-        impact = min(1.0, impact) # Cap at 1.0
-        
+
+        impact = min(1.0, impact)  # Cap at 1.0
+
         score = self.calculate_score(novelty, uncertainty, impact, importance)
-        
+
         logger.debug(f"Evaluated gap for domain {gap.get('domain')} -> Curiosity: {score:.2f}")
         return score
 
-    async def persist_score(self, target_id: str, target_type: str, novelty: float, uncertainty: float, impact: float, importance: float) -> CuriosityScore:
+    async def persist_score(
+        self,
+        target_id: str,
+        target_type: str,
+        novelty: float,
+        uncertainty: float,
+        impact: float,
+        importance: float,
+    ) -> CuriosityScore:
         """Save the calculated score to the database."""
         total_score = self.calculate_score(novelty, uncertainty, impact, importance)
-        
+
         score_record = await self.repo.create(
             target_id=target_id,
             target_type=target_type,
@@ -57,6 +67,6 @@ class CuriosityEngine:
             uncertainty=uncertainty,
             impact=impact,
             importance=importance,
-            total_score=total_score
+            total_score=total_score,
         )
         return score_record

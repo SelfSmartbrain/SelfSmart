@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+
 class FailureCreate(BaseModel):
     task_id: UUID
     error_message: str
@@ -13,10 +14,12 @@ class FailureCreate(BaseModel):
     severity: str
     model_config = {"from_attributes": True}
 
+
 class FailureUpdate(BaseModel):
     resolved: Optional[bool] = None
     resolution_notes: Optional[str] = None
     model_config = {"from_attributes": True}
+
 
 class FailureResponse(BaseModel):
     id: UUID

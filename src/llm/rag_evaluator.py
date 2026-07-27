@@ -8,10 +8,12 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class EvalCase(BaseModel):
     query: str
     ground_truth: str
     context_required: bool = True
+
 
 class EvalResult(BaseModel):
     query: str
@@ -20,13 +22,15 @@ class EvalResult(BaseModel):
     ground_truth: str
     retrieved_contexts: List[str]
     faithfulness_score: float  # 0 to 1
-    relevance_score: float      # 0 to 1
+    relevance_score: float  # 0 to 1
     latency: float
+
 
 class RAGEvaluator:
     """
     Evaluates the RAG pipeline for quality and safety.
     """
+
     def __init__(self, rag_service: RAGService, llm_client: GeminiClient):
         self.rag_service = rag_service
         self.llm_client = llm_client
@@ -37,7 +41,7 @@ class RAGEvaluator:
         In a production setting, this would use a 'Judge LLM' or NLI model.
         """
         if not contexts:
-            return 1.0 # Nothing to contradict
+            return 1.0  # Nothing to contradict
 
         combined_context = "\n".join(contexts)
 
@@ -61,6 +65,7 @@ class RAGEvaluator:
             score_str = judge_response.content.strip()
             # Extract number
             import re
+
             match = re.search(r"([0-1]\.\d+|[0-1])", score_str)
             return float(match.group(1)) if match else 0.5
         except Exception as e:
@@ -83,6 +88,7 @@ class RAGEvaluator:
             judge_response = await self.llm_client.chat([Message(role="user", content=prompt)])
             score_str = judge_response.content.strip()
             import re
+
             match = re.search(r"([0-1]\.\d+|[0-1])", score_str)
             return float(match.group(1)) if match else 0.5
         except Exception as e:
@@ -96,26 +102,32 @@ class RAGEvaluator:
                 start_time = time.time()
 
                 # 1. RAG Step
-                enhanced_query, knowledge = await self.rag_service.enhance_query(case.query, llm_client=self.llm_client)
+                enhanced_query, knowledge = await self.rag_service.enhance_query(
+                    case.query, llm_client=self.llm_client
+                )
                 contexts = [k.content for k in knowledge]
 
                 # 2. Generation Step
-                llm_response = await self.llm_client.chat([Message(role="user", content=enhanced_query)])
+                llm_response = await self.llm_client.chat(
+                    [Message(role="user", content=enhanced_query)]
+                )
                 latency = time.time() - start_time
 
                 # 3. Scoring
                 faithfulness = await self.evaluate_faithfulness(llm_response.content, contexts)
                 relevance = await self.evaluate_relevance(case.query, llm_response.content)
 
-                results.append(EvalResult(
-                    query=case.query,
-                    context_required=case.context_required,
-                    response=llm_response.content,
-                    ground_truth=case.ground_truth,
-                    retrieved_contexts=contexts,
-                    faithfulness_score=faithfulness,
-                    relevance_score=relevance,
-                    latency=latency
-                ))
+                results.append(
+                    EvalResult(
+                        query=case.query,
+                        context_required=case.context_required,
+                        response=llm_response.content,
+                        ground_truth=case.ground_truth,
+                        retrieved_contexts=contexts,
+                        faithfulness_score=faithfulness,
+                        relevance_score=relevance,
+                        latency=latency,
+                    )
+                )
 
         return results

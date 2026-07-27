@@ -25,6 +25,7 @@ _USER_AGENT = "AutonomousAgentPlatform/0.1.0 (https://github.com/agent-platform)
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class WikipediaSearchInput(BaseModel):
     """Input schema for WikipediaSearchTool."""
 
@@ -46,6 +47,7 @@ class WikipediaSearchInput(BaseModel):
 # Tool implementation
 # ---------------------------------------------------------------------------
 
+
 class WikipediaSearchTool(AgentTool):
     """Look up Wikipedia articles.
 
@@ -64,8 +66,7 @@ class WikipediaSearchTool(AgentTool):
 
     name: str = "wikipedia_search"
     description: str = (
-        "Search Wikipedia for articles. Returns page title, summary, "
-        "full URL, and categories."
+        "Search Wikipedia for articles. Returns page title, summary, " "full URL, and categories."
     )
     args_schema: type[BaseModel] = WikipediaSearchInput
     timeout_seconds: float = 30.0
@@ -126,10 +127,7 @@ class WikipediaSearchTool(AgentTool):
         section_titles = [s.title for s in page.sections]
 
         # Extract categories, stripping the "Category:" prefix
-        categories = sorted(
-            cat.replace("Category:", "")
-            for cat in page.categories.keys()
-        )
+        categories = sorted(cat.replace("Category:", "") for cat in page.categories.keys())
 
         # Truncate summary to a reasonable length to keep context lean
         summary = page.summary[:3000] if page.summary else ""

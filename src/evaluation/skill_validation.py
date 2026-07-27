@@ -7,6 +7,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class SkillValidation(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     skills_created: int
@@ -15,6 +16,7 @@ class SkillValidation(BaseModel):
     success_rate: float
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     model_config = {"from_attributes": True}
+
 
 class SkillValidator:
     async def create_skill(self) -> UUID:
@@ -50,5 +52,5 @@ class SkillValidator:
             skills_created=created,
             skills_stored=stored,
             skills_reused=reused,
-            success_rate=success_rate
+            success_rate=success_rate,
         )

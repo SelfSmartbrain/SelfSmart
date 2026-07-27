@@ -261,7 +261,7 @@ class OrchestratorAgent:
         graph.add_node("reflect", self._reflect)
         graph.add_node("extract_learnings", self._extract_learnings)
         graph.add_node("update_strategies", self._update_strategies)
-        
+
         # Phase 6 Autonomous Research Nodes
         graph.add_node("knowledge_gap_detection", self._knowledge_gap_detection)
         graph.add_node("goal_generation", self._goal_generation)
@@ -269,7 +269,7 @@ class OrchestratorAgent:
         graph.add_node("research_director", self._research_director)
         graph.add_node("research_portfolio", self._research_portfolio)
         graph.add_node("knowledge_graph_update", self._knowledge_graph_update)
-        
+
         # Phase 7 Self-Improving Intelligence Nodes
         graph.add_node("cognition_reflection", cognition_reflection_node)
         graph.add_node("failure_analysis", failure_analysis_node)
@@ -278,7 +278,7 @@ class OrchestratorAgent:
         graph.add_node("skill_discovery", skill_discovery_node)
         graph.add_node("record_metrics", metrics_node)
         graph.add_node("self_improvement", self_improvement_node)
-        
+
         # Phase 8 Autonomous Tool Creation Nodes
         graph.add_node("capability_gap_detection", capability_gap_detection_node)
         graph.add_node("tool_specification", tool_specification_node)
@@ -286,7 +286,7 @@ class OrchestratorAgent:
         graph.add_node("tool_validation", tool_validation_node)
         graph.add_node("tool_registration", tool_registration_node)
         graph.add_node("tool_evolution", tool_evolution_node)
-        
+
         # Phase 9 World Model Nodes
         graph.add_node("pattern_discovery", pattern_discovery_node)
         graph.add_node("causal_reasoning", causal_reasoning_node)
@@ -296,7 +296,7 @@ class OrchestratorAgent:
         graph.add_node("belief_update", belief_update_node)
         graph.add_node("prediction_generation", prediction_generation_node)
         graph.add_node("world_model_update", world_model_update_node)
-        
+
         # Phase 10 Architecture Intelligence Nodes
         graph.add_node("architecture_analysis", architecture_analysis_node)
         graph.add_node("dependency_analysis", dependency_analysis_node)
@@ -306,7 +306,7 @@ class OrchestratorAgent:
         graph.add_node("candidate_generation", candidate_generation_node)
         graph.add_node("sandbox_benchmarking", sandbox_benchmarking_node)
         graph.add_node("benchmark_reporting", benchmark_reporting_node)
-        
+
         # Phase 10G Evolution Nodes
         graph.add_node("genome_generation", genome_generation_node)
         graph.add_node("mutation_generation", mutation_generation_node)
@@ -316,7 +316,7 @@ class OrchestratorAgent:
         graph.add_node("rollback_check", rollback_check_node)
         graph.add_node("fitness_tracking", fitness_tracking_node)
         graph.add_node("generation_tracking", generation_tracking_node)
-        
+
         # Phase 11 Capability Nodes
         graph.add_node("capability_evaluation", capability_evaluation_node)
         graph.add_node("benchmark_execution", benchmark_execution_node)
@@ -326,7 +326,7 @@ class OrchestratorAgent:
         graph.add_node("regression_detection", regression_detection_node)
         graph.add_node("program_evaluation", program_evaluation_node)
         graph.add_node("capability_reporting", capability_reporting_node)
-        
+
         # Phase 12 Project Nodes
         graph.add_node("environment_analysis", environment_analysis_node)
         graph.add_node("opportunity_detection", opportunity_detection_node)
@@ -338,7 +338,7 @@ class OrchestratorAgent:
         graph.add_node("failure_recovery", failure_recovery_node)
         graph.add_node("impact_analysis", impact_analysis_node)
         graph.add_node("project_completion", project_completion_node)
-        
+
         graph.add_node("generate_report", self._generate_report)
 
         # Define edges
@@ -382,7 +382,7 @@ class OrchestratorAgent:
         graph.add_edge("dynamic_replan", "classify_task")
         graph.add_edge("reflect", "extract_learnings")
         graph.add_edge("extract_learnings", "update_strategies")
-        
+
         # Phase 6: Autonomous Research Pipeline
         graph.add_edge("update_strategies", "knowledge_gap_detection")
         graph.add_edge("knowledge_gap_detection", "goal_generation")
@@ -399,7 +399,7 @@ class OrchestratorAgent:
         graph.add_edge("strategy_optimization", "skill_discovery")
         graph.add_edge("skill_discovery", "record_metrics")
         graph.add_edge("record_metrics", "self_improvement")
-        
+
         # Phase 8: Capability Evolution Pipeline
         graph.add_edge("self_improvement", "capability_gap_detection")
         graph.add_edge("capability_gap_detection", "tool_specification")
@@ -407,7 +407,7 @@ class OrchestratorAgent:
         graph.add_edge("tool_generation", "tool_validation")
         graph.add_edge("tool_validation", "tool_registration")
         graph.add_edge("tool_registration", "tool_evolution")
-        
+
         # Phase 9: World Model Pipeline
         graph.add_edge("tool_evolution", "pattern_discovery")
         graph.add_edge("pattern_discovery", "causal_reasoning")
@@ -417,7 +417,7 @@ class OrchestratorAgent:
         graph.add_edge("experiment_execution", "belief_update")
         graph.add_edge("belief_update", "prediction_generation")
         graph.add_edge("prediction_generation", "world_model_update")
-        
+
         # Phase 10: Architecture Intelligence Pipeline
         graph.add_edge("world_model_update", "architecture_analysis")
         graph.add_edge("architecture_analysis", "dependency_analysis")
@@ -427,7 +427,7 @@ class OrchestratorAgent:
         graph.add_edge("arch_hypothesis_generation", "candidate_generation")
         graph.add_edge("candidate_generation", "sandbox_benchmarking")
         graph.add_edge("sandbox_benchmarking", "benchmark_reporting")
-        
+
         # Phase 10G: Evolution Pipeline
         graph.add_edge("benchmark_reporting", "genome_generation")
         graph.add_edge("genome_generation", "mutation_generation")
@@ -437,7 +437,7 @@ class OrchestratorAgent:
         graph.add_edge("promotion_decision", "rollback_check")
         graph.add_edge("rollback_check", "fitness_tracking")
         graph.add_edge("fitness_tracking", "generation_tracking")
-        
+
         # Phase 11: Capability Loop
         graph.add_edge("generation_tracking", "capability_evaluation")
         graph.add_edge("capability_evaluation", "benchmark_execution")
@@ -448,7 +448,7 @@ class OrchestratorAgent:
         graph.add_edge("regression_detection", "program_evaluation")
         graph.add_edge("program_evaluation", "capability_reporting")
         graph.add_edge("capability_reporting", "environment_analysis")
-        
+
         # Phase 12: Project Execution Loop
         graph.add_edge("environment_analysis", "opportunity_detection")
         graph.add_edge("opportunity_detection", "project_creation")
@@ -460,7 +460,7 @@ class OrchestratorAgent:
         graph.add_edge("failure_recovery", "impact_analysis")
         graph.add_edge("impact_analysis", "project_completion")
         graph.add_edge("project_completion", "generate_report")
-        
+
         graph.add_edge("generate_report", END)
 
         return graph
@@ -498,10 +498,14 @@ class OrchestratorAgent:
             context=context_str,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are an expert goal analyst. Respond only with valid JSON."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are an expert goal analyst. Respond only with valid JSON."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             analysis = json.loads(response.content)
@@ -564,7 +568,7 @@ class OrchestratorAgent:
     async def _replay_experiences(self, state: AgentStateDict) -> dict[str, Any]:
         """Replay past experiences for context."""
         logger.info("Replaying past experiences")
-        
+
         experiences = []
         if self.experience_replay:
             try:
@@ -574,11 +578,13 @@ class OrchestratorAgent:
                 )
             except Exception as e:
                 logger.warning("Experience replay failed", error=str(e))
-                
+
         context = ""
         if experiences:
-            context = "Past relevant experiences:\n" + "\n".join([e.context_summary for e in experiences])
-            
+            context = "Past relevant experiences:\n" + "\n".join(
+                [e.context_summary for e in experiences]
+            )
+
         return {"experience_context": context}
 
     async def _decompose_tasks(self, state: AgentStateDict) -> dict[str, Any]:
@@ -595,10 +601,14 @@ class OrchestratorAgent:
             memories=memories_str,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are an expert task planner. Respond only with a valid JSON array."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are an expert task planner. Respond only with a valid JSON array."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             tasks = json.loads(response.content)
@@ -610,27 +620,31 @@ class OrchestratorAgent:
                 tasks = json.loads(content[start:end])
             else:
                 # Fallback: create a single research task
-                tasks = [{
-                    "id": "task_1",
-                    "title": "Research and execute goal",
-                    "description": state["goal"],
-                    "agent_type": "research",
-                    "priority": 1,
-                    "dependencies": [],
-                }]
+                tasks = [
+                    {
+                        "id": "task_1",
+                        "title": "Research and execute goal",
+                        "description": state["goal"],
+                        "agent_type": "research",
+                        "priority": 1,
+                        "dependencies": [],
+                    }
+                ]
 
         # Validate and normalize tasks
         validated_tasks = []
         for task in tasks:
-            validated_tasks.append({
-                "id": task.get("id", f"task_{len(validated_tasks) + 1}"),
-                "title": task.get("title", "Unnamed Task"),
-                "description": task.get("description", ""),
-                "agent_type": task.get("agent_type", "research"),
-                "priority": task.get("priority", 3),
-                "dependencies": task.get("dependencies", []),
-                "status": "pending",
-            })
+            validated_tasks.append(
+                {
+                    "id": task.get("id", f"task_{len(validated_tasks) + 1}"),
+                    "title": task.get("title", "Unnamed Task"),
+                    "description": task.get("description", ""),
+                    "agent_type": task.get("agent_type", "research"),
+                    "priority": task.get("priority", 3),
+                    "dependencies": task.get("dependencies", []),
+                    "status": "pending",
+                }
+            )
 
         duration_ms = int((time.monotonic() - start_time) * 1000)
         logger.info(
@@ -649,13 +663,13 @@ class OrchestratorAgent:
         """Classify the current task type."""
         task_plan = state.get("task_plan", [])
         current_idx = state.get("current_task_index", 0)
-        
+
         if current_idx >= len(task_plan):
             return {"task_classification": None}
-            
+
         current_task = task_plan[current_idx]
         logger.info("Classifying task", task_id=current_task.get("id"))
-        
+
         classification = None
         if self.task_classifier:
             try:
@@ -665,7 +679,7 @@ class OrchestratorAgent:
                 )
             except Exception as e:
                 logger.error("Task classification failed", error=str(e))
-                
+
         return {"task_classification": classification}
 
     async def _select_strategy(self, state: AgentStateDict) -> dict[str, Any]:
@@ -673,9 +687,9 @@ class OrchestratorAgent:
         classification = state.get("task_classification")
         if not classification or not self.strategy_engine:
             return {"selected_strategy": None}
-            
+
         logger.info("Selecting strategy for task type", task_type=classification.get("task_type"))
-        
+
         strategy = None
         try:
             # We would normally convert Enum to string or pass directly
@@ -683,7 +697,7 @@ class OrchestratorAgent:
             task_plan = state.get("task_plan", [])
             current_idx = state.get("current_task_index", 0)
             current_task = task_plan[current_idx] if current_idx < len(task_plan) else {}
-            
+
             # get_best_strategy uses semantic search
             strategy = await self.strategy_engine.get_best_strategy(
                 task_type=task_type,
@@ -691,7 +705,7 @@ class OrchestratorAgent:
             )
         except Exception as e:
             logger.error("Strategy selection failed", error=str(e))
-            
+
         strategy_dict = None
         if strategy:
             strategy_dict = {
@@ -700,7 +714,7 @@ class OrchestratorAgent:
                 "steps": strategy.steps,
             }
             logger.info("Strategy selected", strategy_name=strategy.name)
-            
+
         return {"selected_strategy": strategy_dict}
 
     async def _route_task(self, state: AgentStateDict) -> dict[str, Any]:
@@ -793,10 +807,16 @@ class OrchestratorAgent:
                 result = {"status": "failed", "error": str(e)}
         else:
             # Fallback: use the LLM directly for research
-            response = await self.llm.ainvoke([
-                SystemMessage(content="You are a research assistant. Provide thorough, well-sourced answers."),
-                HumanMessage(content=f"Research the following:\n\n{current_task.get('description', state['goal'])}"),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(
+                        content="You are a research assistant. Provide thorough, well-sourced answers."
+                    ),
+                    HumanMessage(
+                        content=f"Research the following:\n\n{current_task.get('description', state['goal'])}"
+                    ),
+                ]
+            )
             result = {
                 "status": "completed",
                 "output": str(response.content),
@@ -842,10 +862,16 @@ class OrchestratorAgent:
                 result = {"status": "failed", "error": str(e)}
         else:
             # Fallback: use the LLM to generate a response
-            response = await self.llm.ainvoke([
-                SystemMessage(content="You are a technical execution assistant. Provide actionable solutions."),
-                HumanMessage(content=f"Execute the following task:\n\n{current_task.get('description', state['goal'])}"),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(
+                        content="You are a technical execution assistant. Provide actionable solutions."
+                    ),
+                    HumanMessage(
+                        content=f"Execute the following task:\n\n{current_task.get('description', state['goal'])}"
+                    ),
+                ]
+            )
             result = {
                 "status": "completed",
                 "output": str(response.content),
@@ -923,13 +949,15 @@ class OrchestratorAgent:
         # Check if current task failed
         errors = list(state.get("errors", []))
         if current_result.get("status") == "failed":
-            errors.append({
-                "task_id": task_id,
-                "agent_type": current_task.get("agent_type", "unknown"),
-                "error_type": "task_failure",
-                "message": current_result.get("error", "Unknown error"),
-                "recoverable": True,
-            })
+            errors.append(
+                {
+                    "task_id": task_id,
+                    "agent_type": current_task.get("agent_type", "unknown"),
+                    "error_type": "task_failure",
+                    "message": current_result.get("error", "Unknown error"),
+                    "recoverable": True,
+                }
+            )
 
         return {
             "current_task_index": new_index,
@@ -941,9 +969,7 @@ class OrchestratorAgent:
         logger.info("Evaluating dynamic replan")
         # In Phase 5, this would use LLM to check if remaining tasks need adjusting
         # For now, it simply tracks the replan count and proceeds.
-        return {
-            "replan_count": state.get("replan_count", 0) + 1
-        }
+        return {"replan_count": state.get("replan_count", 0) + 1}
 
     def _completion_check(self, state: AgentStateDict) -> str:
         """Check if all tasks are complete or if we should continue."""
@@ -999,7 +1025,10 @@ class OrchestratorAgent:
 
             reflection = {
                 "successes": [f"Task {tid} completed successfully" for tid in successes],
-                "failures": [f"Task {tid} failed: {task_results[tid].get('error', 'unknown')}" for tid in failures],
+                "failures": [
+                    f"Task {tid} failed: {task_results[tid].get('error', 'unknown')}"
+                    for tid in failures
+                ],
                 "root_causes": [],
                 "improvements": [],
                 "confidence_score": len(successes) / max(len(task_results), 1),
@@ -1013,12 +1042,14 @@ class OrchestratorAgent:
     async def _extract_learnings(self, state: AgentStateDict) -> dict[str, Any]:
         """Extract learnings from reflection."""
         logger.info("Extracting learnings from reflection")
-        
+
         learnings = []
         if self.learning_engine and state.get("reflection"):
             try:
                 # We need a session ID, fallback to uuid4 if None
-                session_id = uuid.UUID(state.get("session_id")) if state.get("session_id") else uuid.uuid4()
+                session_id = (
+                    uuid.UUID(state.get("session_id")) if state.get("session_id") else uuid.uuid4()
+                )
                 learnings = await self.learning_engine.extract_learnings(
                     session_id=session_id,
                     reflections=[state.get("reflection")],
@@ -1027,7 +1058,7 @@ class OrchestratorAgent:
                 logger.info("Extracted learnings", count=len(learnings))
             except Exception as e:
                 logger.error("Learning extraction failed", error=str(e))
-                
+
         return {"learnings": learnings}
 
     async def _update_strategies(self, state: AgentStateDict) -> dict[str, Any]:
@@ -1053,7 +1084,8 @@ class OrchestratorAgent:
                 gaps.append(
                     {
                         "source": task_id,
-                        "gap_description": result.get("error") or "Task failed without a recorded error",
+                        "gap_description": result.get("error")
+                        or "Task failed without a recorded error",
                         "severity": "high",
                         "domain": result.get("agent_type", "execution"),
                     }
@@ -1155,9 +1187,15 @@ class OrchestratorAgent:
         goals = []
         for goal in state.get("generated_goals", []):
             priority = float(goal.get("priority", 3))
-            novelty = 1.0 if goal.get("source_gap", {}).get("domain") not in {"execution", "unknown"} else 0.6
+            novelty = (
+                1.0
+                if goal.get("source_gap", {}).get("domain") not in {"execution", "unknown"}
+                else 0.6
+            )
             severity_bonus = 0.3 if goal.get("source_gap", {}).get("severity") == "high" else 0.0
-            curiosity_score = min(1.0, max(0.0, (6 - priority) / 5 * 0.6 + novelty * 0.3 + severity_bonus))
+            curiosity_score = min(
+                1.0, max(0.0, (6 - priority) / 5 * 0.6 + novelty * 0.3 + severity_bonus)
+            )
             goals.append({**goal, "curiosity_score": round(curiosity_score, 3)})
 
         goals.sort(key=lambda item: item.get("curiosity_score", 0.0), reverse=True)
@@ -1227,10 +1265,14 @@ class OrchestratorAgent:
             reflection=json.dumps(state.get("reflection", {}), default=str)[:2000],
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a concise report generator. Use Markdown formatting."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a concise report generator. Use Markdown formatting."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         return {
             "final_report": str(response.content),

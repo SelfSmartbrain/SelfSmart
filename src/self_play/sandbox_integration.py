@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class SandboxStatus(Enum):
     """Execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -34,24 +35,44 @@ class SandboxStatus(Enum):
 @dataclass
 class SandboxConfig:
     """Sandbox configuration."""
+
     timeout_seconds: float = 30.0
     memory_limit_mb: int = 256
     cpu_limit_percent: int = 100
     network_allowed: bool = False
     filesystem_read_only: bool = True
-    allowed_imports: List[str] = field(default_factory=lambda: [
-        "math", "random", "datetime", "json", "collections",
-        "itertools", "functools", "typing", "dataclasses",
-    ])
-    blocked_imports: List[str] = field(default_factory=lambda: [
-        "os", "sys", "subprocess", "socket", "threading",
-        "multiprocessing", "importlib", "ctypes", "pickle",
-    ])
+    allowed_imports: List[str] = field(
+        default_factory=lambda: [
+            "math",
+            "random",
+            "datetime",
+            "json",
+            "collections",
+            "itertools",
+            "functools",
+            "typing",
+            "dataclasses",
+        ]
+    )
+    blocked_imports: List[str] = field(
+        default_factory=lambda: [
+            "os",
+            "sys",
+            "subprocess",
+            "socket",
+            "threading",
+            "multiprocessing",
+            "importlib",
+            "ctypes",
+            "pickle",
+        ]
+    )
 
 
 @dataclass
 class TestCase:
     """A single test case."""
+
     test_id: str
     name: str
     input_data: Any
@@ -66,6 +87,7 @@ class TestCase:
 @dataclass
 class TestResult:
     """Result of a single test."""
+
     test_id: str
     name: str
     passed: bool
@@ -81,6 +103,7 @@ class TestResult:
 @dataclass
 class SandboxExecutionResult:
     """Result of sandbox execution."""
+
     execution_id: str
     status: SandboxStatus
     stdout: str = ""
@@ -96,18 +119,18 @@ class SandboxExecutionResult:
 class SandboxTestRunner:
     """
     Runs code in isolated sandbox with test cases.
-    
+
     Features:
     - Resource limits (time, memory, CPU)
     - Import restrictions
     - Test case execution
     - Detailed result tracking
     """
-    
+
     def __init__(self, config: Optional[SandboxConfig] = None):
         self.config = config or SandboxConfig()
         self._execution_count = 0
-    
+
     async def run_code(
         self,
         code: str,
@@ -116,50 +139,50 @@ class SandboxTestRunner:
     ) -> SandboxExecutionResult:
         """
         Execute code in sandbox with optional test cases.
-        
+
         Args:
             code: Python code to execute
             test_cases: Optional test cases to run
             stdin: Standard input
-            
+
         Returns:
             SandboxExecutionResult with execution details and test results
         """
         execution_id = f"exec_{uuid.uuid4().hex[:8]}"
         start_time = time.time()
-        
+
         logger.debug(f"Executing {execution_id} with {len(test_cases or [])} tests")
-        
+
         # Create temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
             f.write(code)
             code_file = f.name
-        
+
         try:
             # Prepare test runner code
             if test_cases:
                 runner_code = self._build_test_runner(code, test_cases, stdin)
             else:
                 runner_code = self._build_simple_runner(code, stdin)
-            
+
             # Write runner
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
                 f.write(runner_code)
                 runner_file = f.name
-            
+
             # Execute with resource limits
             result = await self._execute_with_limits(
                 execution_id,
                 runner_file,
                 start_time,
             )
-            
+
             # Parse test results if available
             if test_cases:
                 result.test_results = self._parse_test_results(result.stdout, test_cases)
-            
+
             return result
-            
+
         finally:
             # Cleanup
             try:
@@ -167,7 +190,7 @@ class SandboxTestRunner:
                 Path(runner_file).unlink()
             except Exception:
                 pass
-    
+
     def _build_test_runner(
         self,
         user_code: str,
@@ -177,15 +200,17 @@ class SandboxTestRunner:
         """Build test runner that executes user code against test cases."""
         test_json = []
         for tc in test_cases:
-            test_json.append({
-                "test_id": tc.test_id,
-                "name": tc.name,
-                "input": tc.input_data,
-                "expected": tc.expected_output,
-                "timeout": tc.timeout_seconds,
-            })
-        
-        return f'''
+            test_json.append(
+                {
+                    "test_id": tc.test_id,
+                    "name": tc.name,
+                    "input": tc.input_data,
+                    "expected": tc.expected_output,
+                    "timeout": tc.timeout_seconds,
+                }
+            )
+
+        return f"""
 import json
 import sys
 import time
@@ -245,11 +270,11 @@ def run_tests():
 
 if __name__ == "__main__":
     run_tests()
-'''
-    
+"""
+
     def _build_simple_runner(self, code: str, stdin: str) -> str:
         """Build simple runner without tests."""
-        return f'''
+        return f"""
 import sys
 import io
 
@@ -258,8 +283,8 @@ sys.stdin = io.StringIO({json.dumps(stdin)})
 
 # User code
 {code}
-'''
-    
+"""
+
     async def _execute_with_limits(
         self,
         execution_id: str,
@@ -267,13 +292,15 @@ sys.stdin = io.StringIO({json.dumps(stdin)})
         start_time: float,
     ) -> SandboxExecutionResult:
         """Execute with resource limits."""
-        
+
         # Build command with limits
         cmd = [
-            "timeout", str(self.config.timeout_seconds),
-            "python3", runner_file,
+            "timeout",
+            str(self.config.timeout_seconds),
+            "python3",
+            runner_file,
         ]
-        
+
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -281,7 +308,7 @@ sys.stdin = io.StringIO({json.dumps(stdin)})
                 stderr=asyncio.subprocess.PIPE,
                 limit=1024 * 1024,  # 1MB output limit
             )
-            
+
             try:
                 stdout, stderr = await asyncio.wait_for(
                     proc.communicate(),
@@ -296,18 +323,18 @@ sys.stdin = io.StringIO({json.dumps(stdin)})
                     error=f"Execution timed out after {self.config.timeout_seconds}s",
                     execution_time_ms=(time.time() - start_time) * 1000,
                 )
-            
+
             execution_time = (time.time() - start_time) * 1000
-            
+
             return SandboxExecutionResult(
                 execution_id=execution_id,
                 status=SandboxStatus.COMPLETED if proc.returncode == 0 else SandboxStatus.FAILED,
-                stdout=stdout.decode('utf-8', errors='replace'),
-                stderr=stderr.decode('utf-8', errors='replace'),
+                stdout=stdout.decode("utf-8", errors="replace"),
+                stderr=stderr.decode("utf-8", errors="replace"),
                 return_code=proc.returncode,
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             return SandboxExecutionResult(
                 execution_id=execution_id,
@@ -315,11 +342,11 @@ sys.stdin = io.StringIO({json.dumps(stdin)})
                 error=str(e),
                 execution_time_ms=(time.time() - start_time) * 1000,
             )
-    
+
     def _parse_test_results(self, stdout: str, test_cases: List[TestCase]) -> List[TestResult]:
         """Parse test results from stdout."""
         results = []
-        
+
         # Find JSON output
         marker = "__TEST_RESULTS__"
         if marker in stdout:
@@ -329,21 +356,23 @@ sys.stdin = io.StringIO({json.dumps(stdin)})
                 for td in test_data:
                     # Find matching test case
                     tc = next((t for t in test_cases if t.test_id == td["test_id"]), None)
-                    
-                    results.append(TestResult(
-                        test_id=td["test_id"],
-                        name=td["name"],
-                        passed=td["passed"],
-                        input_data=td["input"],
-                        expected_output=td["expected"],
-                        actual_output=td["actual"],
-                        duration_ms=td["duration_ms"],
-                        error_message=td["error"],
-                        points_earned=tc.points if tc and td["passed"] else 0.0,
-                    ))
+
+                    results.append(
+                        TestResult(
+                            test_id=td["test_id"],
+                            name=td["name"],
+                            passed=td["passed"],
+                            input_data=td["input"],
+                            expected_output=td["expected"],
+                            actual_output=td["actual"],
+                            duration_ms=td["duration_ms"],
+                            error_message=td["error"],
+                            points_earned=tc.points if tc and td["passed"] else 0.0,
+                        )
+                    )
             except json.JSONDecodeError:
                 logger.warning("Failed to parse test results JSON")
-        
+
         return results
 
 

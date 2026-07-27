@@ -30,6 +30,7 @@ _MAX_FILE_SIZE = 10 * 1024 * 1024
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class FileOperationsInput(BaseModel):
     """Input schema for FileOperationsTool."""
 
@@ -52,6 +53,7 @@ class FileOperationsInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class FileOperationsTool(AgentTool):
     """Read, write, list, and delete files within a sandboxed workspace.

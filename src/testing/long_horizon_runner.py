@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class SystemHealthSnapshot(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     uptime_hours: float
@@ -16,6 +17,7 @@ class SystemHealthSnapshot(BaseModel):
     tasks_processed: int
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     model_config = {"from_attributes": True}
+
 
 class LongHorizonRunner:
     def __init__(self) -> None:
@@ -38,9 +40,11 @@ class LongHorizonRunner:
                 uptime_hours=i * hours_per_interval,
                 memory_usage_mb=256.0 + (i * 10),  # Simulated memory growth
                 active_agents=10 + i,
-                tasks_processed=self.tasks_processed
+                tasks_processed=self.tasks_processed,
             )
             snapshots.append(snapshot)
-            logger.info(f"Snapshot taken at {snapshot.uptime_hours}h: {snapshot.tasks_processed} tasks processed.")
+            logger.info(
+                f"Snapshot taken at {snapshot.uptime_hours}h: {snapshot.tasks_processed} tasks processed."
+            )
 
         return snapshots

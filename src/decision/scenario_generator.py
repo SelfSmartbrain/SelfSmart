@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 class ScenarioType(str, Enum):
     """Types of scenarios."""
+
     OPTIMISTIC = "optimistic"
     PESSIMISTIC = "pessimistic"
     BASELINE = "baseline"
@@ -28,6 +29,7 @@ class ScenarioType(str, Enum):
 @dataclass
 class Scenario:
     """A potential future scenario."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     description: str = ""
@@ -37,7 +39,7 @@ class Scenario:
     assumptions: List[str] = field(default_factory=list)
     time_horizon: str = "medium"  # short, medium, long
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -54,7 +56,7 @@ class Scenario:
 
 class ScenarioGenerator:
     """Generates scenarios for decision evaluation."""
-    
+
     def __init__(self):
         self.scenario_templates = {
             ScenarioType.OPTIMISTIC: self._generate_optimistic_scenario,
@@ -64,7 +66,7 @@ class ScenarioGenerator:
             ScenarioType.BLACK_SWAN: self._generate_black_swan_scenario,
         }
         logger.info("ScenarioGenerator initialized")
-    
+
     def generate_scenarios(
         self,
         context: Dict[str, Any],
@@ -73,7 +75,7 @@ class ScenarioGenerator:
     ) -> List[Scenario]:
         """Generate scenarios for decision evaluation."""
         logger.info(f"Generating {num_scenarios} scenarios")
-        
+
         if scenario_types is None:
             scenario_types = [
                 ScenarioType.BASELINE,
@@ -81,22 +83,22 @@ class ScenarioGenerator:
                 ScenarioType.PESSIMISTIC,
                 ScenarioType.STRESS_TEST,
             ]
-        
+
         scenarios = []
         for i, scenario_type in enumerate(scenario_types[:num_scenarios]):
             generator = self.scenario_templates.get(scenario_type)
             if generator:
                 scenario = generator(context, i)
                 scenarios.append(scenario)
-        
+
         # Fill remaining with baseline if needed
         while len(scenarios) < num_scenarios:
             scenario = self._generate_baseline_scenario(context, len(scenarios))
             scenarios.append(scenario)
-        
+
         logger.info(f"Generated {len(scenarios)} scenarios")
         return scenarios
-    
+
     def _generate_optimistic_scenario(
         self,
         context: Dict[str, Any],
@@ -120,7 +122,7 @@ class ScenarioGenerator:
                 "No major disruptions occur",
             ],
         )
-    
+
     def _generate_pessimistic_scenario(
         self,
         context: Dict[str, Any],
@@ -144,7 +146,7 @@ class ScenarioGenerator:
                 "Unexpected challenges arise",
             ],
         )
-    
+
     def _generate_baseline_scenario(
         self,
         context: Dict[str, Any],
@@ -168,7 +170,7 @@ class ScenarioGenerator:
                 "No major surprises",
             ],
         )
-    
+
     def _generate_stress_test_scenario(
         self,
         context: Dict[str, Any],
@@ -192,7 +194,7 @@ class ScenarioGenerator:
                 "High uncertainty",
             ],
         )
-    
+
     def _generate_black_swan_scenario(
         self,
         context: Dict[str, Any],
@@ -216,7 +218,7 @@ class ScenarioGenerator:
                 "High uncertainty and volatility",
             ],
         )
-    
+
     def generate_custom_scenario(
         self,
         name: str,

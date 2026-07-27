@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class PatchType(Enum):
     """Types of architecture patches"""
+
     PERFORMANCE = "performance"
     RELIABILITY = "reliability"
     FUNCTIONALITY = "functionality"
@@ -31,6 +32,7 @@ class PatchType(Enum):
 
 class PatchStatus(Enum):
     """Patch lifecycle status"""
+
     PROPOSED = "proposed"
     ANALYZING = "analyzing"
     TESTING = "testing"
@@ -44,6 +46,7 @@ class PatchStatus(Enum):
 @dataclass
 class ArchitecturePatch:
     """A proposed architecture improvement patch"""
+
     patch_id: str
     patch_type: PatchType
     title: str
@@ -65,6 +68,7 @@ class ArchitecturePatch:
 @dataclass
 class BottleneckAnalysis:
     """Analysis of a performance bottleneck"""
+
     component: str
     metric: str
     current_value: float
@@ -78,7 +82,7 @@ class ArchitectureEvolver:
     """
     Analyzes system performance, proposes code improvements,
     validates via tests, and applies with human approval.
-    
+
     Flow:
     1. Analyze metrics -> identify bottlenecks
     2. Generate patches via LLM
@@ -119,36 +123,36 @@ class ArchitectureEvolver:
     ) -> List[ArchitecturePatch]:
         """
         Analyze metrics for bottlenecks and propose patches.
-        
+
         Args:
             metrics: System performance metrics
             context: Additional context (recent errors, deployment info, etc.)
-            
+
         Returns:
             List of proposed patches
         """
         logger.info("Starting architecture analysis and patch proposal")
-        
+
         # Step 1: Identify bottlenecks
         bottlenecks = await self._identify_bottlenecks(metrics, context)
-        
+
         if not bottlenecks:
             logger.info("No significant bottlenecks identified")
             return []
-        
+
         # Step 2: Generate patches for top bottlenecks
         patches = []
-        for bottleneck in bottlenecks[:self.max_patches_per_cycle]:
+        for bottleneck in bottlenecks[: self.max_patches_per_cycle]:
             patch = await self._generate_patch(bottleneck, metrics, context)
             if patch:
                 patches.append(patch)
                 self._patches[patch.patch_id] = patch
-        
+
         # Step 3: Validate patches in parallel
-        validation_results = await asyncio.gather(*[
-            self._validate_patch(patch) for patch in patches
-        ], return_exceptions=True)
-        
+        validation_results = await asyncio.gather(
+            *[self._validate_patch(patch) for patch in patches], return_exceptions=True
+        )
+
         for patch, result in zip(patches, validation_results):
             if isinstance(result, Exception):
                 patch.status = PatchStatus.FAILED
@@ -159,7 +163,7 @@ class ArchitectureEvolver:
                     patch.status = PatchStatus.VALIDATED
                 else:
                     patch.status = PatchStatus.REJECTED
-        
+
         # Step 4: Handle approval for validated patches
         for patch in patches:
             if patch.status == PatchStatus.VALIDATED:
@@ -167,8 +171,10 @@ class ArchitectureEvolver:
                     await self._request_approval(patch)
                 elif self.auto_apply_safe and self._is_safe_patch(patch):
                     await self._apply_patch(patch)
-        
-        logger.info(f"Proposed {len(patches)} patches, {sum(1 for p in patches if p.status == PatchStatus.VALIDATED)} validated")
+
+        logger.info(
+            f"Proposed {len(patches)} patches, {sum(1 for p in patches if p.status == PatchStatus.VALIDATED)} validated"
+        )
         return patches
 
     async def _identify_bottlenecks(
@@ -178,49 +184,78 @@ class ArchitectureEvolver:
     ) -> List[BottleneckAnalysis]:
         """Identify performance bottlenecks from metrics"""
         bottlenecks = []
-        
+
         # Define threshold rules for common metrics
         threshold_rules = [
-            ("api_latency_p99", 2.0, "API latency too high", "Optimize slow endpoints, add caching"),
-            ("memory_usage_percent", 85.0, "High memory usage", "Fix memory leaks, optimize data structures"),
+            (
+                "api_latency_p99",
+                2.0,
+                "API latency too high",
+                "Optimize slow endpoints, add caching",
+            ),
+            (
+                "memory_usage_percent",
+                85.0,
+                "High memory usage",
+                "Fix memory leaks, optimize data structures",
+            ),
             ("cpu_usage_percent", 90.0, "High CPU usage", "Optimize hot paths, add parallelism"),
             ("error_rate", 0.05, "High error rate", "Fix root causes, improve error handling"),
-            ("queue_depth", 1000, "Task queue backing up", "Scale workers, optimize task processing"),
+            (
+                "queue_depth",
+                1000,
+                "Task queue backing up",
+                "Scale workers, optimize task processing",
+            ),
             ("db_query_latency_p99", 1.0, "Slow database queries", "Add indexes, optimize queries"),
             ("cache_hit_rate", 0.7, "Low cache hit rate", "Improve caching strategy"),
-            ("task_completion_rate", 0.8, "Low task completion", "Improve reliability, add retries"),
+            (
+                "task_completion_rate",
+                0.8,
+                "Low task completion",
+                "Improve reliability, add retries",
+            ),
         ]
-        
+
         for metric_name, threshold, description, approach in threshold_rules:
             current = metrics.get(metric_name)
             if current is not None:
-                if (metric_name.endswith("_rate") or metric_name.endswith("_percent")) and current > threshold:
+                if (
+                    metric_name.endswith("_rate") or metric_name.endswith("_percent")
+                ) and current > threshold:
                     severity = min((current - threshold) / threshold, 1.0)
-                    bottlenecks.append(BottleneckAnalysis(
-                        component=metric_name.split("_")[0],
-                        metric=metric_name,
-                        current_value=current,
-                        expected_value=threshold,
-                        severity=severity,
-                        root_cause=description,
-                        suggested_approach=approach,
-                    ))
-                elif not (metric_name.endswith("_rate") or metric_name.endswith("_percent")) and current > threshold:
+                    bottlenecks.append(
+                        BottleneckAnalysis(
+                            component=metric_name.split("_")[0],
+                            metric=metric_name,
+                            current_value=current,
+                            expected_value=threshold,
+                            severity=severity,
+                            root_cause=description,
+                            suggested_approach=approach,
+                        )
+                    )
+                elif (
+                    not (metric_name.endswith("_rate") or metric_name.endswith("_percent"))
+                    and current > threshold
+                ):
                     severity = min((current - threshold) / threshold, 1.0)
-                    bottlenecks.append(BottleneckAnalysis(
-                        component=metric_name.split("_")[0],
-                        metric=metric_name,
-                        current_value=current,
-                        expected_value=threshold,
-                        severity=severity,
-                        root_cause=description,
-                        suggested_approach=approach,
-                    ))
-        
+                    bottlenecks.append(
+                        BottleneckAnalysis(
+                            component=metric_name.split("_")[0],
+                            metric=metric_name,
+                            current_value=current,
+                            expected_value=threshold,
+                            severity=severity,
+                            root_cause=description,
+                            suggested_approach=approach,
+                        )
+                    )
+
         # Sort by severity
         bottlenecks.sort(key=lambda b: b.severity, reverse=True)
         self._bottleneck_history.extend(bottlenecks)
-        
+
         return bottlenecks
 
     async def _generate_patch(
@@ -230,28 +265,30 @@ class ArchitectureEvolver:
         context: Optional[Dict[str, Any]],
     ) -> Optional[ArchitecturePatch]:
         """Generate a code patch for a bottleneck using LLM"""
-        
+
         # Find relevant source files
         target_files = await self._find_relevant_files(bottleneck)
-        
+
         if not target_files:
             logger.warning(f"No relevant files found for bottleneck: {bottleneck.metric}")
             return None
-        
+
         # Read current file contents
         file_contents = {}
         for file_path in target_files:
             full_path = self.repo_root / file_path
             if full_path.exists():
                 file_contents[file_path] = full_path.read_text()
-        
+
         # Build prompt for LLM
         prompt = self._build_patch_prompt(bottleneck, file_contents, metrics, context)
-        
+
         try:
             response = await self.llm.ainvoke(prompt)
-            patch_data = json.loads(response.content if hasattr(response, 'content') else str(response))
-            
+            patch_data = json.loads(
+                response.content if hasattr(response, "content") else str(response)
+            )
+
             patch = ArchitecturePatch(
                 patch_id=f"patch_{uuid.uuid4().hex[:12]}",
                 patch_type=PatchType(patch_data.get("patch_type", "performance")),
@@ -259,18 +296,24 @@ class ArchitectureEvolver:
                 description=patch_data.get("description", ""),
                 target_files=target_files,
                 diff=patch_data.get("diff", ""),
-                rationale=patch_data.get("rationale", f"Address bottleneck: {bottleneck.root_cause}"),
-                expected_impact=patch_data.get("expected_impact", {bottleneck.metric: -bottleneck.severity * 0.5}),
-                approval_required=not self._is_safe_patch_type(patch_data.get("patch_type", "performance")),
+                rationale=patch_data.get(
+                    "rationale", f"Address bottleneck: {bottleneck.root_cause}"
+                ),
+                expected_impact=patch_data.get(
+                    "expected_impact", {bottleneck.metric: -bottleneck.severity * 0.5}
+                ),
+                approval_required=not self._is_safe_patch_type(
+                    patch_data.get("patch_type", "performance")
+                ),
             )
-            
+
             return patch
-            
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse patch JSON: {e}")
         except Exception as e:
             logger.error(f"Patch generation failed: {e}")
-        
+
         return None
 
     async def _find_relevant_files(self, bottleneck: BottleneckAnalysis) -> List[str]:
@@ -286,9 +329,9 @@ class ArchitectureEvolver:
             "cache_hit_rate": ["src/memory/**/*.py"],
             "task_completion": ["src/runtime/**/*.py", "src/cognition/**/*.py"],
         }
-        
+
         patterns = metric_to_patterns.get(bottleneck.metric.split("_")[0], ["src/**/*.py"])
-        
+
         # For now, return a reasonable default set
         # In production, would use more sophisticated analysis
         relevant = [
@@ -297,13 +340,13 @@ class ArchitectureEvolver:
             "src/api/routes.py",
             "src/cognition/planner.py",
         ]
-        
+
         # Filter to existing files
         existing = []
         for f in relevant:
             if (self.repo_root / f).exists():
                 existing.append(f)
-        
+
         return existing[:3]  # Limit to top 3
 
     def _build_patch_prompt(
@@ -314,12 +357,11 @@ class ArchitectureEvolver:
         context: Optional[Dict[str, Any]],
     ) -> str:
         """Build LLM prompt for patch generation"""
-        
-        files_text = "\n\n".join([
-            f"=== {path} ===\n{content[:3000]}"
-            for path, content in file_contents.items()
-        ])
-        
+
+        files_text = "\n\n".join(
+            [f"=== {path} ===\n{content[:3000]}" for path, content in file_contents.items()]
+        )
+
         return f"""You are an expert software architect optimizing an AGI agent platform.
 
 BOTTLENECK ANALYSIS:
@@ -358,31 +400,30 @@ Focus on:
 
 Return ONLY valid JSON."""
 
-
     async def _validate_patch(self, patch: ArchitecturePatch) -> Dict[str, Any]:
         """Validate a patch by running tests in sandbox"""
         patch.status = PatchStatus.TESTING
-        
+
         try:
             # Apply patch temporarily
             await self._apply_patch_temp(patch)
-            
+
             # Run tests
             test_results = await self.test_runner(patch.patch_id)
-            
+
             # Revert patch
             await self._revert_patch_temp(patch)
-            
+
             passed = test_results.get("passed", False)
             patch.status = PatchStatus.VALIDATED if passed else PatchStatus.REJECTED
-            
+
             return {
                 "passed": passed,
                 "test_output": test_results.get("output", ""),
                 "tests_run": test_results.get("tests_run", 0),
                 "failures": test_results.get("failures", []),
             }
-            
+
         except Exception as e:
             logger.error(f"Patch validation failed: {e}")
             await self._revert_patch_temp(patch)
@@ -397,7 +438,7 @@ Return ONLY valid JSON."""
             full_path = self.repo_root / file_path
             if full_path.exists():
                 patch.metadata["original_content"][file_path] = full_path.read_text()
-        
+
         # Apply diff (simplified - would use proper patch library)
         logger.info(f"Temporarily applying patch {patch.patch_id}")
 
@@ -433,21 +474,23 @@ Return ONLY valid JSON."""
                 if full_path.exists():
                     # In production, would use proper patch application
                     logger.info(f"Applying patch {patch.patch_id} to {file_path}")
-            
+
             patch.status = PatchStatus.APPLIED
             patch.applied_at = datetime.now().timestamp()
-            
+
             # Record in history
-            self._patch_history.append({
-                "patch_id": patch.patch_id,
-                "title": patch.title,
-                "type": patch.patch_type.value,
-                "applied_at": patch.applied_at,
-                "target_files": patch.target_files,
-            })
-            
+            self._patch_history.append(
+                {
+                    "patch_id": patch.patch_id,
+                    "title": patch.title,
+                    "type": patch.patch_type.value,
+                    "applied_at": patch.applied_at,
+                    "target_files": patch.target_files,
+                }
+            )
+
             logger.info(f"Patch {patch.patch_id} applied successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to apply patch: {e}")
             patch.status = PatchStatus.FAILED
@@ -455,9 +498,9 @@ Return ONLY valid JSON."""
     def _is_safe_patch(self, patch: ArchitecturePatch) -> bool:
         """Check if patch is safe for auto-apply"""
         return (
-            patch.patch_type in (PatchType.REFACTOR, PatchType.PERFORMANCE) and
-            patch.expected_impact.get("risk", 1.0) < 0.3 and
-            len(patch.target_files) <= 2
+            patch.patch_type in (PatchType.REFACTOR, PatchType.PERFORMANCE)
+            and patch.expected_impact.get("risk", 1.0) < 0.3
+            and len(patch.target_files) <= 2
         )
 
     def _is_safe_patch_type(self, patch_type: str) -> bool:
@@ -510,29 +553,31 @@ class StrategyEvolver:
     ) -> List[Dict[str, Any]]:
         """
         Evolve strategies using genetic algorithm.
-        
+
         Args:
             performance_data: Historical performance data
             generations: Number of generations
             population_size: Population size
-            
+
         Returns:
             Best evolved strategies
         """
-        logger.info(f"Starting strategy evolution: {generations} generations, pop={population_size}")
-        
+        logger.info(
+            f"Starting strategy evolution: {generations} generations, pop={population_size}"
+        )
+
         # Initialize population from performance data
         self._population = await self._initialize_population(performance_data, population_size)
-        
+
         for gen in range(generations):
             # Evaluate fitness
-            fitness_scores = await asyncio.gather(*[
-                self._evaluate_individual(ind) for ind in self._population
-            ])
-            
+            fitness_scores = await asyncio.gather(
+                *[self._evaluate_individual(ind) for ind in self._population]
+            )
+
             # Select parents
             parents = self._select_parents(self._population, fitness_scores)
-            
+
             # Create next generation
             offspring = []
             while len(offspring) < population_size:
@@ -540,18 +585,18 @@ class StrategyEvolver:
                 child = await self._crossover(parent1, parent2)
                 child = await self._mutate(child)
                 offspring.append(child)
-            
+
             self._population = offspring
             self._generation += 1
-            
+
             best_fitness = max(fitness_scores)
             logger.info(f"Generation {gen+1}: best fitness = {best_fitness:.4f}")
-        
+
         # Return top strategies
-        final_fitness = await asyncio.gather(*[
-            self._evaluate_individual(ind) for ind in self._population
-        ])
-        
+        final_fitness = await asyncio.gather(
+            *[self._evaluate_individual(ind) for ind in self._population]
+        )
+
         ranked = sorted(zip(self._population, final_fitness), key=lambda x: x[1], reverse=True)
         return [ind for ind, _ in ranked[:5]]
 
@@ -562,29 +607,32 @@ class StrategyEvolver:
     ) -> List[Dict[str, Any]]:
         """Initialize population from performance data"""
         population = []
-        
+
         # Extract successful strategy patterns
         successful = [d for d in performance_data if d.get("success_rate", 0) > 0.7]
-        
+
         for i in range(size):
             if successful and i < len(successful):
                 base = successful[i % len(successful)].get("strategy_params", {})
             else:
                 base = {}
-            
+
             # Add variation
-            individual = {k: v * (0.8 + 0.4 * hash(str(k) + str(i)) % 100 / 100) 
-                         for k, v in base.items()}
-            
+            individual = {
+                k: v * (0.8 + 0.4 * hash(str(k) + str(i)) % 100 / 100) for k, v in base.items()
+            }
+
             # Add some random parameters
-            individual.update({
-                "exploration_rate": 0.1 + 0.3 * (i % 10) / 10,
-                "retry_threshold": 2 + (i % 5),
-                "parallelism": 1 + (i % 4),
-            })
-            
+            individual.update(
+                {
+                    "exploration_rate": 0.1 + 0.3 * (i % 10) / 10,
+                    "retry_threshold": 2 + (i % 5),
+                    "parallelism": 1 + (i % 4),
+                }
+            )
+
             population.append(individual)
-        
+
         return population
 
     async def _evaluate_individual(self, individual: Dict[str, Any]) -> float:
@@ -613,7 +661,7 @@ class StrategyEvolver:
         """Crossover two parents"""
         child = {}
         all_keys = set(parent1.keys()) | set(parent2.keys())
-        
+
         for key in all_keys:
             if key in parent1 and key in parent2:
                 # Blend
@@ -622,18 +670,18 @@ class StrategyEvolver:
                 child[key] = parent1[key]
             else:
                 child[key] = parent2[key]
-        
+
         return child
 
     async def _mutate(self, individual: Dict[str, Any]) -> Dict[str, Any]:
         """Mutate an individual"""
         mutated = individual.copy()
-        
+
         for key, value in mutated.items():
             if isinstance(value, (int, float)) and np.random.random() < 0.1:
                 # Gaussian mutation
                 mutated[key] = value * (1 + np.random.normal(0, 0.1))
-        
+
         return mutated
 
 

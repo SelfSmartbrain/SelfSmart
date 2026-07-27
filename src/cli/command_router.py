@@ -3,6 +3,7 @@ import shlex
 from src.tools.shell_tool import ShellTool
 from src.tools.filesystem_tool import FilesystemTool
 
+
 class CommandRouter:
     def __init__(self, session, history):
         self.session = session
@@ -16,7 +17,7 @@ class CommandRouter:
         except ValueError as e:
             print(f"Error parsing command: {e}")
             return
-            
+
         if not parts:
             return
 

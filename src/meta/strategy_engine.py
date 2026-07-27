@@ -41,11 +41,11 @@ class StrategyEngine:
         is_global: bool = False,
     ) -> Strategy:
         """Create a new strategy and index it in the vector store."""
-        
+
         # Embed the strategy description for semantic search
         embedding_content = f"{name}: {description}"
         embedding = await self.embedding_service.embed_text(embedding_content)
-        
+
         # Create DB record
         strategy = await self.repo.create(
             task_type=task_type,
@@ -58,11 +58,11 @@ class StrategyEngine:
             is_global=is_global,
             status=StrategyStatus.TESTING,
         )
-        
+
         # Update with embedding id
         embedding_id = str(strategy.id)
         strategy = await self.repo.update(strategy.id, embedding_id=embedding_id)
-        
+
         # Upsert to Qdrant
         if strategy and embedding:
             await self.vector_store.upsert(
@@ -75,9 +75,9 @@ class StrategyEngine:
                     "description": strategy.description,
                     "status": strategy.status.value,
                     "is_global": strategy.is_global,
-                }
+                },
             )
-            
+
         return strategy
 
     async def get_strategies(self, task_type: TaskType | str, limit: int = 10) -> list[Strategy]:
@@ -98,34 +98,39 @@ class StrategyEngine:
             return strategies[0] if strategies else None
 
         # Search vector store for relevant strategies
-        filters = {"task_type": task_type if isinstance(task_type, str) else task_type.value, "status": "active"}
+        filters = {
+            "task_type": task_type if isinstance(task_type, str) else task_type.value,
+            "status": "active",
+        }
         search_results = await self.vector_store.search(
             collection=self.collection,
             query_vector=context_vector,
             limit=5,
             filters=filters,
         )
-        
+
         if not search_results:
             strategies = await self.get_strategies(task_type, limit=1)
             return strategies[0] if strategies else None
-            
+
         # We need to combine semantic relevance score with historic success_rate and confidence
         best_strategy = None
         best_score = -1.0
-        
+
         for result in search_results:
             strategy_id = UUID(str(result.id))
             strategy = await self.repo.get_by_id(strategy_id)
             if not strategy:
                 continue
-                
+
             # Score formula: (success_rate * 0.6) + (confidence * 0.2) + (semantic_relevance * 0.2)
-            score = (strategy.success_rate * 0.6) + (strategy.confidence * 0.2) + (result.score * 0.2)
+            score = (
+                (strategy.success_rate * 0.6) + (strategy.confidence * 0.2) + (result.score * 0.2)
+            )
             if score > best_score:
                 best_score = score
                 best_strategy = strategy
-                
+
         return best_strategy
 
     async def record_execution(

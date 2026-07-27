@@ -11,10 +11,12 @@ from src.world_model.belief_engine import BeliefEngine, Belief
 
 logger = get_logger(__name__)
 
+
 class PredictionRequest(BaseModel):
     target: str
     context: str
     model_config = {"from_attributes": True}
+
 
 class PredictionResult(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -25,6 +27,7 @@ class PredictionResult(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     resolved_at: Optional[datetime] = None
     model_config = {"from_attributes": True}
+
 
 class PredictionEngine:
     """Predicts strategy success, research quality, or goal completion based on beliefs."""
@@ -46,14 +49,18 @@ class PredictionEngine:
         prediction = PredictionResult(
             target=request.target,
             predicted_success_probability=avg_confidence,
-            reasoning=f"Generated prediction using {len(beliefs)} active beliefs."
+            reasoning=f"Generated prediction using {len(beliefs)} active beliefs.",
         )
 
         self.predictions[prediction.id] = prediction
-        logger.info(f"Prediction {prediction.id} created with probability {prediction.predicted_success_probability:.2f}")
+        logger.info(
+            f"Prediction {prediction.id} created with probability {prediction.predicted_success_probability:.2f}"
+        )
         return prediction
 
-    async def record_outcome(self, prediction_id: uuid.UUID, actual_success: bool) -> PredictionResult:
+    async def record_outcome(
+        self, prediction_id: uuid.UUID, actual_success: bool
+    ) -> PredictionResult:
         """Records the real-world outcome of a prediction to evaluate accuracy later."""
         if prediction_id not in self.predictions:
             logger.error(f"Prediction {prediction_id} not found.")

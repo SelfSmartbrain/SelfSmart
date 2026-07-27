@@ -1,8 +1,8 @@
-'''consolidation_engine.py
+"""consolidation_engine.py
 
 Engine that merges duplicate episodic memories and creates unified representations.
 Uses sentence embeddings to detect semantically similar episodes and merges them.
-'''
+"""
 
 from typing import List
 import logging
@@ -21,13 +21,14 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 class ConsolidationEngine:
     def __init__(self, db_session: Session):
         self.db = db_session
         self.model = None
         if SentenceTransformer is not None:
             try:
-                self.model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+                self.model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
                 logger.info("ConsolidationEngine: SentenceTransformer model loaded")
             except Exception as e:
                 logger.warning(f"Failed to load SentenceTransformer model: {e}")
@@ -50,7 +51,9 @@ class ConsolidationEngine:
                 return
 
             # Filter out episodes with empty or None outcome
-            valid_episodes = [(eid, out) for eid, out in episodes if out and isinstance(out, str) and out.strip()]
+            valid_episodes = [
+                (eid, out) for eid, out in episodes if out and isinstance(out, str) and out.strip()
+            ]
             if len(valid_episodes) < 2:
                 logger.info("ConsolidationEngine: insufficient valid episodes for comparison")
                 return

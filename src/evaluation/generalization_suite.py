@@ -1,13 +1,14 @@
-'''generalization_suite.py
+"""generalization_suite.py
 
 Runs a suite of cross‑domain generalization benchmarks for the cognitive core.
 Each test loads a predefined problem set from the ``novel_domain_benchmark`` module
 and evaluates the system's ability to transfer learned skills.
-''' 
+"""
 
 from typing import List, Dict
 from .novel_domain_benchmark import load_benchmarks
 from .transfer_validation import TransferValidator
+
 
 class GeneralizationSuite:
     def __init__(self, transfer_validator: TransferValidator):
@@ -16,7 +17,7 @@ class GeneralizationSuite:
 
     def run(self) -> List[Dict[str, float]]:
         """Execute all benchmarks and return a list of metric dicts.
-        
+
         Example result entry: {"benchmark": "graph_reasoning", "accuracy": 0.78}
         """
         results = []

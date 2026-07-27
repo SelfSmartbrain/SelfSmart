@@ -17,16 +17,20 @@ logger = logging.getLogger(__name__)
 
 class ExtractedLearning(BaseModel):
     """A single learning extracted from a reflection."""
-    
-    pattern_type: str = Field(description="The category of the learning (e.g., 'context_management', 'error_handling').")
+
+    pattern_type: str = Field(
+        description="The category of the learning (e.g., 'context_management', 'error_handling')."
+    )
     description: str = Field(description="A clear description of the observed pattern or failure.")
-    action_taken: str = Field(description="The proposed or successful action to address this pattern.")
+    action_taken: str = Field(
+        description="The proposed or successful action to address this pattern."
+    )
     confidence: float = Field(description="Confidence in this learning (0.0 to 1.0).")
 
 
 class LearningExtractionResponse(BaseModel):
     """List of extracted learnings."""
-    
+
     learnings: list[ExtractedLearning]
 
 
@@ -40,9 +44,10 @@ class LearningEngine:
     ) -> None:
         self.repo = learning_repo
         self.settings = get_settings()
-        
+
         if llm is None:
             from langchain_anthropic import ChatAnthropic
+
             self.llm = ChatAnthropic(
                 model=self.settings.anthropic_model,
                 api_key=self.settings.anthropic_api_key.get_secret_value(),
@@ -60,7 +65,7 @@ class LearningEngine:
         task_results: dict[str, dict[str, Any]],
     ) -> list[dict[str, Any]]:
         """Extract generic learnings from specific session reflections."""
-        
+
         if not reflections:
             return []
 
@@ -85,7 +90,7 @@ class LearningEngine:
 
         try:
             result: LearningExtractionResponse = await self.structured_llm.ainvoke(messages)
-            
+
             # Save learnings to database as LearningPatterns
             saved_learnings = []
             for learning in result.learnings:
@@ -96,20 +101,22 @@ class LearningEngine:
                     confidence=learning.confidence,
                     action_taken=learning.action_taken,
                 )
-                
+
                 # Auto-generate policy for high confidence learnings
                 if learning.confidence >= 0.8:
                     await self._generate_policy(pattern)
-                    
-                saved_learnings.append({
-                    "id": str(pattern.id),
-                    "pattern_type": pattern.pattern_type,
-                    "description": pattern.description,
-                    "action_taken": pattern.action_taken,
-                })
-                
+
+                saved_learnings.append(
+                    {
+                        "id": str(pattern.id),
+                        "pattern_type": pattern.pattern_type,
+                        "description": pattern.description,
+                        "action_taken": pattern.action_taken,
+                    }
+                )
+
             return saved_learnings
-            
+
         except Exception as e:
             logger.error(f"Learning extraction failed: {e}")
             return []

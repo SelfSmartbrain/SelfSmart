@@ -9,14 +9,16 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class Individual(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     genome: Dict[str, Any]
     fitness_score: Optional[float] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     generation: int
+
 
 class PopulationManager:
     def __init__(self, population_size: int):
@@ -28,11 +30,10 @@ class PopulationManager:
         self.population = []
         for _ in range(self.population_size):
             individual = Individual(
-                genome={"param_a": 0.5, "param_b": 1.0}, # placeholder genome
-                generation=generation
+                genome={"param_a": 0.5, "param_b": 1.0}, generation=generation  # placeholder genome
             )
             self.population.append(individual)
-            
+
     async def get_population(self) -> List[Individual]:
         return self.population
 

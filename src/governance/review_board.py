@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class ReviewStatus(str, Enum):
     """Status of a review."""
+
     PENDING = "pending"
     IN_REVIEW = "in_review"
     APPROVED = "approved"
@@ -31,6 +32,7 @@ class ReviewStatus(str, Enum):
 
 class ReviewPriority(str, Enum):
     """Priority of a review."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -40,13 +42,14 @@ class ReviewPriority(str, Enum):
 @dataclass
 class ReviewComment:
     """A comment in a review."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     reviewer_id: str = ""
     reviewer_name: str = ""
     comment: str = ""
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -61,6 +64,7 @@ class ReviewComment:
 @dataclass
 class DecisionReview:
     """A review of a decision."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     decision_id: str = ""
     decision_query: str = ""
@@ -76,7 +80,7 @@ class DecisionReview:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     reviewed_at: Optional[datetime] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -99,14 +103,14 @@ class DecisionReview:
 
 class ReviewBoard:
     """Executive review board for major decisions."""
-    
+
     def __init__(self):
         self.reviews: Dict[str, DecisionReview] = {}
         self.reviews_by_decision: Dict[str, str] = {}  # decision_id -> review_id
         self.reviewers: Dict[str, Dict[str, Any]] = {}  # reviewer_id -> reviewer info
         self.auto_review_threshold = ReviewPriority.HIGH
         logger.info("ReviewBoard initialized")
-    
+
     def add_reviewer(
         self,
         reviewer_id: str,
@@ -122,7 +126,7 @@ class ReviewBoard:
             "can_approve": can_approve,
         }
         logger.info(f"Added reviewer: {name}")
-    
+
     def submit_for_review(
         self,
         decision_id: str,
@@ -137,14 +141,14 @@ class ReviewBoard:
             priority=priority,
             risk_assessment=risk_assessment or {},
         )
-        
+
         self.reviews[review.id] = review
         self.reviews_by_decision[decision_id] = review.id
-        
+
         logger.info(f"Submitted decision {decision_id} for review")
-        
+
         return review
-    
+
     def assign_reviewer(
         self,
         review_id: str,
@@ -154,19 +158,19 @@ class ReviewBoard:
         review = self.reviews.get(review_id)
         if review is None:
             return False
-        
+
         if reviewer_id not in self.reviewers:
             logger.warning(f"Reviewer {reviewer_id} not found")
             return False
-        
+
         review.reviewer_id = reviewer_id
         review.reviewer_name = self.reviewers[reviewer_id]["name"]
         review.status = ReviewStatus.IN_REVIEW
-        
+
         logger.info(f"Assigned reviewer {reviewer_id} to review {review_id}")
-        
+
         return True
-    
+
     def add_comment(
         self,
         review_id: str,
@@ -177,22 +181,22 @@ class ReviewBoard:
         review = self.reviews.get(review_id)
         if review is None:
             return False
-        
+
         if reviewer_id not in self.reviewers:
             return False
-        
+
         review_comment = ReviewComment(
             reviewer_id=reviewer_id,
             reviewer_name=self.reviewers[reviewer_id]["name"],
             comment=comment,
         )
-        
+
         review.comments.append(review_comment)
-        
+
         logger.info(f"Added comment to review {review_id}")
-        
+
         return True
-    
+
     def approve_review(
         self,
         review_id: str,
@@ -203,16 +207,16 @@ class ReviewBoard:
         review = self.reviews.get(review_id)
         if review is None:
             return False
-        
+
         review.status = ReviewStatus.APPROVED if not conditions else ReviewStatus.CONDITIONAL
         review.approval_conditions = conditions or []
         review.strategic_alignment = strategic_alignment
         review.reviewed_at = datetime.now(timezone.utc)
-        
+
         logger.info(f"Approved review {review_id}")
-        
+
         return True
-    
+
     def reject_review(
         self,
         review_id: str,
@@ -222,15 +226,15 @@ class ReviewBoard:
         review = self.reviews.get(review_id)
         if review is None:
             return False
-        
+
         review.status = ReviewStatus.REJECTED
         review.rejection_reasons = reasons
         review.reviewed_at = datetime.now(timezone.utc)
-        
+
         logger.info(f"Rejected review {review_id}")
-        
+
         return True
-    
+
     def defer_review(
         self,
         review_id: str,
@@ -240,15 +244,15 @@ class ReviewBoard:
         review = self.reviews.get(review_id)
         if review is None:
             return False
-        
+
         review.status = ReviewStatus.DEFERRED
         review.rejection_reasons = [reason]
         review.reviewed_at = datetime.now(timezone.utc)
-        
+
         logger.info(f"Deferred review {review_id}")
-        
+
         return True
-    
+
     def auto_review(
         self,
         decision_data: Dict[str, Any],
@@ -257,7 +261,7 @@ class ReviewBoard:
         """Perform automatic review based on priority and governance."""
         decision_id = decision_data.get("id", "")
         decision_query = decision_data.get("query", "")
-        
+
         # Determine priority based on governance result
         priority = ReviewPriority.MEDIUM
         if governance_result:
@@ -268,7 +272,7 @@ class ReviewBoard:
                 priority = ReviewPriority.MEDIUM
             else:
                 priority = ReviewPriority.LOW
-        
+
         # Submit for review
         review = self.submit_for_review(
             decision_id=decision_id,
@@ -276,7 +280,7 @@ class ReviewBoard:
             priority=priority,
             risk_assessment=decision_data.get("metadata", {}).get("risk_assessment", {}),
         )
-        
+
         # Auto-approve if below threshold
         if priority.value <= self.auto_review_threshold.value:
             self.approve_review(
@@ -287,47 +291,44 @@ class ReviewBoard:
         else:
             # Assign to system reviewer
             self.assign_reviewer(review.id, "system")
-        
+
         return review
-    
+
     def get_review(self, review_id: str) -> Optional[DecisionReview]:
         """Get a review by ID."""
         return self.reviews.get(review_id)
-    
+
     def get_review_by_decision(self, decision_id: str) -> Optional[DecisionReview]:
         """Get a review by decision ID."""
         review_id = self.reviews_by_decision.get(decision_id)
         if review_id:
             return self.reviews.get(review_id)
         return None
-    
+
     def list_reviews(self, status: Optional[ReviewStatus] = None) -> List[DecisionReview]:
         """List all reviews, optionally filtered by status."""
         if status:
             return [r for r in self.reviews.values() if r.status == status]
         return list(self.reviews.values())
-    
+
     def get_pending_reviews(self) -> List[DecisionReview]:
         """Get all pending reviews."""
         return self.list_reviews(ReviewStatus.PENDING)
-    
+
     def get_review_statistics(self) -> Dict[str, Any]:
         """Get statistics about reviews."""
         total_reviews = len(self.reviews)
-        
-        by_status = {
-            status.value: len(self.list_reviews(status))
-            for status in ReviewStatus
-        }
-        
+
+        by_status = {status.value: len(self.list_reviews(status)) for status in ReviewStatus}
+
         by_priority = {
             priority.value: len([r for r in self.reviews.values() if r.priority == priority])
             for priority in ReviewPriority
         }
-        
+
         approved = len(self.list_reviews(ReviewStatus.APPROVED))
         rejected = len(self.list_reviews(ReviewStatus.REJECTED))
-        
+
         return {
             "total_reviews": total_reviews,
             "by_status": by_status,

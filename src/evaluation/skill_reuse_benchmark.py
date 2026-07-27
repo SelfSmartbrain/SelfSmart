@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class SkillReuseMetrics(BaseModel):
     id: uuid.UUID
     skill_id: str
@@ -17,17 +18,14 @@ class SkillReuseMetrics(BaseModel):
     timestamp: datetime
     model_config = {"from_attributes": True}
 
+
 class SkillReuseBenchmark:
     """Benchmark framework for evaluating skill reuse."""
 
     def __init__(self) -> None:
         self.logger = logger
 
-    async def evaluate_skill_reuse(
-        self, 
-        db: AsyncSession, 
-        skill_id: str
-    ) -> Dict[str, Any]:
+    async def evaluate_skill_reuse(self, db: AsyncSession, skill_id: str) -> Dict[str, Any]:
         """Tracks Reuse Count, Reuse Success Rate, and Performance Gain for skills."""
         self.logger.info(f"Evaluating reuse metrics for skill {skill_id}")
 
@@ -38,7 +36,7 @@ class SkillReuseBenchmark:
             reuse_count=150,
             reuse_success_rate=0.95,
             performance_gain=1.2,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         return metrics.model_dump()

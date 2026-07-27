@@ -11,7 +11,7 @@ def main() -> None:
     """Launch the ModelX Terminal User Interface."""
     api_url = os.getenv("MODELX_API_URL", "http://localhost:8000")
     api_key = os.getenv("MODELX_API_KEY")
-    
+
     app = ModelXTUI(api_url=api_url, api_key=api_key)
     app.run()
 

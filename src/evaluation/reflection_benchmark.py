@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ReflectionMetrics(BaseModel):
     id: uuid.UUID
     agent_id: str
@@ -16,17 +17,14 @@ class ReflectionMetrics(BaseModel):
     timestamp: datetime
     model_config = {"from_attributes": True}
 
+
 class ReflectionBenchmark:
     """Benchmark framework for evaluating agent reflections."""
 
     def __init__(self) -> None:
         self.logger = logger
 
-    async def evaluate_reflection(
-        self, 
-        db: AsyncSession, 
-        agent_id: str
-    ) -> Dict[str, Any]:
+    async def evaluate_reflection(self, db: AsyncSession, agent_id: str) -> Dict[str, Any]:
         """Tracks the quality and impact of reflections."""
         self.logger.info(f"Evaluating reflection metrics for agent {agent_id}")
 
@@ -36,7 +34,7 @@ class ReflectionBenchmark:
             agent_id=agent_id,
             reflection_quality=0.92,
             impact_score=0.85,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         return metrics.model_dump()

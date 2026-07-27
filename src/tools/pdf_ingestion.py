@@ -29,6 +29,7 @@ _MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class PDFIngestionInput(BaseModel):
     """Input schema for PDFIngestionTool."""
 
@@ -42,6 +43,7 @@ class PDFIngestionInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class PDFIngestionTool(AgentTool):
     """Extract text content from a PDF document.
@@ -157,7 +159,9 @@ class PDFIngestionTool(AgentTool):
                     "subject": raw_meta.subject or None,
                     "creator": raw_meta.creator or None,
                     "producer": raw_meta.producer or None,
-                    "creation_date": str(raw_meta.creation_date) if raw_meta.creation_date else None,
+                    "creation_date": (
+                        str(raw_meta.creation_date) if raw_meta.creation_date else None
+                    ),
                     "modification_date": (
                         str(raw_meta.modification_date) if raw_meta.modification_date else None
                     ),

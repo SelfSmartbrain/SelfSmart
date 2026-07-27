@@ -1,4 +1,5 @@
 """Meta-learning engine — discovers patterns across reflections, strategies, and failures."""
+
 from __future__ import annotations
 
 import json
@@ -59,12 +60,14 @@ class MetaLearningEngine:
             ranked = await self.update_rankings(
                 [s if isinstance(s, dict) else {"strategy": s} for s in strategies]
             )
-            improvements = await self.recommend_improvements({
-                "pattern_count": len(patterns),
-                "strategy_count": len(ranked),
-                "failure_count": len(failures),
-                "reflection_count": len(reflections),
-            })
+            improvements = await self.recommend_improvements(
+                {
+                    "pattern_count": len(patterns),
+                    "strategy_count": len(ranked),
+                    "failure_count": len(failures),
+                    "reflection_count": len(reflections),
+                }
+            )
 
             report: dict[str, Any] = {
                 "patterns": patterns,
@@ -80,7 +83,12 @@ class MetaLearningEngine:
             return report
         except Exception as exc:
             logger.error("learn_from_history_failed", error=str(exc))
-            return {"patterns": [], "ranked_strategies": [], "improvements": [], "meta_summary": "Meta-learning failed."}
+            return {
+                "patterns": [],
+                "ranked_strategies": [],
+                "improvements": [],
+                "meta_summary": "Meta-learning failed.",
+            }
 
     async def discover_patterns(self, data: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Find recurring patterns across mixed source data.
@@ -99,13 +107,15 @@ class MetaLearningEngine:
             patterns: list[dict[str, Any]] = []
             for source, items in groups.items():
                 if len(items) >= 2:
-                    patterns.append({
-                        "source": source,
-                        "frequency": len(items),
-                        "type": "recurring",
-                        "description": f"Recurring {source} pattern ({len(items)} occurrences)",
-                        "samples": items[:3],
-                    })
+                    patterns.append(
+                        {
+                            "source": source,
+                            "frequency": len(items),
+                            "type": "recurring",
+                            "description": f"Recurring {source} pattern ({len(items)} occurrences)",
+                            "samples": items[:3],
+                        }
+                    )
             logger.info("patterns_discovered", count=len(patterns))
             return patterns
         except Exception as exc:
@@ -156,10 +166,12 @@ class MetaLearningEngine:
         human_prompt = f"System metrics:\n{json.dumps(metrics, indent=2, default=str)}"
 
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             suggestions: list[str] = json.loads(response.content)
             logger.info("improvements_recommended", count=len(suggestions))
             return suggestions

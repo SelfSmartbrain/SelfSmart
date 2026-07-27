@@ -12,9 +12,7 @@ logger = get_logger(__name__)
 
 
 @router.get("")
-async def list_conversations(
-    limit: int = 50, current_user: TokenData = Depends(get_current_user)
-):
+async def list_conversations(limit: int = 50, current_user: TokenData = Depends(get_current_user)):
     try:
         conversations = await chat_runtime.conversation_manager.list_conversations(
             user_id=current_user.user_id, limit=limit

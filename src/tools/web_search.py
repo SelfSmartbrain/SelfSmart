@@ -26,6 +26,7 @@ TAVILY_API_URL = "https://api.tavily.com/search"
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class WebSearchInput(BaseModel):
     """Input schema for WebSearchTool."""
 
@@ -50,6 +51,7 @@ class WebSearchInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class WebSearchTool(AgentTool):
     """Search the web using the Tavily Search API.

@@ -100,6 +100,7 @@ class ProgressTracker:
                 await self.save_record(record, self.session)
             except Exception as e:
                 from src.config.logging import get_logger
+
                 get_logger(__name__).warning(f"Failed to persist progress: {e}")
 
         return record

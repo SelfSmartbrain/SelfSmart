@@ -119,6 +119,7 @@ _DANGEROUS_REGEX = re.compile(
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class PythonExecutorInput(BaseModel):
     """Input schema for PythonExecutorTool."""
 
@@ -139,6 +140,7 @@ class PythonExecutorInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Code validator
 # ---------------------------------------------------------------------------
+
 
 class _CodeValidator:
     """Static analyser that inspects Python source for forbidden patterns."""
@@ -201,6 +203,7 @@ class _CodeValidator:
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class PythonExecutorTool(AgentTool):
     """Execute Python code in a sandboxed subprocess.
@@ -324,7 +327,7 @@ class PythonExecutorTool(AgentTool):
         """
         # Encode the user code in base64 to avoid escaping issues
         # This prevents sandbox escape via triple-quote breaking
-        encoded_code = base64.b64encode(code.encode('utf-8')).decode('ascii')
+        encoded_code = base64.b64encode(code.encode("utf-8")).decode("ascii")
 
         wrapper = textwrap.dedent(f"""\
             import sys, platform, base64

@@ -68,7 +68,6 @@ __all__ = [
     "DecisionTraceManager",
     "ExplanationEngine",
     "DecisionExplanation",
-    
     # 16B: Assumption Extraction
     "AssumptionDetector",
     "Assumption",
@@ -76,7 +75,6 @@ __all__ = [
     "Belief",
     "PremiseAnalyzer",
     "Premise",
-    
     # 16C: Decision Pattern Mining
     "DecisionPatternMiner",
     "DecisionPattern",
@@ -84,7 +82,6 @@ __all__ = [
     "SuccessPattern",
     "FailurePatternDetector",
     "FailurePattern",
-    
     # 16D: Governance Framework
     "GovernanceEngine",
     "GovernanceResult",
@@ -92,13 +89,11 @@ __all__ = [
     "Policy",
     "ConstraintSystem",
     "Constraint",
-    
     # 16E: Executive Review Board
     "ReviewBoard",
     "DecisionReview",
     "StrategicReviewer",
     "StrategicReview",
-    
     # 16F: Decision Evolution Engine
     "DecisionEvolutionEngine",
     "EvolutionProposal",
@@ -106,13 +101,11 @@ __all__ = [
     "StrategyMutation",
     "PolicyOptimizer",
     "PolicyOptimization",
-    
     # 16G: Decision Fitness Metrics
     "DecisionFitnessCalculator",
     "DecisionFitness",
     "DecisionBenchmark",
     "BenchmarkResult",
-    
     # 16H: Long-Term Outcome Tracking
     "OutcomeTracker",
     "OutcomeTracking",
@@ -120,7 +113,6 @@ __all__ = [
     "OutcomeValidation",
     "CausalAttributor",
     "CausalAttribution",
-    
     # 16I: Strategic Governance Memory
     "GovernanceMemory",
     "GovernanceRecord",

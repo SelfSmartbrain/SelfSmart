@@ -12,6 +12,7 @@ try:
 except ImportError:
     CapabilityGap = None
 
+
 class CapabilityGapDetector:
     """
     Analyzes a research goal and current tools list using an LLM
@@ -22,10 +23,7 @@ class CapabilityGapDetector:
         self.llm_client = llm_client
 
     async def detect_gap(
-        self, 
-        session: AsyncSession, 
-        goal: str, 
-        available_tools: List[str]
+        self, session: AsyncSession, goal: str, available_tools: List[str]
     ) -> dict:
         """
         Identify if there is a gap in capabilities for the given goal and tools.
@@ -34,7 +32,7 @@ class CapabilityGapDetector:
         # In a real implementation, we would call self.llm_client.prompt(...)
         # For now, we simulate an identified gap based on the goal.
         identified_gap = f"Identified missing tool capabilities for goal: {goal}"
-        
+
         gap_id = uuid.uuid4()
         now = datetime.datetime.utcnow()
 
@@ -46,7 +44,7 @@ class CapabilityGapDetector:
                 identified_gap=identified_gap,
                 status="DETECTED",
                 created_at=now,
-                updated_at=now
+                updated_at=now,
             )
             session.add(new_gap)
             await session.commit()
@@ -63,19 +61,22 @@ class CapabilityGapDetector:
                 INSERT INTO capability_gaps (id, goal, identified_gap, status, created_at, updated_at)
                 VALUES (:id, :goal, :identified_gap, :status, :created_at, :updated_at)
             """)
-            await session.execute(query, {
-                "id": gap_id,
-                "goal": goal,
-                "identified_gap": identified_gap,
-                "status": "DETECTED",
-                "created_at": now,
-                "updated_at": now
-            })
+            await session.execute(
+                query,
+                {
+                    "id": gap_id,
+                    "goal": goal,
+                    "identified_gap": identified_gap,
+                    "status": "DETECTED",
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
             await session.commit()
 
             return {
                 "id": str(gap_id),
                 "goal": goal,
                 "identified_gap": identified_gap,
-                "status": "DETECTED"
+                "status": "DETECTED",
             }

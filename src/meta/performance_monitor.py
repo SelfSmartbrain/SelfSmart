@@ -45,5 +45,5 @@ class PerformanceMonitor:
         for m_type in MetricType:
             avg_val = await self.repo.get_average_metric(user_id=user_id, metric_type=m_type.value)
             summary[m_type.value] = avg_val
-            
+
         return summary

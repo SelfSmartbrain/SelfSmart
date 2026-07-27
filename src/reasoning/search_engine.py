@@ -1,8 +1,8 @@
-'''search_engine.py
- 
+"""search_engine.py
+
 Provides retrieval of relevant memories (working, episodic, semantic, procedural) for the ReasoningEngine.
 Uses simple keyword matching and optional vector similarity via the SemanticMemory embeddings.
-''' 
+"""
 
 from typing import List, Dict, Any
 import logging
@@ -14,14 +14,18 @@ from ..memory.procedural_memory import ProceduralMemory
 # Lazy-load the sentence transformer model to avoid importing at module level if not used
 _embedding_model = None
 
+
 def _get_embedding_model():
     global _embedding_model
     if _embedding_model is None:
         from sentence_transformers import SentenceTransformer
-        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
     return _embedding_model
 
+
 logger = logging.getLogger(__name__)
+
 
 class SearchEngine:
     def __init__(self, db_session, working_mem: WorkingMemory, semantic_mem: SemanticMemory):
@@ -31,7 +35,7 @@ class SearchEngine:
 
     def retrieve(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """Retrieve top‑k relevant items for a query.
-        
+
         Currently combines:
         * Working memory (exact key match).
         * Semantic memory vector similarity (now using sentence-transformers).
@@ -58,7 +62,9 @@ class SearchEngine:
                 query_vector = _get_embedding_model().encode(query).tolist()
                 semantic_results = self.semantic_mem.similarity_search(query_vector, top_k=top_k)
                 for sr in semantic_results:
-                    results.append({"source": "semantic_memory", "content": sr.content, "score": sr.score})
+                    results.append(
+                        {"source": "semantic_memory", "content": sr.content, "score": sr.score}
+                    )
             except Exception as e:
                 logger.warning(f"Semantic memory search failed: {e}")
         return results

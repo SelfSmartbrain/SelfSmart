@@ -28,7 +28,7 @@ class DataCollector:
         self,
         output_dir: str = "./training_data",
         max_concurrent_requests: int = 10,
-        delay_between_requests: float = 1.0
+        delay_between_requests: float = 1.0,
     ):
         """
         Initialize data collector.
@@ -47,23 +47,16 @@ class DataCollector:
 
         # Data sources configuration
         self.sources = {
-            "wikipedia": {
-                "base_url": "https://en.wikipedia.org/api/rest_v1",
-                "enabled": True
-            },
-            "hacker_news": {
-                "base_url": "https://hacker-news.firebaseio.com/v0",
-                "enabled": True
-            },
-            "reddit": {
-                "base_url": "https://www.reddit.com",
-                "enabled": False  # Requires API key
-            }
+            "wikipedia": {"base_url": "https://en.wikipedia.org/api/rest_v1", "enabled": True},
+            "hacker_news": {"base_url": "https://hacker-news.firebaseio.com/v0", "enabled": True},
+            "reddit": {"base_url": "https://www.reddit.com", "enabled": False},  # Requires API key
         }
 
         logger.info(f"Data collector initialized with output directory: {self.output_dir}")
 
-    def sanitize_content(self, content: str, min_length: int = 50, max_length: int = 10000) -> Optional[str]:
+    def sanitize_content(
+        self, content: str, min_length: int = 50, max_length: int = 10000
+    ) -> Optional[str]:
         """
         Sanitize content by removing HTML artifacts, excessive whitespace, and low-quality content.
         Also removes script tags and suspicious instruction-like phrases, and caps length.
@@ -81,37 +74,39 @@ class DataCollector:
 
         # Remove script tags and their content
         # Regex to match <script> tags and everything between them until </script>
-        content = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', ' ', content, flags=re.IGNORECASE)
+        content = re.sub(
+            r"<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>", " ", content, flags=re.IGNORECASE
+        )
         # Also remove any standalone opening or closing script tags (in case of malformed)
-        content = re.sub(r'</?script\b[^>]*>', ' ', content, flags=re.IGNORECASE)
+        content = re.sub(r"</?script\b[^>]*>", " ", content, flags=re.IGNORECASE)
 
         # Remove suspicious instruction-like phrases (case-insensitive)
         suspicious_patterns = [
-            r'ignore\s+previous\s+instructions',
-            r'you\s+are\s+now',
-            r'disregard\s+above',
-            r'forget\s+everything\s+before',
-            r'this\s+overrides\s+previous',
-            r'new\s+instructions:',
+            r"ignore\s+previous\s+instructions",
+            r"you\s+are\s+now",
+            r"disregard\s+above",
+            r"forget\s+everything\s+before",
+            r"this\s+overrides\s+previous",
+            r"new\s+instructions:",
             # Add more patterns as needed
         ]
         for pattern in suspicious_patterns:
-            content = re.sub(pattern, ' ', content, flags=re.IGNORECASE)
+            content = re.sub(pattern, " ", content, flags=re.IGNORECASE)
 
         # Remove HTML tags (any remaining)
-        content = re.sub(r'<[^>]+>', ' ', content)
+        content = re.sub(r"<[^>]+>", " ", content)
 
         # Remove common HTML entities
-        content = re.sub(r'&[a-zA-Z]+;', ' ', content)
+        content = re.sub(r"&[a-zA-Z]+;", " ", content)
 
         # Remove URLs
-        content = re.sub(r'https?://\S+', ' ', content)
+        content = re.sub(r"https?://\S+", " ", content)
 
         # Remove email addresses
-        content = re.sub(r'\S+@\S+', ' ', content)
+        content = re.sub(r"\S+@\S+", " ", content)
 
         # Remove excessive whitespace
-        content = re.sub(r'\s+', ' ', content)
+        content = re.sub(r"\s+", " ", content)
 
         # Remove leading/trailing whitespace
         content = content.strip()
@@ -120,7 +115,7 @@ class DataCollector:
         if len(content) > max_length:
             content = content[:max_length]
             # Try to cut at a space to avoid cutting words in half
-            last_space = content.rfind(' ')
+            last_space = content.rfind(" ")
             if last_space > max_length * 0.8:  # Only if we don't lose too much
                 content = content[:last_space]
 
@@ -129,7 +124,9 @@ class DataCollector:
             return None
 
         # Filter out content with too many special characters (potential spam)
-        special_char_ratio = sum(1 for c in content if not c.isalnum() and not c.isspace()) / max(len(content), 1)
+        special_char_ratio = sum(1 for c in content if not c.isalnum() and not c.isspace()) / max(
+            len(content), 1
+        )
         if special_char_ratio > 0.5:
             return None
 
@@ -143,16 +140,14 @@ class DataCollector:
             ttl_dns_cache=300,
             use_dns_cache=True,
             force_close=False,
-            enable_cleanup_closed=True
+            enable_cleanup_closed=True,
         )
 
         self.session = aiohttp.ClientSession(
             timeout=timeout,
             connector=connector,
-            headers={
-                'User-Agent': 'SmartSelf-AI-DataCollector/1.0'
-            },
-            trust_env=False
+            headers={"User-Agent": "SmartSelf-AI-DataCollector/1.0"},
+            trust_env=False,
         )
         return self
 
@@ -162,9 +157,7 @@ class DataCollector:
             await self.session.close()
 
     async def fetch_wikipedia_articles(
-        self,
-        count: int = 100,
-        categories: Optional[List[str]] = None
+        self, count: int = 100, categories: Optional[List[str]] = None
     ) -> List[Dict[str, Any]]:
         """
         Fetch Wikipedia articles for training data.
@@ -205,14 +198,18 @@ class DataCollector:
                                     "source": "wikipedia",
                                     "title": article.get("title", ""),
                                     "content": sanitized_content,
-                                    "url": article.get("content_urls", {}).get("desktop", {}).get("page", ""),
+                                    "url": article.get("content_urls", {})
+                                    .get("desktop", {})
+                                    .get("page", ""),
                                     "timestamp": datetime.now().isoformat(),
-                                    "categories": article.get("categories", [])
+                                    "categories": article.get("categories", []),
                                 }
 
                                 articles.append(article_data)
                             else:
-                                logger.debug(f"Skipped Wikipedia article due to sanitization: {article.get('title', '')}")
+                                logger.debug(
+                                    f"Skipped Wikipedia article due to sanitization: {article.get('title', '')}"
+                                )
 
                 except Exception as e:
                     logger.error(f"Error fetching Wikipedia article: {e}")
@@ -225,10 +222,7 @@ class DataCollector:
             logger.error(f"Error in Wikipedia fetching: {e}")
             return []
 
-    async def fetch_hacker_news_stories(
-        self,
-        count: int = 100
-    ) -> List[Dict[str, Any]]:
+    async def fetch_hacker_news_stories(self, count: int = 100) -> List[Dict[str, Any]]:
         """
         Fetch Hacker News stories for training data.
 
@@ -278,12 +272,14 @@ class DataCollector:
                                             "url": story.get("url", ""),
                                             "timestamp": datetime.now().isoformat(),
                                             "score": story.get("score", 0),
-                                            "comments": story.get("descendants", 0)
+                                            "comments": story.get("descendants", 0),
                                         }
 
                                         stories.append(story_data)
                                     else:
-                                        logger.debug(f"Skipped HN story due to sanitization: {story.get('title', '')}")
+                                        logger.debug(
+                                            f"Skipped HN story due to sanitization: {story.get('title', '')}"
+                                        )
 
                         except Exception as e:
                             logger.error(f"Error fetching story {story_id}: {e}")
@@ -296,11 +292,7 @@ class DataCollector:
             logger.error(f"Error in Hacker News fetching: {e}")
             return []
 
-    async def crawl_url(
-        self,
-        url: str,
-        max_depth: int = 1
-    ) -> Optional[Dict[str, Any]]:
+    async def crawl_url(self, url: str, max_depth: int = 1) -> Optional[Dict[str, Any]]:
         """
         Crawl a single URL and extract content.
 
@@ -319,7 +311,7 @@ class DataCollector:
                     return None
 
                 html = await response.text()
-                soup = BeautifulSoup(html, 'html.parser')
+                soup = BeautifulSoup(html, "html.parser")
 
                 # Remove script and style elements
                 for script in soup(["script", "style"]):
@@ -329,10 +321,10 @@ class DataCollector:
                 text = soup.get_text()
                 lines = (line.strip() for line in text.splitlines())
                 chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-                text = '\n'.join(chunk for chunk in chunks if chunk)
+                text = "\n".join(chunk for chunk in chunks if chunk)
 
                 # Extract metadata
-                title = soup.find('title')
+                title = soup.find("title")
                 title_text = title.get_text() if title else ""
 
                 # Sanitize content
@@ -344,7 +336,7 @@ class DataCollector:
                         "title": title_text,
                         "content": sanitized_content,
                         "url": url,
-                        "timestamp": datetime.now().isoformat()
+                        "timestamp": datetime.now().isoformat(),
                     }
                 else:
                     logger.debug(f"Skipped web crawl due to sanitization: {url}")
@@ -354,10 +346,7 @@ class DataCollector:
             logger.error(f"Error crawling {url}: {e}")
             return None
 
-    async def collect_from_urls(
-        self,
-        urls: List[str]
-    ) -> List[Dict[str, Any]]:
+    async def collect_from_urls(self, urls: List[str]) -> List[Dict[str, Any]]:
         """
         Collect data from a list of URLs.
 
@@ -380,11 +369,7 @@ class DataCollector:
         logger.info(f"Successfully crawled {len(data)} URLs")
         return data
 
-    def save_data(
-        self,
-        data: List[Dict[str, Any]],
-        filename: str
-    ):
+    def save_data(self, data: List[Dict[str, Any]], filename: str):
         """
         Save collected data to file.
 
@@ -394,7 +379,7 @@ class DataCollector:
         """
         output_path = self.output_dir / filename
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
         logger.info(f"Saved {len(data)} items to {output_path}")
@@ -415,7 +400,7 @@ class DataCollector:
             logger.warning(f"File not found: {input_path}")
             return []
 
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         logger.info(f"Loaded {len(data)} items from {input_path}")
@@ -425,7 +410,7 @@ class DataCollector:
         self,
         wikipedia_count: int = 50,
         hacker_news_count: int = 50,
-        urls: Optional[List[str]] = None
+        urls: Optional[List[str]] = None,
     ) -> Dict[str, List[Dict[str, Any]]]:
         """
         Collect data from all enabled sources.

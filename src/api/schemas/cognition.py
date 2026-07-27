@@ -1,4 +1,5 @@
 """Pydantic schemas for the Cognition and Dashboard modules (Phase 7)."""
+
 from __future__ import annotations
 
 from datetime import datetime

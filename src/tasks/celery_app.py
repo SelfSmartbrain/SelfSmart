@@ -7,7 +7,7 @@ app = Celery(
     "smartself",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["src.tasks.learning_tasks", "src.tasks.training_tasks"]
+    include=["src.tasks.learning_tasks", "src.tasks.training_tasks"],
 )
 
 app.conf.update(

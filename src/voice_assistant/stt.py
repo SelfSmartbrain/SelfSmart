@@ -1,6 +1,7 @@
 """
 Speech-to-Text using Whisper.cpp (local, fast)
 """
+
 import asyncio
 import subprocess
 import tempfile
@@ -44,10 +45,14 @@ class WhisperSTT:
         """Transcribe audio file to text"""
         cmd = [
             str(self.whisper_cpp_path / "main"),
-            "-m", str(self.model_path),
-            "-f", audio_file,
-            "-l", self.language,
-            "-t", str(self.threads),
+            "-m",
+            str(self.model_path),
+            "-f",
+            audio_file,
+            "-l",
+            self.language,
+            "-t",
+            str(self.threads),
             "-nt",  # no timestamps
         ]
 
@@ -73,7 +78,8 @@ class WhisperSTT:
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
             # Write WAV header
             import wave
-            with wave.open(f.name, 'wb') as wav:
+
+            with wave.open(f.name, "wb") as wav:
                 wav.setnchannels(1)
                 wav.setsampwidth(2)  # 16-bit
                 wav.setframerate(sample_rate)
@@ -113,6 +119,7 @@ class WhisperSTT:
 
 class VADWrapper:
     """Voice Activity Detection wrapper using Silero VAD"""
+
     def __init__(self, threshold: float = 0.5):
         self.threshold = threshold
         self._model = None
@@ -121,10 +128,9 @@ class VADWrapper:
     def _init_vad(self):
         try:
             import torch
+
             self._model, _ = torch.hub.load(
-                repo_or_dir='snakers4/silero-vad',
-                model='silero_vad',
-                force_reload=False
+                repo_or_dir="snakers4/silero-vad", model="silero_vad", force_reload=False
             )
         except Exception as e:
             logger.warning(f"VAD not available: {e}")

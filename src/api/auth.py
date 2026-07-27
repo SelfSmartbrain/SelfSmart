@@ -12,19 +12,24 @@ from src.config.settings import get_settings
 from src.db.repositories.user_repo import UserRepository
 from src.db.session import get_session
 
+
 class User(BaseModel):
     id: uuid.UUID
     email: str
     is_active: bool = True
 
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     settings = get_settings()
@@ -39,6 +44,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, secret_key, algorithm="HS256")
     return encoded_jwt
+
 
 async def get_current_user(
     token: Annotated[str | None, Depends(oauth2_scheme)],
@@ -63,15 +69,19 @@ async def get_current_user(
             payload = jwt.decode(token, secret_key, algorithms=["HS256"])
             email: str = payload.get("sub")
             if email is None:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+                )
         except JWTError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
+
         user_db = await repo.get_by_email(email)
         if user_db is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         return User(id=user_db.id, email=user_db.email)
-    
+
     # API Key authentication
     if api_key:
         # Fetch all users that have an API key set
@@ -82,7 +92,7 @@ async def get_current_user(
             if verify_password(api_key, user.api_key_hash):
                 return User(id=user.id, email=user.email)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
-    
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated.",

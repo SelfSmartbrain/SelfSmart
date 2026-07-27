@@ -1,4 +1,5 @@
 """Learning velocity tracker — measures rates of knowledge, concept, and research growth."""
+
 from __future__ import annotations
 
 import time
@@ -90,10 +91,12 @@ class LearningVelocityTracker:
         """
         try:
             current_rate = await self._current_growth_rate()
-            self._growth_history.append({
-                "rate": current_rate,
-                "timestamp": time.time(),
-            })
+            self._growth_history.append(
+                {
+                    "rate": current_rate,
+                    "timestamp": time.time(),
+                }
+            )
 
             if len(self._growth_history) < 2:
                 logger.info("learning_acceleration", acceleration=0.0, note="insufficient history")

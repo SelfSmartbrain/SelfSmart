@@ -38,7 +38,9 @@ class PiperSynthesizer:
 
     def _load_voice(self):
         if self._voice is None:
-            voice_file = self.VOICE_CONFIG.get(self.voice_name, self.VOICE_CONFIG[self.DEFAULT_VOICE])
+            voice_file = self.VOICE_CONFIG.get(
+                self.voice_name, self.VOICE_CONFIG[self.DEFAULT_VOICE]
+            )
             voice_path = self.voices_dir / voice_file
             config_path = voice_path.with_suffix(".onnx.json")
 
@@ -46,7 +48,9 @@ class PiperSynthesizer:
                 raise FileNotFoundError(f"Voice model not found: {voice_path}")
 
             logger.info(f"Loading Piper voice: {voice_file}")
-            self._voice = piper.PiperVoice.load(str(voice_path), config_path=str(config_path) if config_path.exists() else None)
+            self._voice = piper.PiperVoice.load(
+                str(voice_path), config_path=str(config_path) if config_path.exists() else None
+            )
             self._sample_rate = self._voice.config.sample_rate
             logger.info(f"Voice loaded, sample rate: {self._sample_rate}")
 
@@ -60,17 +64,17 @@ class PiperSynthesizer:
 
     def synthesize(self, text: str) -> np.ndarray:
         self._load_voice()
-        
+
         synthesis_config = piper.config.SynthesisConfig(
             length_scale=self.length_scale,
             noise_scale=self.noise_scale,
             noise_w_scale=self.noise_w_scale,
         )
-        
+
         audio_chunks = []
         for audio_chunk in self._voice.synthesize(text, syn_config=synthesis_config):
             audio_chunks.append(audio_chunk.audio_float_array)
-        
+
         audio = np.concatenate(audio_chunks).astype(np.float32)
         return audio
 
@@ -80,13 +84,13 @@ class PiperSynthesizer:
 
     def synthesize_stream(self, text: str):
         self._load_voice()
-        
+
         synthesis_config = piper.config.SynthesisConfig(
             length_scale=self.length_scale,
             noise_scale=self.noise_scale,
             noise_w_scale=self.noise_w_scale,
         )
-        
+
         for audio_chunk in self._voice.synthesize(text, syn_config=synthesis_config):
             yield audio_chunk.audio_float_array
 

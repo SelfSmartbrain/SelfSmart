@@ -16,6 +16,7 @@ from transformers import TrainingArguments
 
 logger = logging.getLogger(__name__)
 
+
 def set_seed(seed: int = 42):
     """Set random seeds for Python, NumPy, and PyTorch."""
     random.seed(seed)
@@ -27,10 +28,12 @@ def set_seed(seed: int = 42):
     torch.backends.cudnn.benchmark = False
     logger.info(f"Random seed set to {seed}")
 
+
 def compute_data_hash(data: list) -> str:
     """Compute SHA256 hash of training data for versioning."""
     data_str = json.dumps(data, sort_keys=True)
     return hashlib.sha256(data_str.encode()).hexdigest()[:16]
+
 
 async def _run_training_pipeline():
     """Async function to run the full LoRA fine-tuning pipeline."""
@@ -51,7 +54,7 @@ async def _run_training_pipeline():
         "data_hash": data_hash,
         "timestamp": datetime.utcnow().isoformat(),
         "total_samples": len(processed_data),
-        "sources": ["wikipedia", "hacker_news"]
+        "sources": ["wikipedia", "hacker_news"],
     }
     processed_dir = Path("./training_data/processed")
     processed_dir.mkdir(parents=True, exist_ok=True)
@@ -82,7 +85,7 @@ async def _run_training_pipeline():
         evaluation_strategy="steps",
         fp16=False,
         bf16=True,  # MPS/M1 optimization
-        optim="adamw_torch"
+        optim="adamw_torch",
     )
 
     trainer.train(
@@ -90,8 +93,9 @@ async def _run_training_pipeline():
         val_data_path="./training_data/processed/val_processed_combined_training_data.json",
         lora_config=None,  # Use default LoRA config
         training_args=training_args,
-        data_hash=data_hash
+        data_hash=data_hash,
     )
+
 
 @app.task(bind=True, name="src.tasks.training_tasks.run_model_training")
 def run_model_training(self):

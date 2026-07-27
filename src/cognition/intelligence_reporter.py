@@ -1,4 +1,5 @@
 """Intelligence reporter — generates daily, weekly, and monthly Markdown intelligence reports."""
+
 from __future__ import annotations
 
 import json
@@ -121,10 +122,12 @@ class IntelligenceReporter:
             f"Failure rate: {failure_rate:.2%}"
         )
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             return response.content
         except Exception as exc:
             logger.error("narrative_generation_failed", error=str(exc))

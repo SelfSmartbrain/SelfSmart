@@ -15,7 +15,6 @@ import click
 from rich.console import Console
 from rich.table import Table
 
-
 console = Console()
 DEFAULT_STATE_FILE = Path(".modelx/execution_loop_checkpoints.json")
 DEFAULT_PID_FILE = Path("/tmp/modelx_harness.pid")
@@ -196,8 +195,7 @@ class ExecutionLoopHarness:
             status=status,
         )
         console.print(
-            f"{checkpoint['checkpoint_name']} "
-            f"step={current_step}/{total_steps} status={status}"
+            f"{checkpoint['checkpoint_name']} " f"step={current_step}/{total_steps} status={status}"
         )
         return checkpoint
 
@@ -287,8 +285,7 @@ def restore(
     harness = _build_harness(state_file, pid_file, step_delay)
     checkpoint = harness.restore_and_resume(objective_id)
     console.print(
-        f"restored objective_id={objective_id} "
-        f"status={checkpoint['state_snapshot']['status']}"
+        f"restored objective_id={objective_id} " f"status={checkpoint['state_snapshot']['status']}"
     )
 
 

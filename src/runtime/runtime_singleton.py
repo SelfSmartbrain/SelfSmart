@@ -4,6 +4,7 @@ Use `init_runtime()` once inside the FastAPI `lifespan` context and
 `get_runtime()` anywhere else.  Thread-safe via an asyncio.Lock so that
 concurrent lifespan callbacks (e.g. during testing) cannot double-initialize.
 """
+
 from __future__ import annotations
 
 import asyncio

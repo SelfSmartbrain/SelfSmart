@@ -7,6 +7,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class EnvironmentService(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     name: str
@@ -17,8 +18,10 @@ class EnvironmentService(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class EnvironmentRegistry:
     """Registry for managing available external environment services."""
+
     def __init__(self) -> None:
         self._services: Dict[uuid.UUID, EnvironmentService] = {}
 
@@ -35,7 +38,7 @@ class EnvironmentRegistry:
     async def list_services(self) -> List[EnvironmentService]:
         """List all registered environment services."""
         return list(self._services.values())
-        
+
     async def unregister_service(self, service_id: uuid.UUID) -> bool:
         """Unregister an environment service."""
         if service_id in self._services:

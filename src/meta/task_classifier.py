@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class TaskClassification(BaseModel):
     """Structured output for task classification."""
-    
+
     task_type: TaskType = Field(
         description="The primary category of the task. Must be one of the allowed TaskType values."
     )
@@ -29,9 +29,7 @@ class TaskClassification(BaseModel):
     subtypes: list[str] = Field(
         description="Optional list of more specific task subtypes or tags (e.g., ['python', 'refactoring'])."
     )
-    reasoning: str = Field(
-        description="Brief explanation of why this classification was chosen."
-    )
+    reasoning: str = Field(description="Brief explanation of why this classification was chosen.")
 
 
 class TaskClassifier:
@@ -42,6 +40,7 @@ class TaskClassifier:
         if llm is None:
             # Lazy import to avoid circular dependencies if needed
             from langchain_anthropic import ChatAnthropic
+
             self.llm = ChatAnthropic(
                 model=self.settings.anthropic_model,
                 api_key=self.settings.anthropic_api_key.get_secret_value(),
@@ -55,15 +54,15 @@ class TaskClassifier:
 
     async def classify(self, task_description: str, context: str | None = None) -> dict[str, Any]:
         """Classify a task description into a TaskType."""
-        
+
         system_prompt = (
             "You are an expert AI task classifier. Your job is to analyze a task description "
             "and categorize it into exactly one of the following primary types:\n\n"
         )
-        
+
         for task_type in TaskType:
             system_prompt += f"- {task_type.value}\n"
-            
+
         system_prompt += (
             "\nAnalyze the task carefully and provide the classification, a confidence score, "
             "relevant subtypes/tags, and a brief reasoning."

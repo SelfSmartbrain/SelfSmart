@@ -13,7 +13,13 @@ from typing import Any
 from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 
 from src.api.dependencies import CurrentUser, DB_SessionRepo, DB_TaskRepo
-from src.api.schemas.goals import GoalCreate, GoalExecute, GoalListResponse, GoalResponse, GoalSummary
+from src.api.schemas.goals import (
+    GoalCreate,
+    GoalExecute,
+    GoalListResponse,
+    GoalResponse,
+    GoalSummary,
+)
 from src.config.logging import get_logger
 
 logger = get_logger(__name__)
@@ -81,6 +87,7 @@ async def get_goal(
     total = len(tasks) or 1
 
     from src.api.schemas.goals import TaskSummaryInGoal
+
     task_summaries = [
         TaskSummaryInGoal(
             id=t.id,
@@ -162,17 +169,17 @@ async def execute_goal(
         raise HTTPException(status_code=404, detail="Goal not found")
 
     from src.db.enums import SessionStatus
+
     await session_repo.update_status(goal_id, SessionStatus.ACTIVE)
 
     async def _run_goal() -> None:
         """Background task: push the goal into the runtime ObjectiveManager."""
         try:
             from src.runtime.runtime_singleton import get_runtime
+
             runtime = get_runtime()
             priority = float(
-                (body.context or {}).get("priority", 0.5)
-                if hasattr(body, "context")
-                else 0.5
+                (body.context or {}).get("priority", 0.5) if hasattr(body, "context") else 0.5
             )
             obj = runtime.objective_manager.set_objective(
                 session.goal,
@@ -188,10 +195,12 @@ async def execute_goal(
                 error=str(exc),
             )
             from src.db.enums import SessionStatus
+
             await session_repo.update_status(goal_id, SessionStatus.FAILED)
         except Exception as exc:
             logger.error("Goal execution failed", goal_id=str(goal_id), error=str(exc))
             from src.db.enums import SessionStatus
+
             await session_repo.update_status(goal_id, SessionStatus.FAILED)
 
     background_tasks.add_task(_run_goal)

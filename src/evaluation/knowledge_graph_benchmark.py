@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class KnowledgeGraphMetrics(BaseModel):
     id: uuid.UUID
     graph_density: float
@@ -17,16 +18,14 @@ class KnowledgeGraphMetrics(BaseModel):
     timestamp: datetime
     model_config = {"from_attributes": True}
 
+
 class KnowledgeGraphBenchmark:
     """Benchmark framework for evaluating knowledge graph state."""
 
     def __init__(self) -> None:
         self.logger = logger
 
-    async def evaluate_graph(
-        self, 
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+    async def evaluate_graph(self, db: AsyncSession) -> Dict[str, Any]:
         """Evaluates graph density and consistency."""
         self.logger.info("Evaluating knowledge graph metrics")
 
@@ -37,7 +36,7 @@ class KnowledgeGraphBenchmark:
             consistency_score=0.98,
             node_count=10500,
             edge_count=24000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         return metrics.model_dump()

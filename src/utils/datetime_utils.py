@@ -13,9 +13,9 @@ from typing import Optional
 def utcnow() -> datetime:
     """
     Get current UTC time as timezone-aware datetime.
-    
+
     Replaces deprecated datetime.utcnow() which returns naive datetime.
-    
+
     Returns:
         Current UTC time with timezone info (timezone.utc)
     """
@@ -25,7 +25,7 @@ def utcnow() -> datetime:
 def utcnow_isoformat() -> str:
     """
     Get current UTC time as ISO format string.
-    
+
     Returns:
         ISO 8601 formatted UTC timestamp with timezone (e.g., '2024-01-15T10:30:00+00:00')
     """
@@ -35,7 +35,7 @@ def utcnow_isoformat() -> str:
 def utcnow_naive_utc() -> datetime:
     """
     Get current UTC time as naive datetime (UTC but no timezone info).
-    
+
     Use ONLY when interfacing with legacy code or databases that require
     naive UTC datetimes. Prefer utcnow() for new code.
     """
@@ -45,10 +45,10 @@ def utcnow_naive_utc() -> datetime:
 def parse_isoformat(dt_string: str) -> datetime:
     """
     Parse ISO format datetime string, ensuring result is timezone-aware.
-    
+
     Args:
         dt_string: ISO 8601 datetime string
-        
+
     Returns:
         Timezone-aware datetime (UTC if no timezone specified)
     """
@@ -61,10 +61,10 @@ def parse_isoformat(dt_string: str) -> datetime:
 def ensure_utc(dt: datetime) -> datetime:
     """
     Ensure a datetime is timezone-aware in UTC.
-    
+
     Args:
         dt: A datetime (naive or timezone-aware)
-        
+
     Returns:
         Timezone-aware datetime in UTC
     """
@@ -76,12 +76,12 @@ def ensure_utc(dt: datetime) -> datetime:
 def age_days(created_at: datetime) -> int:
     """
     Calculate age in days from a timestamp to now.
-    
+
     Handles both naive and timezone-aware datetimes safely.
-    
+
     Args:
         created_at: The creation timestamp
-        
+
     Returns:
         Number of full days elapsed
     """

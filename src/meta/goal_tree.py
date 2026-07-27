@@ -23,18 +23,19 @@ class GoalTreeEngine:
         self.tree_repo = tree_repo
         self.subgoal_repo = subgoal_repo
 
-    async def generate_hierarchy(self, goal: GeneratedGoal, plan_steps: list[dict[str, Any]]) -> GoalTree:
+    async def generate_hierarchy(
+        self, goal: GeneratedGoal, plan_steps: list[dict[str, Any]]
+    ) -> GoalTree:
         """
         Convert a flat list of plan steps into a GoalTree with proper dependencies.
         """
         logger.info(f"Generating GoalTree hierarchy for goal {goal.id}")
-        
+
         # 1. Create the root tree record
         tree = await self.tree_repo.create(
-            goal_id=goal.id,
-            structure={"root": "SubGoals will be linked to this tree"}
+            goal_id=goal.id, structure={"root": "SubGoals will be linked to this tree"}
         )
-        
+
         # 2. Iterate through plan steps and create SubGoals
         # Assuming plan_steps has format: {"id": "1", "title": "...", "desc": "...", "deps": []}
         for step in plan_steps:
@@ -43,15 +44,15 @@ class GoalTreeEngine:
                 title=step.get("title", "Untitled SubGoal"),
                 description=step.get("desc", ""),
                 dependencies=step.get("deps", []),
-                status="generated"
+                status="generated",
             )
-            
+
         return tree
 
     async def track_milestone(self, subgoal_id: UUID, is_completed: bool) -> SubGoal | None:
         """Update the status of a subgoal and check if downstream dependencies are unblocked."""
         logger.debug(f"Tracking milestone for subgoal {subgoal_id}: completed={is_completed}")
-        
+
         status = "achieved" if is_completed else "failed"
         return await self.subgoal_repo.update(subgoal_id, status=status)
 

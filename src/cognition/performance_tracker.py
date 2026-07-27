@@ -1,4 +1,5 @@
 """Performance tracker — records and queries agent-level performance metrics."""
+
 from __future__ import annotations
 
 import time
@@ -140,8 +141,4 @@ class PerformanceTracker:
     def _window_values(self, metric_name: str, window_hours: int) -> list[float]:
         """Return metric values within the time window."""
         cutoff = time.time() - window_hours * 3600
-        return [
-            e["value"]
-            for e in self._metrics.get(metric_name, [])
-            if e["timestamp"] >= cutoff
-        ]
+        return [e["value"] for e in self._metrics.get(metric_name, []) if e["timestamp"] >= cutoff]

@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class LearningMetrics(BaseModel):
     id: uuid.UUID
     agent_id: str
@@ -18,6 +19,7 @@ class LearningMetrics(BaseModel):
     timestamp: datetime
     model_config = {"from_attributes": True}
 
+
 class LearningBenchmark:
     """Benchmark framework for tracking agent learning."""
 
@@ -25,13 +27,12 @@ class LearningBenchmark:
         self.logger = logger
 
     async def evaluate_learning(
-        self, 
-        db: AsyncSession, 
-        agent_id: str, 
-        time_window_days: int = 7
+        self, db: AsyncSession, agent_id: str, time_window_days: int = 7
     ) -> Dict[str, Any]:
         """Tracks Knowledge Growth, Velocity, Concept Growth, and Gap Closure Rate."""
-        self.logger.info(f"Evaluating learning metrics for agent {agent_id} over {time_window_days} days")
+        self.logger.info(
+            f"Evaluating learning metrics for agent {agent_id} over {time_window_days} days"
+        )
 
         # Placeholder logic for computing metrics from DB
         metrics = LearningMetrics(
@@ -41,7 +42,7 @@ class LearningBenchmark:
             learning_velocity=2.3,
             concept_growth=42,
             gap_closure_rate=0.88,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         return metrics.model_dump()

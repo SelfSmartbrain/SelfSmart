@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class ShellInput(BaseModel):
     """Input schema for ShellTool."""
 
@@ -48,9 +49,11 @@ class ShellInput(BaseModel):
         description="Working directory (relative to workspace)",
     )
 
+
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class ShellTool(AgentTool):
     """Execute shell commands in a sandboxed environment.

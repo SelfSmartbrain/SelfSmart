@@ -6,12 +6,14 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ResearchMetrics(BaseModel):
     concurrent_tracks: int
     completed_tracks: int
     failed_tracks: int
     duration_sec: float
     model_config = {"from_attributes": True}
+
 
 class ResearchStressTester:
     async def mock_research_track(self, track_id: int) -> bool:
@@ -38,5 +40,5 @@ class ResearchStressTester:
             concurrent_tracks=tracks,
             completed_tracks=completed,
             failed_tracks=failed,
-            duration_sec=duration
+            duration_sec=duration,
         )

@@ -1,4 +1,5 @@
 """Strategy synthesizer — generates, scores, and optimises research strategies via LLM."""
+
 from __future__ import annotations
 
 import json
@@ -64,17 +65,20 @@ class StrategySynthesizer:
             "Return ONLY valid JSON — no markdown fences."
         )
 
-        history_summary = json.dumps(history[:10], indent=2, default=str) if history else "No history."
+        history_summary = (
+            json.dumps(history[:10], indent=2, default=str) if history else "No history."
+        )
         human_prompt = (
-            f"Goal: {goal}\nDomain: {domain}\n\n"
-            f"Previous strategy history:\n{history_summary}"
+            f"Goal: {goal}\nDomain: {domain}\n\n" f"Previous strategy history:\n{history_summary}"
         )
 
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             strategy: dict[str, Any] = json.loads(response.content)
             logger.info("strategy_generated", name=strategy.get("name"))
             return strategy
@@ -160,10 +164,12 @@ class StrategySynthesizer:
         )
 
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             optimized: dict[str, Any] = json.loads(response.content)
             logger.info("strategy_optimized", name=optimized.get("name"))
             return optimized

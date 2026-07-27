@@ -12,6 +12,7 @@ from src.crawler.web_crawler import CrawlResult
 
 logger = logging.getLogger(__name__)
 
+
 class YouTubeCrawler:
     """
     Crawler for extracting transcripts from YouTube videos.
@@ -23,9 +24,9 @@ class YouTubeCrawler:
     def _extract_video_id(self, url: str) -> Optional[str]:
         """Extract YouTube video ID from URL"""
         patterns = [
-            r'(?:v=|\/)([0-9A-Za-z_-]{11}).*',
-            r'(?:embed\/)([0-9A-Za-z_-]{11}).*',
-            r'(?:youtu\.be\/)([0-9A-Za-z_-]{11}).*'
+            r"(?:v=|\/)([0-9A-Za-z_-]{11}).*",
+            r"(?:embed\/)([0-9A-Za-z_-]{11}).*",
+            r"(?:youtu\.be\/)([0-9A-Za-z_-]{11}).*",
         ]
 
         for pattern in patterns:
@@ -46,7 +47,7 @@ class YouTubeCrawler:
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
 
             # Combine transcript parts
-            text = " ".join([t['text'] for t in transcript_list])
+            text = " ".join([t["text"] for t in transcript_list])
 
             if not text.strip():
                 return None
@@ -56,14 +57,14 @@ class YouTubeCrawler:
                 title=f"YouTube Video: {video_id}",
                 content=text,
                 metadata={
-                    'video_id': video_id,
-                    'has_transcript': True,
-                    'transcript_length': len(transcript_list)
+                    "video_id": video_id,
+                    "has_transcript": True,
+                    "transcript_length": len(transcript_list),
                 },
                 timestamp=datetime.utcnow(),
-                source_type='youtube',
+                source_type="youtube",
                 quality_score=0.7,
-                language='en'
+                language="en",
             )
         except Exception as e:
             logger.error(f"Error fetching YouTube transcript for {video_id}: {e}")

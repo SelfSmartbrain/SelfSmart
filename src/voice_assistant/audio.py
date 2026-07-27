@@ -1,6 +1,7 @@
 """
 Audio I/O Manager - Handles microphone input and speaker output
 """
+
 import asyncio
 import pyaudio
 import numpy as np
@@ -33,7 +34,9 @@ class AudioManager:
         """List available audio devices"""
         for i in range(self.pyaudio.get_device_count()):
             info = self.pyaudio.get_device_info_by_index(i)
-            print(f"Device {i}: {info['name']} (in:{info['maxInputChannels']} out:{info['maxOutputChannels']})")
+            print(
+                f"Device {i}: {info['name']} (in:{info['maxInputChannels']} out:{info['maxOutputChannels']})"
+            )
 
     async def start_recording(self) -> AsyncGenerator[bytes, None]:
         """Start recording audio from microphone"""
@@ -77,9 +80,7 @@ class AudioManager:
                 output_device_index=self.config.output_device_index,
             )
 
-        await asyncio.get_event_loop().run_in_executor(
-            None, self._output_stream.write, audio_data
-        )
+        await asyncio.get_event_loop().run_in_executor(None, self._output_stream.write, audio_data)
 
     async def play_audio_stream(self, audio_chunks: AsyncGenerator[bytes, None]):
         """Play streaming audio"""
@@ -93,9 +94,7 @@ class AudioManager:
             )
 
         async for chunk in audio_chunks:
-            await asyncio.get_event_loop().run_in_executor(
-                None, self._output_stream.write, chunk
-            )
+            await asyncio.get_event_loop().run_in_executor(None, self._output_stream.write, chunk)
 
     def cleanup(self):
         """Cleanup audio resources"""

@@ -19,8 +19,8 @@ logger = get_logger(__name__)
 
 # The canonical collections this manager creates / uses.
 MANAGED_COLLECTIONS: tuple[str, ...] = (
-    "knowledge", 
-    "memories", 
+    "knowledge",
+    "memories",
     "reflections",
     "strategies",
     "skills",

@@ -4,6 +4,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class GenomeValidator:
     @staticmethod
     async def validate_genome_structure(genome: Dict[str, Any]) -> bool:

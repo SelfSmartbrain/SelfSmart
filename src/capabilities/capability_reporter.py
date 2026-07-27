@@ -9,6 +9,7 @@ from src.capability.capability_comparator import CapabilityDelta
 
 logger = get_logger(__name__)
 
+
 class CapabilityReport(BaseModel):
     report_id: UUID = Field(default_factory=uuid4)
     generated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -18,16 +19,12 @@ class CapabilityReport(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 async def generate_capability_report(
-    growth: List[GrowthMetrics], 
-    comparisons: List[CapabilityDelta]
+    growth: List[GrowthMetrics], comparisons: List[CapabilityDelta]
 ) -> CapabilityReport:
     logger.info("Generating capability report")
-    
+
     summary = f"Report includes {len(growth)} growth metrics and {len(comparisons)} comparisons."
-    
-    return CapabilityReport(
-        growth_metrics=growth,
-        comparisons=comparisons,
-        summary=summary
-    )
+
+    return CapabilityReport(growth_metrics=growth, comparisons=comparisons, summary=summary)

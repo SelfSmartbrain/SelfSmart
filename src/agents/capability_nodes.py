@@ -49,6 +49,7 @@ async def _llm_json(system: str, prompt: str, fallback: Any) -> Any:
         logger.warning("Capability node LLM call failed", error=str(e))
     return fallback
 
+
 async def capability_evaluation(state: Dict[str, Any]) -> Dict[str, Any]:
     """Evaluate system capabilities based on task results and skill inventory."""
     logger.info("Executing capability_evaluation node.")
@@ -128,11 +129,13 @@ async def discovery_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
     new_skills = []
     for skill in cognitive_skills:
         if skill.get("usage_count", 0) <= 1:
-            new_skills.append({
-                "name": skill.get("name", "unknown"),
-                "type": skill.get("skill_type", "unknown"),
-                "potential": skill.get("success_rate", 0.0),
-            })
+            new_skills.append(
+                {
+                    "name": skill.get("name", "unknown"),
+                    "type": skill.get("skill_type", "unknown"),
+                    "potential": skill.get("success_rate", 0.0),
+                }
+            )
 
     discovery_results = {
         "new_skills": new_skills,
@@ -149,7 +152,9 @@ async def peer_review(state: Dict[str, Any]) -> Dict[str, Any]:
     cognition_reflections = state.get("cognition_reflections", [])
 
     if cognition_reflections:
-        avg_quality = sum(r.get("quality_score", 0) for r in cognition_reflections) / len(cognition_reflections)
+        avg_quality = sum(r.get("quality_score", 0) for r in cognition_reflections) / len(
+            cognition_reflections
+        )
     else:
         avg_quality = 0.0
 
@@ -178,11 +183,15 @@ async def regression_detection(state: Dict[str, Any]) -> Dict[str, Any]:
     regressions = []
     for pattern in failure_patterns:
         if pattern.get("frequency", 0) > 2 and pattern.get("severity") == "high":
-            regressions.append({
-                "pattern": pattern.get("pattern_name", "unknown"),
-                "frequency": pattern.get("frequency", 0),
-                "recommendation": pattern.get("recommended_fix", "Investigate recurring failure"),
-            })
+            regressions.append(
+                {
+                    "pattern": pattern.get("pattern_name", "unknown"),
+                    "frequency": pattern.get("frequency", 0),
+                    "recommendation": pattern.get(
+                        "recommended_fix", "Investigate recurring failure"
+                    ),
+                }
+            )
 
     regression_results = {
         "regressions_found": len(regressions) > 0,
@@ -205,8 +214,11 @@ async def program_evaluation(state: Dict[str, Any]) -> Dict[str, Any]:
         value = metric.get("metric_value", 0.0)
         metric_summary[name] = value
 
-    effectiveness = "high" if metric_summary.get("autonomy_score", 0) >= 0.7 else \
-                    "medium" if metric_summary.get("autonomy_score", 0) >= 0.4 else "low"
+    effectiveness = (
+        "high"
+        if metric_summary.get("autonomy_score", 0) >= 0.7
+        else "medium" if metric_summary.get("autonomy_score", 0) >= 0.4 else "low"
+    )
 
     program_results = {
         "effectiveness": effectiveness,
@@ -370,9 +382,9 @@ async def tool_evolution_node(state: Dict[str, Any]) -> Dict[str, Any]:
         fallback,
     )
     return {
-        "tool_evolution_results": evolution_results
-        if isinstance(evolution_results, list)
-        else fallback
+        "tool_evolution_results": (
+            evolution_results if isinstance(evolution_results, list) else fallback
+        )
     }
 
 

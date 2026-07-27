@@ -54,7 +54,9 @@ class Settings(BaseSettings):
     # Redis & Celery
     redis_url: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
     celery_broker_url: str = Field(default="redis://localhost:6379/1", env="CELERY_BROKER_URL")
-    celery_result_backend: str = Field(default="redis://localhost:6379/1", env="CELERY_RESULT_BACKEND")
+    celery_result_backend: str = Field(
+        default="redis://localhost:6379/1", env="CELERY_RESULT_BACKEND"
+    )
 
     # Learning Configuration
     max_concurrent_crawls: int = Field(default=10, env="MAX_CONCURRENT_CRAWLS")
@@ -71,7 +73,7 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
-        "extra": "allow"
+        "extra": "allow",
     }
 
     def __init__(self, **kwargs):

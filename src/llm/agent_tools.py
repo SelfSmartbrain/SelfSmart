@@ -11,6 +11,7 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
+
 class ToolExecutor:
     """
     Executes tools requested by the Agentic LLM.
@@ -20,7 +21,7 @@ class ToolExecutor:
         self.tools = {
             "web_search": self._web_search,
             "python_repl": self._python_repl,
-            "get_datetime": self._get_datetime
+            "get_datetime": self._get_datetime,
         }
         logger.info("Tool executor initialized")
 
@@ -59,23 +60,27 @@ class ToolExecutor:
             results = []
 
             if data.get("AbstractText"):
-                results.append({
-                    "title": data.get("Heading", query),
-                    "snippet": data["AbstractText"][:400],
-                    "url": data.get("AbstractURL", ""),
-                    "source": "DuckDuckGo",
-                })
+                results.append(
+                    {
+                        "title": data.get("Heading", query),
+                        "snippet": data["AbstractText"][:400],
+                        "url": data.get("AbstractURL", ""),
+                        "source": "DuckDuckGo",
+                    }
+                )
 
             for topic in data.get("RelatedTopics", []):
                 if len(results) >= max_results:
                     break
                 if isinstance(topic, dict) and topic.get("Text"):
-                    results.append({
-                        "title": topic["Text"][:80],
-                        "snippet": topic["Text"][:400],
-                        "url": topic.get("FirstURL", ""),
-                        "source": "DuckDuckGo Related",
-                    })
+                    results.append(
+                        {
+                            "title": topic["Text"][:80],
+                            "snippet": topic["Text"][:400],
+                            "url": topic.get("FirstURL", ""),
+                            "source": "DuckDuckGo Related",
+                        }
+                    )
 
             if not results:
                 return {
@@ -97,10 +102,7 @@ class ToolExecutor:
         """Safely executes Python code in a subprocess."""
         try:
             result = subprocess.run(
-                ['python3', '-c', code],
-                capture_output=True,
-                text=True,
-                timeout=5
+                ["python3", "-c", code], capture_output=True, text=True, timeout=5
             )
             return {"stdout": result.stdout, "stderr": result.stderr}
         except Exception as e:
@@ -109,4 +111,5 @@ class ToolExecutor:
     async def _get_datetime(self) -> Dict[str, str]:
         """Returns current system datetime."""
         from datetime import datetime
+
         return {"datetime": datetime.now().isoformat()}

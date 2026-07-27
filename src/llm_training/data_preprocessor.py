@@ -26,7 +26,7 @@ class DataPreprocessor:
         input_dir: str = "./training_data",
         output_dir: str = "./processed_data",
         min_text_length: int = 100,
-        max_text_length: int = 10000
+        max_text_length: int = 10000,
     ):
         """
         Initialize data preprocessor.
@@ -51,7 +51,7 @@ class DataPreprocessor:
             "duplicates_removed": 0,
             "too_short": 0,
             "too_long": 0,
-            "filtered": 0
+            "filtered": 0,
         }
 
         logger.info(f"Data preprocessor initialized")
@@ -67,13 +67,13 @@ class DataPreprocessor:
             Cleaned text
         """
         # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"\s+", " ", text)
 
         # Remove special characters (keep basic punctuation)
-        text = re.sub(r'[^\w\s\.\,\!\?\-\:\;\'\"]', '', text)
+        text = re.sub(r"[^\w\s\.\,\!\?\-\:\;\'\"]", "", text)
 
         # Remove multiple punctuation
-        text = re.sub(r'([\.!?])\1+', r'\1', text)
+        text = re.sub(r"([\.!?])\1+", r"\1", text)
 
         # Strip leading/trailing whitespace
         text = text.strip()
@@ -130,18 +130,18 @@ class DataPreprocessor:
             if content_length > self.max_text_length:
                 self.stats["too_long"] += 1
                 # Truncate instead of filtering
-                item["content"] = content[:self.max_text_length]
+                item["content"] = content[: self.max_text_length]
                 filtered_data.append(item)
             else:
                 filtered_data.append(item)
 
-        logger.info(f"Filtered {self.stats['too_short']} too short, {self.stats['too_long']} truncated")
+        logger.info(
+            f"Filtered {self.stats['too_short']} too short, {self.stats['too_long']} truncated"
+        )
         return filtered_data
 
     def format_for_training(
-        self,
-        data: List[Dict[str, Any]],
-        format_type: str = "instruction"
+        self, data: List[Dict[str, Any]], format_type: str = "instruction"
     ) -> List[Dict[str, str]]:
         """
         Format data for training.
@@ -161,29 +161,21 @@ class DataPreprocessor:
                 formatted = {
                     "instruction": item.get("title", ""),
                     "input": "",
-                    "output": self.clean_text(item.get("content", ""))
+                    "output": self.clean_text(item.get("content", "")),
                 }
                 formatted_data.append(formatted)
 
             elif format_type == "completion":
                 # Completion format: just the text
-                formatted = {
-                    "text": self.clean_text(item.get("content", ""))
-                }
+                formatted = {"text": self.clean_text(item.get("content", ""))}
                 formatted_data.append(formatted)
 
             elif format_type == "conversation":
                 # Conversation format: simulate Q&A
                 formatted = {
                     "conversations": [
-                        {
-                            "from": "human",
-                            "value": item.get("title", "")
-                        },
-                        {
-                            "from": "gpt",
-                            "value": self.clean_text(item.get("content", ""))
-                        }
+                        {"from": "human", "value": item.get("title", "")},
+                        {"from": "gpt", "value": self.clean_text(item.get("content", ""))},
                     ]
                 }
                 formatted_data.append(formatted)
@@ -192,10 +184,7 @@ class DataPreprocessor:
         return formatted_data
 
     def process_file(
-        self,
-        input_file: str,
-        output_file: str,
-        format_type: str = "instruction"
+        self, input_file: str, output_file: str, format_type: str = "instruction"
     ) -> List[Dict[str, str]]:
         """
         Process a single file.
@@ -215,7 +204,7 @@ class DataPreprocessor:
             return []
 
         # Load data
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         self.stats["total_input"] = len(data)
@@ -237,7 +226,7 @@ class DataPreprocessor:
 
         # Save processed data
         output_path = self.output_dir / output_file
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(formatted_data, f, ensure_ascii=False, indent=2)
 
         self.stats["total_output"] = len(formatted_data)
@@ -245,10 +234,7 @@ class DataPreprocessor:
 
         return formatted_data
 
-    def process_all(
-        self,
-        format_type: str = "instruction"
-    ) -> Dict[str, List[Dict[str, str]]]:
+    def process_all(self, format_type: str = "instruction") -> Dict[str, List[Dict[str, str]]]:
         """
         Process all files in input directory.
 
@@ -267,11 +253,7 @@ class DataPreprocessor:
             output_file = f"processed_{json_file.name}"
 
             try:
-                processed_data = self.process_file(
-                    json_file.name,
-                    output_file,
-                    format_type
-                )
+                processed_data = self.process_file(json_file.name, output_file, format_type)
 
                 all_processed[json_file.stem] = processed_data
 
@@ -281,7 +263,7 @@ class DataPreprocessor:
 
         # Save statistics
         stats_file = self.output_dir / "processing_stats.json"
-        with open(stats_file, 'w', encoding='utf-8') as f:
+        with open(stats_file, "w", encoding="utf-8") as f:
             json.dump(self.stats, f, indent=2)
 
         logger.info(f"Processing complete. Stats: {self.stats}")
@@ -291,11 +273,7 @@ class DataPreprocessor:
         """Get processing statistics."""
         return self.stats
 
-    def create_train_val_split(
-        self,
-        input_file: str,
-        train_split: float = 0.9
-    ) -> tuple:
+    def create_train_val_split(self, input_file: str, train_split: float = 0.9) -> tuple:
         """
         Create train/validation split from processed data.
 
@@ -311,11 +289,12 @@ class DataPreprocessor:
         if not input_path.exists():
             raise FileNotFoundError(f"File not found: {input_path}")
 
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Shuffle data
         import random
+
         random.shuffle(data)
 
         # Split
@@ -327,10 +306,10 @@ class DataPreprocessor:
         train_path = self.output_dir / f"train_{input_file}"
         val_path = self.output_dir / f"val_{input_file}"
 
-        with open(train_path, 'w', encoding='utf-8') as f:
+        with open(train_path, "w", encoding="utf-8") as f:
             json.dump(train_data, f, ensure_ascii=False, indent=2)
 
-        with open(val_path, 'w', encoding='utf-8') as f:
+        with open(val_path, "w", encoding="utf-8") as f:
             json.dump(val_data, f, ensure_ascii=False, indent=2)
 
         logger.info(f"Created train/val split: {len(train_data)} train, {len(val_data)} val")

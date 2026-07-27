@@ -1,4 +1,5 @@
 """Failure analyzer — detects error patterns, clusters failures, and suggests fixes."""
+
 from __future__ import annotations
 
 import json
@@ -56,13 +57,15 @@ class FailureAnalyzer:
             patterns: list[dict[str, Any]] = []
             for error_type, group in groups.items():
                 severity = self._estimate_severity(group)
-                patterns.append({
-                    "pattern_name": f"{error_type}_cluster",
-                    "error_type": error_type,
-                    "count": len(group),
-                    "sample_errors": group[:3],
-                    "severity": severity,
-                })
+                patterns.append(
+                    {
+                        "pattern_name": f"{error_type}_cluster",
+                        "error_type": error_type,
+                        "count": len(group),
+                        "sample_errors": group[:3],
+                        "severity": severity,
+                    }
+                )
 
             logger.info("patterns_detected", pattern_count=len(patterns))
             return patterns
@@ -117,14 +120,15 @@ class FailureAnalyzer:
             "actionable fixes. Return a JSON array of strings. No markdown fences."
         )
         human_prompt = (
-            f"Failure pattern:\n{json.dumps(pattern, indent=2, default=str)}\n\n"
-            "Suggest fixes."
+            f"Failure pattern:\n{json.dumps(pattern, indent=2, default=str)}\n\n" "Suggest fixes."
         )
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             fixes: list[str] = json.loads(response.content)
             logger.info("fixes_generated", fix_count=len(fixes))
             return fixes
@@ -143,9 +147,7 @@ class FailureAnalyzer:
         logger.info("ranking_failures", pattern_count=len(patterns))
         try:
             for p in patterns:
-                p["priority_score"] = round(
-                    p.get("count", 1) * p.get("severity", 0.5), 4
-                )
+                p["priority_score"] = round(p.get("count", 1) * p.get("severity", 0.5), 4)
             ranked = sorted(patterns, key=lambda p: p["priority_score"], reverse=True)
             logger.info("failures_ranked", top_score=ranked[0]["priority_score"] if ranked else 0)
             return ranked

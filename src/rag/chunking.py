@@ -150,9 +150,7 @@ class TextChunker:
                 # Section too large — recursively split it
                 sub_chunks = self._recursive_chunk(section, chunk_size, overlap=100)
                 for sc in sub_chunks:
-                    chunks.append(
-                        self._make_chunk(sc.content, len(chunks), text)
-                    )
+                    chunks.append(self._make_chunk(sc.content, len(chunks), text))
 
         logger.debug("markdown_chunking_complete", total_chunks=len(chunks))
         return chunks
@@ -161,9 +159,7 @@ class TextChunker:
     # Recursive strategy
     # --------------------------------------------------------------------- #
 
-    def _recursive_chunk(
-        self, text: str, chunk_size: int, overlap: int
-    ) -> list[Chunk]:
+    def _recursive_chunk(self, text: str, chunk_size: int, overlap: int) -> list[Chunk]:
         """Recursively split text trying increasingly fine-grained separators."""
         raw_chunks = self._recursive_split(text, self._recursive_separators, chunk_size)
         # Merge very small pieces and apply overlap
@@ -205,9 +201,7 @@ class TextChunker:
                         # Still too large — recurse with the remaining separators
                         remaining_seps = separators[separators.index(sep) + 1 :]
                         if remaining_seps:
-                            final.extend(
-                                self._recursive_split(piece, remaining_seps, chunk_size)
-                            )
+                            final.extend(self._recursive_split(piece, remaining_seps, chunk_size))
                         else:
                             # No more separators — force-split by characters
                             final.extend(self._force_split(piece, chunk_size))

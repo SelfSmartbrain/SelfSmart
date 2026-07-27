@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class DelegationStatus(Enum):
     """Delegation lifecycle status"""
+
     PENDING = "pending"
     ASSIGNED = "assigned"
     IN_PROGRESS = "in_progress"
@@ -30,6 +31,7 @@ class DelegationStatus(Enum):
 
 class DelegationPriority(Enum):
     """Delegation priority levels"""
+
     LOW = 1
     NORMAL = 5
     HIGH = 8
@@ -39,6 +41,7 @@ class DelegationPriority(Enum):
 @dataclass
 class DelegationTask:
     """Task being delegated"""
+
     task_id: str
     description: str
     required_capabilities: List[str]
@@ -51,6 +54,7 @@ class DelegationTask:
 @dataclass
 class DelegationContract:
     """Contract between delegator and delegatee"""
+
     delegation_id: str
     task: DelegationTask
     delegator_id: str
@@ -69,6 +73,7 @@ class DelegationContract:
 @dataclass
 class DelegationResult:
     """Result of a delegation"""
+
     delegation_id: str
     success: bool
     result: Any = None
@@ -80,7 +85,7 @@ class DelegationResult:
 class DelegationProtocol:
     """
     Manages task delegation between agents.
-    
+
     Features:
     - Async delegation with callbacks
     - Progress tracking and timeouts
@@ -103,13 +108,15 @@ class DelegationProtocol:
 
         self._contracts: Dict[str, DelegationContract] = {}
         self._pending_callbacks: Dict[str, List[Callable]] = defaultdict(list)
-        self._delegatee_stats: Dict[str, Dict[str, Any]] = defaultdict(lambda: {
-            "success_count": 0,
-            "failure_count": 0,
-            "avg_execution_time": 0.0,
-            "circuit_open": False,
-            "circuit_open_until": 0.0,
-        })
+        self._delegatee_stats: Dict[str, Dict[str, Any]] = defaultdict(
+            lambda: {
+                "success_count": 0,
+                "failure_count": 0,
+                "avg_execution_time": 0.0,
+                "circuit_open": False,
+                "circuit_open_until": 0.0,
+            }
+        )
 
     async def delegate(
         self,
@@ -120,13 +127,13 @@ class DelegationProtocol:
     ) -> str:
         """
         Delegate a task to an agent.
-        
+
         Args:
             task: Task to delegate
             delegator_id: ID of delegating agent
             delegatee_id: Specific delegatee (None = auto-select)
             callback: Optional callback for result
-            
+
         Returns:
             Delegation ID
         """
@@ -137,7 +144,7 @@ class DelegationProtocol:
                 delegator_id,
                 task.required_capabilities,
             )
-            
+
             if not delegatee_id:
                 raise RuntimeError("No capable delegatee found")
 
@@ -168,7 +175,9 @@ class DelegationProtocol:
         # Start timeout monitor
         asyncio.create_task(self._monitor_delegation(delegation_id))
 
-        logger.info(f"Delegated task {task.task_id} to {delegatee_id} (delegation: {delegation_id})")
+        logger.info(
+            f"Delegated task {task.task_id} to {delegatee_id} (delegation: {delegation_id})"
+        )
         return delegation_id
 
     async def _send_delegation_message(self, contract: DelegationContract) -> None:
@@ -200,11 +209,15 @@ class DelegationProtocol:
             return
 
         deadline = contract.task.deadline or (contract.created_at + self.default_timeout)
-        
+
         while datetime.now().timestamp() < deadline:
             await asyncio.sleep(5)
             contract = self._contracts.get(delegation_id)
-            if not contract or contract.status in (DelegationStatus.COMPLETED, DelegationStatus.FAILED, DelegationStatus.CANCELLED):
+            if not contract or contract.status in (
+                DelegationStatus.COMPLETED,
+                DelegationStatus.FAILED,
+                DelegationStatus.CANCELLED,
+            ):
                 return
 
         # Timeout
@@ -213,7 +226,10 @@ class DelegationProtocol:
     async def _handle_timeout(self, delegation_id: str) -> None:
         """Handle delegation timeout"""
         contract = self._contracts.get(delegation_id)
-        if not contract or contract.status not in (DelegationStatus.ASSIGNED, DelegationStatus.IN_PROGRESS):
+        if not contract or contract.status not in (
+            DelegationStatus.ASSIGNED,
+            DelegationStatus.IN_PROGRESS,
+        ):
             return
 
         contract.status = DelegationStatus.TIMEOUT
@@ -235,7 +251,7 @@ class DelegationProtocol:
     ) -> None:
         """
         Handle response from delegatee.
-        
+
         Called by message broker when delegatee responds.
         """
         contract = self._contracts.get(delegation_id)
@@ -244,7 +260,9 @@ class DelegationProtocol:
             return
 
         if contract.delegatee_id != delegatee_id:
-            logger.warning(f"Delegatee mismatch: expected {contract.delegatee_id}, got {delegatee_id}")
+            logger.warning(
+                f"Delegatee mismatch: expected {contract.delegatee_id}, got {delegatee_id}"
+            )
             return
 
         if progress is not None:
@@ -258,11 +276,13 @@ class DelegationProtocol:
         if error:
             contract.status = DelegationStatus.FAILED
             self._record_failure(delegatee_id)
-            
+
             # Retry logic
             if contract.metadata.get("retries", 0) < self.max_retries:
                 contract.metadata["retries"] += 1
-                logger.info(f"Retrying delegation {delegation_id} (attempt {contract.metadata['retries']})")
+                logger.info(
+                    f"Retrying delegation {delegation_id} (attempt {contract.metadata['retries']})"
+                )
                 await self._retry_delegation(contract)
                 return
         else:
@@ -291,20 +311,25 @@ class DelegationProtocol:
             success=contract.status == DelegationStatus.COMPLETED,
             result=contract.result,
             error=contract.error,
-            execution_time=contract.completed_at - contract.started_at if contract.started_at else 0,
+            execution_time=(
+                contract.completed_at - contract.started_at if contract.started_at else 0
+            ),
             delegatee_id=contract.delegatee_id,
         )
 
         # Send response to delegator
-        await self.broker.publish(f"agent.{contract.delegator_id}.delegation_results", {
-            "type": "delegation_result",
-            "delegation_id": contract.delegation_id,
-            "task_id": contract.task.task_id,
-            "success": result.success,
-            "result": result.result,
-            "error": result.error,
-            "execution_time": result.execution_time,
-        })
+        await self.broker.publish(
+            f"agent.{contract.delegator_id}.delegation_results",
+            {
+                "type": "delegation_result",
+                "delegation_id": contract.delegation_id,
+                "task_id": contract.task.task_id,
+                "success": result.success,
+                "result": result.result,
+                "error": result.error,
+                "execution_time": result.execution_time,
+            },
+        )
 
         # Call callbacks
         for callback in self._pending_callbacks.get(contract.delegation_id, []):
@@ -320,15 +345,13 @@ class DelegationProtocol:
         stats = self._delegatee_stats[delegatee_id]
         stats["success_count"] += 1
         n = stats["success_count"] + stats["failure_count"]
-        stats["avg_execution_time"] = (
-            (stats["avg_execution_time"] * (n - 1) + execution_time) / n
-        )
+        stats["avg_execution_time"] = (stats["avg_execution_time"] * (n - 1) + execution_time) / n
 
     def _record_failure(self, delegatee_id: str) -> None:
         """Record failed delegation for delegatee stats"""
         stats = self._delegatee_stats[delegatee_id]
         stats["failure_count"] += 1
-        
+
         # Open circuit breaker if failure rate too high
         total = stats["success_count"] + stats["failure_count"]
         if total >= 5 and stats["failure_count"] / total > 0.5:
@@ -347,10 +370,16 @@ class DelegationProtocol:
             return True
         return False
 
-    async def cancel_delegation(self, delegation_id: str, reason: str = "Cancelled by delegator") -> bool:
+    async def cancel_delegation(
+        self, delegation_id: str, reason: str = "Cancelled by delegator"
+    ) -> bool:
         """Cancel a pending delegation"""
         contract = self._contracts.get(delegation_id)
-        if not contract or contract.status in (DelegationStatus.COMPLETED, DelegationStatus.FAILED, DelegationStatus.CANCELLED):
+        if not contract or contract.status in (
+            DelegationStatus.COMPLETED,
+            DelegationStatus.FAILED,
+            DelegationStatus.CANCELLED,
+        ):
             return False
 
         contract.status = DelegationStatus.CANCELLED
@@ -358,11 +387,14 @@ class DelegationProtocol:
         contract.completed_at = datetime.now().timestamp()
 
         # Notify delegatee
-        await self.broker.publish(f"agent.{contract.delegatee_id}.delegations", {
-            "type": "delegation_cancelled",
-            "delegation_id": delegation_id,
-            "reason": reason,
-        })
+        await self.broker.publish(
+            f"agent.{contract.delegatee_id}.delegations",
+            {
+                "type": "delegation_cancelled",
+                "delegation_id": delegation_id,
+                "reason": reason,
+            },
+        )
 
         await self._notify_completion(contract)
         return True
@@ -411,14 +443,14 @@ class ParallelDelegationManager:
     ) -> List[DelegationResult]:
         """
         Delegate multiple tasks in parallel.
-        
+
         Args:
             tasks: List of tasks to delegate
             delegator_id: Delegating agent
             delegatee_ids: Specific delegatees (must match tasks length)
             aggregation: How to aggregate results
             timeout: Overall timeout
-            
+
         Returns:
             List of delegation results
         """
@@ -447,21 +479,32 @@ class ParallelDelegationManager:
                 break
 
             await asyncio.sleep(0.5)
-            
+
             for del_id in delegation_ids:
                 if del_id in completed:
                     continue
                 contract = self.protocol.get_delegation_status(del_id)
-                if contract and contract.status in (DelegationStatus.COMPLETED, DelegationStatus.FAILED, DelegationStatus.CANCELLED, DelegationStatus.TIMEOUT):
+                if contract and contract.status in (
+                    DelegationStatus.COMPLETED,
+                    DelegationStatus.FAILED,
+                    DelegationStatus.CANCELLED,
+                    DelegationStatus.TIMEOUT,
+                ):
                     completed.add(del_id)
-                    results.append(DelegationResult(
-                        delegation_id=contract.delegation_id,
-                        success=contract.status == DelegationStatus.COMPLETED,
-                        result=contract.result,
-                        error=contract.error,
-                        execution_time=contract.completed_at - contract.started_at if contract.started_at else 0,
-                        delegatee_id=contract.delegatee_id,
-                    ))
+                    results.append(
+                        DelegationResult(
+                            delegation_id=contract.delegation_id,
+                            success=contract.status == DelegationStatus.COMPLETED,
+                            result=contract.result,
+                            error=contract.error,
+                            execution_time=(
+                                contract.completed_at - contract.started_at
+                                if contract.started_at
+                                else 0
+                            ),
+                            delegatee_id=contract.delegatee_id,
+                        )
+                    )
 
             # Early termination for "first" aggregation
             if aggregation == "first" and results:
@@ -478,13 +521,13 @@ class ParallelDelegationManager:
     ) -> Any:
         """
         Map-reduce style delegation: partition data, delegate map tasks, reduce results.
-        
+
         Args:
             task_template: Base task (parameters will be updated with partition)
             data_partitions: List of data partitions
             delegator_id: Delegating agent
             reduce_func: Function to aggregate results
-            
+
         Returns:
             Reduced result
         """
@@ -494,16 +537,20 @@ class ParallelDelegationManager:
                 task_id=f"{task_template.task_id}_map_{i}",
                 description=f"{task_template.description} (partition {i})",
                 required_capabilities=task_template.required_capabilities,
-                parameters={**task_template.parameters, "partition": partition, "partition_index": i},
+                parameters={
+                    **task_template.parameters,
+                    "partition": partition,
+                    "partition_index": i,
+                },
                 priority=task_template.priority,
             )
             tasks.append(task)
 
         results = await self.delegate_parallel(tasks, delegator_id, aggregation="all")
-        
+
         # Extract successful results
         successful_results = [r.result for r in results if r.success]
-        
+
         if not successful_results:
             raise RuntimeError("All map tasks failed")
 

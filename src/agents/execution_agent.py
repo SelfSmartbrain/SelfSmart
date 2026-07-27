@@ -155,8 +155,10 @@ class ExecutionAgent:
         """Use LLM to plan the execution strategy."""
         previous = context.get("previous_results", {})
         prev_summary = json.dumps(
-            {k: {"status": v.get("status"), "output_preview": str(v.get("output", ""))[:200]}
-             for k, v in previous.items()},
+            {
+                k: {"status": v.get("status"), "output_preview": str(v.get("output", ""))[:200]}
+                for k, v in previous.items()
+            },
             default=str,
         )[:2000]
 
@@ -166,10 +168,14 @@ class ExecutionAgent:
             previous_results=prev_summary,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are an execution planning expert. Respond only with valid JSON."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are an execution planning expert. Respond only with valid JSON."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             plan = json.loads(response.content)
@@ -182,12 +188,14 @@ class ExecutionAgent:
             else:
                 # Fallback: generate code directly
                 plan = {
-                    "steps": [{
-                        "tool": "python_executor",
-                        "action": task_description,
-                        "parameters": {"code": "# Task will be executed via LLM"},
-                        "expected_output": "Task result",
-                    }],
+                    "steps": [
+                        {
+                            "tool": "python_executor",
+                            "action": task_description,
+                            "parameters": {"code": "# Task will be executed via LLM"},
+                            "expected_output": "Task result",
+                        }
+                    ],
                     "approach": "Direct execution via code generation",
                 }
 
@@ -221,22 +229,26 @@ class ExecutionAgent:
                     # Fallback: use LLM to handle the step
                     result = await self._llm_fallback(action, context)
 
-                results.append({
-                    "step": i + 1,
-                    "tool": tool_name,
-                    "action": action,
-                    **result,
-                })
+                results.append(
+                    {
+                        "step": i + 1,
+                        "tool": tool_name,
+                        "action": action,
+                        **result,
+                    }
+                )
 
             except Exception as e:
                 logger.warning("Step execution failed", step=i + 1, error=str(e))
-                results.append({
-                    "step": i + 1,
-                    "tool": tool_name,
-                    "action": action,
-                    "status": "failed",
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "step": i + 1,
+                        "tool": tool_name,
+                        "action": action,
+                        "status": "failed",
+                        "error": str(e),
+                    }
+                )
 
         return results
 
@@ -260,10 +272,16 @@ class ExecutionAgent:
             return {"status": "completed", "output": str(result), "code": code}
 
         # Fallback: have the LLM reason about what the code would produce
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a Python expert. Analyze this code and describe what it would output."),
-            HumanMessage(content=f"Analyze this code:\n```python\n{code}\n```\n\nDescribe the expected output."),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a Python expert. Analyze this code and describe what it would output."
+                ),
+                HumanMessage(
+                    content=f"Analyze this code:\n```python\n{code}\n```\n\nDescribe the expected output."
+                ),
+            ]
+        )
         return {
             "status": "completed",
             "output": str(response.content),
@@ -280,26 +298,33 @@ class ExecutionAgent:
         context_str = ""
         previous = context.get("previous_results", {})
         if previous:
-            context_str = "Previous results:\n" + json.dumps(
-                {k: str(v.get("output", ""))[:300] for k, v in previous.items()},
-                default=str,
-            )[:1000]
+            context_str = (
+                "Previous results:\n"
+                + json.dumps(
+                    {k: str(v.get("output", ""))[:300] for k, v in previous.items()},
+                    default=str,
+                )[:1000]
+            )
 
         prompt = CODE_GENERATION_PROMPT.format(
             task=task,
             context=context_str,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a Python code generator. Respond with ONLY executable Python code."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a Python code generator. Respond with ONLY executable Python code."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         code = str(response.content)
 
         # Strip markdown code blocks if present
         if code.startswith("```python"):
-            code = code[len("```python"):].strip()
+            code = code[len("```python") :].strip()
         if code.startswith("```"):
             code = code[3:].strip()
         if code.endswith("```"):
@@ -313,10 +338,14 @@ class ExecutionAgent:
         context: dict[str, Any],
     ) -> dict[str, Any]:
         """Use LLM as a fallback when specific tools are not available."""
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a technical execution assistant. Provide actionable, detailed results."),
-            HumanMessage(content=f"Execute the following:\n\n{action}"),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a technical execution assistant. Provide actionable, detailed results."
+                ),
+                HumanMessage(content=f"Execute the following:\n\n{action}"),
+            ]
+        )
 
         return {
             "status": "completed",

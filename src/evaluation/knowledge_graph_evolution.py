@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class GraphEvolutionSnapshot(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     node_count: int
@@ -17,6 +18,7 @@ class GraphEvolutionSnapshot(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     model_config = {"from_attributes": True}
 
+
 class GraphEvolutionTracker:
     def __init__(self) -> None:
         self.nodes = 100
@@ -24,13 +26,14 @@ class GraphEvolutionTracker:
 
     async def measure_density(self) -> float:
         await asyncio.sleep(0.05)
-        if self.nodes == 0: return 0.0
+        if self.nodes == 0:
+            return 0.0
         max_edges = self.nodes * (self.nodes - 1)
         return self.edges / max_edges if max_edges > 0 else 0.0
 
     async def measure_gap_closure(self) -> float:
         await asyncio.sleep(0.05)
-        return 0.85 # Mock 85% gap closure rate
+        return 0.85  # Mock 85% gap closure rate
 
     async def evolve_graph(self) -> None:
         self.nodes += int(self.nodes * 0.1)
@@ -47,7 +50,7 @@ class GraphEvolutionTracker:
                 node_count=self.nodes,
                 edge_count=self.edges,
                 graph_density=density,
-                gap_closure_rate=gap_closure
+                gap_closure_rate=gap_closure,
             )
             snapshots.append(snapshot)
 

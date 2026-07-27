@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class AgentRelationship(Enum):
     """Types of agent relationships"""
+
     PARENT = "parent"
     CHILD = "child"
     PEER = "peer"
@@ -29,6 +30,7 @@ class AgentRelationship(Enum):
 @dataclass
 class CapabilityVector:
     """Vector representation of agent capabilities"""
+
     capability_name: str
     embedding: List[float]
     proficiency: float
@@ -38,6 +40,7 @@ class CapabilityVector:
 @dataclass
 class AgentRelationshipInfo:
     """Relationship between agents"""
+
     agent_id: str
     related_agent_id: str
     relationship: AgentRelationship
@@ -57,7 +60,7 @@ class HierarchicalAgentRegistry:
     def __init__(self, neo4j_client: Any = None, embedding_model: Any = None):
         self.neo4j = neo4j_client
         self.embedding_model = embedding_model
-        
+
         # In-memory storage (backed by Neo4j if available)
         self._agents: Dict[str, Dict[str, Any]] = {}
         self._capability_vectors: Dict[str, List[CapabilityVector]] = defaultdict(list)
@@ -67,7 +70,7 @@ class HierarchicalAgentRegistry:
     async def initialize(self) -> None:
         """Initialize registry and Neo4j indexes"""
         logger.info("HierarchicalAgentRegistry initialized")
-        
+
         if self.neo4j:
             await self._create_indexes()
 
@@ -79,7 +82,7 @@ class HierarchicalAgentRegistry:
             "CREATE INDEX capability_name IF NOT EXISTS FOR (c:Capability) ON (c.name)",
             "CREATE VECTOR INDEX capability_embedding IF NOT EXISTS FOR (c:Capability) ON (c.embedding) OPTIONS {indexConfig: {`vector.dimensions`: 1536, `vector.similarity_function`: 'cosine'}}",
         ]
-        
+
         for index in indexes:
             try:
                 await self.neo4j.run(index)
@@ -97,7 +100,7 @@ class HierarchicalAgentRegistry:
     ) -> Dict[str, Any]:
         """
         Register a new agent with hierarchical support.
-        
+
         Args:
             agent_id: Unique agent identifier
             name: Human-readable name
@@ -105,7 +108,7 @@ class HierarchicalAgentRegistry:
             capabilities: List of {name, proficiency, description} dicts
             parent_id: Optional parent agent ID for hierarchy
             metadata: Additional metadata
-            
+
         Returns:
             Agent information dict
         """
@@ -113,13 +116,17 @@ class HierarchicalAgentRegistry:
         capability_vectors = []
         if capabilities:
             for cap in capabilities:
-                embedding = await self._generate_capability_embedding(cap["name"], cap.get("description", ""))
-                capability_vectors.append(CapabilityVector(
-                    capability_name=cap["name"],
-                    embedding=embedding,
-                    proficiency=cap.get("proficiency", 0.5),
-                    metadata=cap.get("metadata", {}),
-                ))
+                embedding = await self._generate_capability_embedding(
+                    cap["name"], cap.get("description", "")
+                )
+                capability_vectors.append(
+                    CapabilityVector(
+                        capability_name=cap["name"],
+                        embedding=embedding,
+                        proficiency=cap.get("proficiency", 0.5),
+                        metadata=cap.get("metadata", {}),
+                    )
+                )
 
         agent = {
             "agent_id": agent_id,
@@ -149,7 +156,9 @@ class HierarchicalAgentRegistry:
         if self.neo4j:
             await self._persist_agent(agent)
 
-        logger.info(f"Registered agent {agent_id} ({name}) with {len(capability_vectors)} capabilities")
+        logger.info(
+            f"Registered agent {agent_id} ({name}) with {len(capability_vectors)} capabilities"
+        )
         return agent
 
     async def _generate_capability_embedding(self, name: str, description: str) -> List[float]:
@@ -163,6 +172,7 @@ class HierarchicalAgentRegistry:
     def _hash_embedding(self, text: str, dim: int = 1536) -> List[float]:
         """Generate deterministic pseudo-embedding from text hash"""
         import hashlib
+
         hash_bytes = hashlib.sha256(text.encode()).digest()
         # Expand to desired dimension
         result = []
@@ -198,24 +208,32 @@ class HierarchicalAgentRegistry:
     ) -> List[Dict[str, Any]]:
         """
         Find agents matching required capabilities.
-        
+
         Args:
             required_capabilities: List of capability names or descriptions
             min_proficiency: Minimum proficiency threshold
             strategy: "vector" (semantic), "exact" (name match), or "hybrid"
             limit: Maximum results
-            
+
         Returns:
             List of matching agents with match scores
         """
         if strategy == "vector" and self.embedding_model:
-            return await self._vector_capability_search(required_capabilities, min_proficiency, limit)
+            return await self._vector_capability_search(
+                required_capabilities, min_proficiency, limit
+            )
         elif strategy == "hybrid":
-            exact = await self._exact_capability_search(required_capabilities, min_proficiency, limit)
-            vector = await self._vector_capability_search(required_capabilities, min_proficiency, limit)
+            exact = await self._exact_capability_search(
+                required_capabilities, min_proficiency, limit
+            )
+            vector = await self._vector_capability_search(
+                required_capabilities, min_proficiency, limit
+            )
             return self._merge_results(exact, vector, limit)
         else:
-            return await self._exact_capability_search(required_capabilities, min_proficiency, limit)
+            return await self._exact_capability_search(
+                required_capabilities, min_proficiency, limit
+            )
 
     async def _exact_capability_search(
         self,
@@ -225,27 +243,29 @@ class HierarchicalAgentRegistry:
     ) -> List[Dict[str, Any]]:
         """Exact capability name matching"""
         results = []
-        
+
         for agent_id, agent in self._agents.items():
             if agent["status"] == "decommissioned":
                 continue
-                
+
             match_score = 0
             matched_caps = []
-            
+
             for cap in agent["capabilities"]:
                 if cap["name"] in required and cap.get("proficiency", 0) >= min_proficiency:
                     match_score += cap.get("proficiency", 0)
                     matched_caps.append(cap["name"])
-            
+
             if matched_caps:
-                results.append({
-                    "agent": agent,
-                    "match_score": match_score / len(required),
-                    "matched_capabilities": matched_caps,
-                    "search_type": "exact",
-                })
-        
+                results.append(
+                    {
+                        "agent": agent,
+                        "match_score": match_score / len(required),
+                        "matched_capabilities": matched_caps,
+                        "search_type": "exact",
+                    }
+                )
+
         results.sort(key=lambda x: x["match_score"], reverse=True)
         return results[:limit]
 
@@ -261,25 +281,25 @@ class HierarchicalAgentRegistry:
         for cap in required:
             emb = await self._generate_capability_embedding(cap, "")
             required_embeddings.append(emb)
-        
+
         results = []
-        
+
         for agent_id, agent in self._agents.items():
             if agent["status"] == "decommissioned":
                 continue
-            
+
             agent_vectors = self._capability_vectors.get(agent_id, [])
             if not agent_vectors:
                 continue
-            
+
             # Calculate max similarity for each required capability
             total_similarity = 0
             matched_caps = []
-            
+
             for req_emb, req_name in zip(required_embeddings, required):
                 best_sim = 0
                 best_cap = None
-                
+
                 for cap_vec in agent_vectors:
                     if cap_vec.proficiency < min_proficiency:
                         continue
@@ -287,19 +307,21 @@ class HierarchicalAgentRegistry:
                     if sim > best_sim:
                         best_sim = sim
                         best_cap = cap_vec.capability_name
-                
+
                 if best_sim > 0.7:  # Threshold for semantic match
                     total_similarity += best_sim
                     matched_caps.append(f"{best_cap} (~{req_name})")
-            
+
             if matched_caps:
-                results.append({
-                    "agent": agent,
-                    "match_score": total_similarity / len(required),
-                    "matched_capabilities": matched_caps,
-                    "search_type": "vector",
-                })
-        
+                results.append(
+                    {
+                        "agent": agent,
+                        "match_score": total_similarity / len(required),
+                        "matched_capabilities": matched_caps,
+                        "search_type": "vector",
+                    }
+                )
+
         results.sort(key=lambda x: x["match_score"], reverse=True)
         return results[:limit]
 
@@ -317,12 +339,12 @@ class HierarchicalAgentRegistry:
     ) -> List[Dict[str, Any]]:
         """Merge and deduplicate exact and vector search results"""
         merged = {}
-        
+
         for r in exact + vector:
             agent_id = r["agent"]["agent_id"]
             if agent_id not in merged or r["match_score"] > merged[agent_id]["match_score"]:
                 merged[agent_id] = r
-        
+
         results = list(merged.values())
         results.sort(key=lambda x: x["match_score"], reverse=True)
         return results[:limit]
@@ -332,7 +354,7 @@ class HierarchicalAgentRegistry:
         agent = self._agents.get(agent_id)
         if not agent:
             return {}
-        
+
         return {
             "agent_id": agent_id,
             "parent_id": agent.get("parent_id"),
@@ -354,7 +376,7 @@ class HierarchicalAgentRegistry:
         """Get all descendant agent IDs"""
         descendants = []
         queue = [agent_id]
-        
+
         while queue:
             current_id = queue.pop(0)
             agent = self._agents.get(current_id)
@@ -362,16 +384,18 @@ class HierarchicalAgentRegistry:
                 for child_id in agent.get("children", []):
                     descendants.append(child_id)
                     queue.append(child_id)
-        
+
         return descendants
 
-    async def get_subordinates(self, agent_id: str, direct_only: bool = False) -> List[Dict[str, Any]]:
+    async def get_subordinates(
+        self, agent_id: str, direct_only: bool = False
+    ) -> List[Dict[str, Any]]:
         """Get subordinate agents (children, grandchildren, etc.)"""
         if direct_only:
             child_ids = self._agents.get(agent_id, {}).get("children", [])
         else:
             child_ids = await self._get_descendants(agent_id)
-        
+
         return [self._agents[cid] for cid in child_ids if cid in self._agents]
 
     async def delegate_task(
@@ -383,60 +407,65 @@ class HierarchicalAgentRegistry:
     ) -> Optional[str]:
         """
         Delegate task to capable subordinate or peer.
-        
+
         Args:
             task: Task description
             delegator_id: Agent delegating the task
             required_capabilities: Required capabilities
             strategy: "best_match", "least_busy", "highest_reputation"
-            
+
         Returns:
             Delegatee agent ID or None
         """
         # First try subordinates
         subordinates = await self.get_subordinates(delegator_id)
         subordinate_ids = [a["agent_id"] for a in subordinates]
-        
+
         candidates = await self.find_capable_agents(
             required_capabilities,
             min_proficiency=0.6,
             strategy="hybrid",
             limit=20,
         )
-        
+
         # Filter to subordinates first, then peers
         filtered = [c for c in candidates if c["agent"]["agent_id"] in subordinate_ids]
         if not filtered:
             filtered = candidates  # Fall back to any capable agent
-        
+
         if not filtered:
             return None
-        
+
         # Select based on strategy
         if strategy == "least_busy":
             filtered.sort(key=lambda x: x["agent"]["status"] != "idle")
         elif strategy == "highest_reputation":
             filtered.sort(key=lambda x: x["agent"].get("reputation", 0), reverse=True)
         # "best_match" already sorted by match_score
-        
+
         delegatee = filtered[0]["agent"]["agent_id"]
-        
+
         # Record delegation
-        self._delegation_history.append({
-            "task": task,
-            "delegator": delegator_id,
-            "delegatee": delegatee,
-            "timestamp": datetime.now().timestamp(),
-            "required_capabilities": required_capabilities,
-            "match_score": filtered[0]["match_score"],
-        })
-        
+        self._delegation_history.append(
+            {
+                "task": task,
+                "delegator": delegator_id,
+                "delegatee": delegatee,
+                "timestamp": datetime.now().timestamp(),
+                "required_capabilities": required_capabilities,
+                "match_score": filtered[0]["match_score"],
+            }
+        )
+
         logger.info(f"Delegated task from {delegator_id} to {delegatee}")
         return delegatee
 
     def get_delegation_history(self, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get delegation history"""
         if agent_id:
-            return [d for d in self._delegation_history 
-                   if d["delegator"] == agent_id or d["delegatee"] == agent_id]
+            return [
+                d
+                for d in self._delegation_history
+                if d["delegator"] == agent_id or d["delegatee"] == agent_id
+            ]
         return self._delegation_history

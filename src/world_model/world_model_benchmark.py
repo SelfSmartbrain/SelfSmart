@@ -12,6 +12,7 @@ from src.world_model.prediction_engine import PredictionEngine, PredictionResult
 
 logger = get_logger(__name__)
 
+
 class AccuracyMetrics(BaseModel):
     total_predictions: int
     correct_predictions: int
@@ -19,12 +20,14 @@ class AccuracyMetrics(BaseModel):
     brier_score: float
     model_config = {"from_attributes": True}
 
+
 class BenchmarkResult(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     run_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     prediction_metrics: AccuracyMetrics
     belief_calibration_score: float
     model_config = {"from_attributes": True}
+
 
 class WorldModelBenchmarkRunner:
     """Evaluates hypothesis accuracy, prediction accuracy, and belief calibration over time."""
@@ -43,20 +46,18 @@ class WorldModelBenchmarkRunner:
         calibration_score = await self._evaluate_beliefs()
 
         result = BenchmarkResult(
-            prediction_metrics=prediction_metrics,
-            belief_calibration_score=calibration_score
+            prediction_metrics=prediction_metrics, belief_calibration_score=calibration_score
         )
-        logger.info(f"Benchmark completed with accuracy score: {prediction_metrics.accuracy_score:.2f}")
+        logger.info(
+            f"Benchmark completed with accuracy score: {prediction_metrics.accuracy_score:.2f}"
+        )
         return result
 
     async def _evaluate_predictions(self, predictions: List[PredictionResult]) -> AccuracyMetrics:
         """Calculates prediction accuracy and Brier score."""
         if not predictions:
             return AccuracyMetrics(
-                total_predictions=0,
-                correct_predictions=0,
-                accuracy_score=0.0,
-                brier_score=0.0
+                total_predictions=0, correct_predictions=0, accuracy_score=0.0, brier_score=0.0
             )
 
         correct = 0
@@ -81,7 +82,7 @@ class WorldModelBenchmarkRunner:
             total_predictions=total,
             correct_predictions=correct,
             accuracy_score=correct / total,
-            brier_score=brier_sum / total
+            brier_score=brier_sum / total,
         )
 
     async def _evaluate_beliefs(self) -> float:

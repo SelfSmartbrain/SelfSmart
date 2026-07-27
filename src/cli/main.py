@@ -16,9 +16,16 @@ formatter = OutputFormatter()
 
 @click.group()
 @click.version_option(version="1.0.0")
-@click.option("--api-url", envvar="MODELX_API_URL", default="http://localhost:8000", help="ModelX API URL")
+@click.option(
+    "--api-url", envvar="MODELX_API_URL", default="http://localhost:8000", help="ModelX API URL"
+)
 @click.option("--api-key", envvar="MODELX_API_KEY", help="ModelX API key")
-@click.option("--output", type=click.Choice(["table", "json", "stream"]), default="table", help="Output format")
+@click.option(
+    "--output",
+    type=click.Choice(["table", "json", "stream"]),
+    default="table",
+    help="Output format",
+)
 @click.pass_context
 def cli(ctx, api_url, api_key, output):
     """ModelX CLI - Interact with the ModelX AGI Platform."""
@@ -69,15 +76,15 @@ def list_providers(ctx):
     """List all configured providers."""
     config_manager = ctx.obj["config"]
     providers = config_manager.list_providers()
-    
+
     table = Table(title="Configured LLM Providers")
     table.add_column("Provider", style="cyan")
     table.add_column("Model", style="magenta")
     table.add_column("API Key", style="green")
-    
+
     for p in providers:
         table.add_row(p["provider"], p.get("model", "N/A"), p["api_key"][:10] + "...")
-    
+
     console.print(table)
 
 
@@ -122,14 +129,11 @@ def create(ctx, description, priority, deadline):
     """Create a new goal."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "description": description,
-        "priority": priority
-    }
+
+    data = {"description": description, "priority": priority}
     if deadline:
         data["deadline"] = deadline
-    
+
     result = client.create_goal(data)
     formatter.output(result, output_format)
 
@@ -140,7 +144,7 @@ def list(ctx):
     """List all goals."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     goals = client.list_goals()
     formatter.output(goals, output_format)
 
@@ -152,7 +156,7 @@ def get(ctx, goal_id):
     """Get goal details."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     goal = client.get_goal(goal_id)
     formatter.output(goal, output_format)
 
@@ -163,7 +167,7 @@ def get(ctx, goal_id):
 def delete(ctx, goal_id):
     """Delete a goal."""
     client = ctx.obj["client"]
-    
+
     client.delete_goal(goal_id)
     console.print(f"[green]✓[/green] Deleted goal {goal_id}")
 
@@ -188,13 +192,9 @@ def create(ctx, goal_id, description, priority):
     """Create a new task for a goal."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "goal_id": goal_id,
-        "description": description,
-        "priority": priority
-    }
-    
+
+    data = {"goal_id": goal_id, "description": description, "priority": priority}
+
     result = client.create_task(data)
     formatter.output(result, output_format)
 
@@ -207,7 +207,7 @@ def list(ctx, goal_id, status):
     """List all tasks."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     tasks = client.list_tasks(goal_id=goal_id, status=status)
     formatter.output(tasks, output_format)
 
@@ -219,7 +219,7 @@ def get(ctx, task_id):
     """Get task details."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     task = client.get_task(task_id)
     formatter.output(task, output_format)
 
@@ -231,7 +231,7 @@ def execute(ctx, task_id):
     """Execute a task."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     result = client.execute_task(task_id)
     formatter.output(result, output_format)
 
@@ -255,12 +255,9 @@ def add(ctx, content, type):
     """Add a memory entry."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "content": content,
-        "memory_type": type
-    }
-    
+
+    data = {"content": content, "memory_type": type}
+
     result = client.add_memory(data)
     formatter.output(result, output_format)
 
@@ -273,7 +270,7 @@ def search(ctx, query, limit):
     """Search memory."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     results = client.search_memory(query, limit)
     formatter.output(results, output_format)
 
@@ -284,7 +281,7 @@ def list(ctx):
     """List all memories."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     memories = client.list_memories()
     formatter.output(memories, output_format)
 
@@ -308,12 +305,9 @@ def add(ctx, content, tags):
     """Add knowledge entry."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "content": content,
-        "tags": tags.split(",") if tags else []
-    }
-    
+
+    data = {"content": content, "tags": tags.split(",") if tags else []}
+
     result = client.add_knowledge(data)
     formatter.output(result, output_format)
 
@@ -325,7 +319,7 @@ def search(ctx, query):
     """Search knowledge base."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     results = client.search_knowledge(query)
     formatter.output(results, output_format)
 
@@ -347,7 +341,7 @@ def analyze(ctx):
     """Analyze learning patterns."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     result = client.analyze_meta_learning()
     formatter.output(result, output_format)
 
@@ -358,7 +352,7 @@ def strategies(ctx):
     """List learned strategies."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     strategies = client.list_strategies()
     formatter.output(strategies, output_format)
 
@@ -381,7 +375,7 @@ def create(ctx, topic):
     """Create a reflection."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     data = {"topic": topic}
     result = client.create_reflection(data)
     formatter.output(result, output_format)
@@ -393,7 +387,7 @@ def list(ctx):
     """List all reflections."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     reflections = client.list_reflections()
     formatter.output(reflections, output_format)
 
@@ -418,15 +412,13 @@ def run(ctx, goal, budget, duration):
     """Run autonomous execution."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "goal": goal
-    }
+
+    data = {"goal": goal}
     if budget:
         data["budget"] = budget
     if duration:
         data["duration"] = duration
-    
+
     result = client.run_autonomous(data)
     formatter.output(result, output_format)
 
@@ -438,7 +430,7 @@ def status(ctx, execution_id):
     """Get autonomous execution status."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     status = client.get_execution_status(execution_id)
     formatter.output(status, output_format)
 
@@ -463,14 +455,11 @@ def analyze(ctx, image_path, extract_text, detect_elements):
     """Analyze a screenshot/image."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     with open(image_path, "rb") as f:
         files = {"file": f}
-        data = {
-            "extract_text": extract_text,
-            "detect_elements": detect_elements
-        }
-        
+        data = {"extract_text": extract_text, "detect_elements": detect_elements}
+
         result = client.analyze_image(files, data)
         formatter.output(result, output_format)
 
@@ -484,13 +473,9 @@ def capture(ctx, url, width, height):
     """Capture screenshot from URL."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "url": url,
-        "viewport_width": width,
-        "viewport_height": height
-    }
-    
+
+    data = {"url": url, "viewport_width": width, "viewport_height": height}
+
     result = client.capture_web_page(data)
     formatter.output(result, output_format)
 
@@ -504,14 +489,11 @@ def detect(ctx, image_path, element_type, min_confidence):
     """Detect specific elements in image."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     with open(image_path, "rb") as f:
         files = {"file": f}
-        data = {
-            "element_type": element_type,
-            "min_confidence": min_confidence
-        }
-        
+        data = {"element_type": element_type, "min_confidence": min_confidence}
+
         result = client.detect_elements(files, data)
         formatter.output(result, output_format)
 
@@ -537,15 +519,11 @@ def submit(ctx, description, priority, complexity, capabilities):
     """Submit a goal to the swarm."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
-    data = {
-        "description": description,
-        "priority": priority,
-        "estimated_complexity": complexity
-    }
+
+    data = {"description": description, "priority": priority, "estimated_complexity": complexity}
     if capabilities:
         data["required_capabilities"] = capabilities.split(",")
-    
+
     result = client.submit_swarm_goal(data)
     formatter.output(result, output_format)
 
@@ -557,7 +535,7 @@ def status(ctx, goal_id):
     """Get swarm goal status."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     status = client.get_swarm_goal_status(goal_id)
     formatter.output(status, output_format)
 
@@ -568,7 +546,7 @@ def metrics(ctx):
     """Get swarm metrics."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     metrics = client.get_swarm_metrics()
     formatter.output(metrics, output_format)
 
@@ -581,13 +559,13 @@ def scale(ctx, directors, sub_orchestrators):
     """Scale the swarm."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     data = {}
     if directors:
         data["target_directors"] = directors
     if sub_orchestrators:
         data["target_sub_orchestrators_per_director"] = sub_orchestrators
-    
+
     result = client.scale_swarm(data)
     formatter.output(result, output_format)
 
@@ -598,7 +576,7 @@ def initialize(ctx):
     """Initialize the swarm."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     result = client.initialize_swarm()
     formatter.output(result, output_format)
 
@@ -609,7 +587,7 @@ def shutdown(ctx):
     """Shutdown the swarm."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    
+
     result = client.shutdown_swarm()
     formatter.output(result, output_format)
 
@@ -643,10 +621,7 @@ def reason(ctx, query, limit):
     """Perform reasoning on a query."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "query": query,
-        "limit": limit
-    }
+    data = {"query": query, "limit": limit}
     result = client.cognitive_reason(data)
     formatter.output(result, output_format)
 
@@ -659,10 +634,7 @@ def attend(ctx, task, priority):
     """Allocate attention to a task."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "task": task,
-        "priority": priority
-    }
+    data = {"task": task, "priority": priority}
     result = client.cognitive_attend(data)
     formatter.output(result, output_format)
 
@@ -686,10 +658,7 @@ def create(ctx, name, purpose):
     """Create a new agent society."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "name": name,
-        "purpose": purpose
-    }
+    data = {"name": name, "purpose": purpose}
     result = client.create_society(data)
     formatter.output(result, output_format)
 
@@ -712,10 +681,7 @@ def add_agent(ctx, society_id, agent_id):
     """Add an agent to a society."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "society_id": society_id,
-        "agent_id": agent_id
-    }
+    data = {"society_id": society_id, "agent_id": agent_id}
     result = client.add_agent_to_society(data)
     formatter.output(result, output_format)
 
@@ -749,10 +715,7 @@ def create_mission(ctx, title, description):
     """Create a new mission."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "title": title,
-        "description": description
-    }
+    data = {"title": title, "description": description}
     result = client.identity_create_mission(data)
     formatter.output(result, output_format)
 
@@ -786,10 +749,7 @@ def create_program(ctx, title, domain):
     """Create a research program."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "title": title,
-        "domain": domain
-    }
+    data = {"title": title, "domain": domain}
     result = client.research_create_program(data)
     formatter.output(result, output_format)
 
@@ -802,10 +762,7 @@ def schedule(ctx, program_id, frequency):
     """Schedule a research program."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "program_id": program_id,
-        "frequency": frequency
-    }
+    data = {"program_id": program_id, "frequency": frequency}
     result = client.research_schedule_program(data)
     formatter.output(result, output_format)
 
@@ -838,9 +795,7 @@ def analyze(ctx, component):
     """Analyze a component for improvements."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "component": component
-    }
+    data = {"component": component}
     result = client.develop_analyze(data)
     formatter.output(result, output_format)
 
@@ -862,9 +817,7 @@ def improve(ctx, safety_level):
     """Generate improvement plan."""
     client = ctx.obj["client"]
     output_format = ctx.obj["output"]
-    data = {
-        "safety_level": safety_level
-    }
+    data = {"safety_level": safety_level}
     result = client.develop_improve(data)
     formatter.output(result, output_format)
 
@@ -921,11 +874,11 @@ def list(ctx):
     table.add_column("Name", style="magenta")
     table.add_column("State", style="green")
     table.add_column("Confidence", style="yellow")
-    
+
     table.add_row("c_001", "Infrastructure Reliability", "stable", "0.85")
     table.add_row("c_002", "API Timeout", "stable", "0.78")
     table.add_row("c_003", "Cache Strategy", "emerging", "0.60")
-    
+
     console.print(table)
 
 
@@ -995,11 +948,11 @@ def list(ctx):
     table.add_column("Type", style="green")
     table.add_column("Strength", style="yellow")
     table.add_column("Confidence", style="blue")
-    
+
     table.add_row("t_001", "Parallel Execution Theory", "optimization", "supported", "0.82")
     table.add_row("t_002", "Cache Strategy Theory", "generalization", "tentative", "0.55")
     table.add_row("t_003", "API Timeout Pattern", "pattern", "strong", "0.91")
-    
+
     console.print(table)
 
 
@@ -1176,11 +1129,11 @@ def history(ctx):
     table.add_column("Message", style="magenta")
     table.add_column("Author", style="green")
     table.add_column("Time", style="yellow")
-    
+
     table.add_row("abc123", "Created concept", "agent_001", "2h ago")
     table.add_row("def456", "Derived theory", "agent_002", "1h ago")
     table.add_row("ghi789", "Formed strategy", "agent_001", "30m ago")
-    
+
     console.print(table)
 
 
@@ -1192,11 +1145,11 @@ def branches(ctx):
     table.add_column("Branch", style="cyan")
     table.add_column("Head", style="magenta")
     table.add_column("Status", style="green")
-    
+
     table.add_row("main", "ghi789", "active")
     table.add_row("experiment", "def456", "inactive")
     table.add_row("feature", "abc123", "inactive")
-    
+
     console.print(table)
 
 
@@ -1206,13 +1159,15 @@ def branches(ctx):
 
 
 @cli.command()
-@click.option("--api-url", envvar="MODELX_API_URL", default="http://localhost:8000", help="ModelX API URL")
+@click.option(
+    "--api-url", envvar="MODELX_API_URL", default="http://localhost:8000", help="ModelX API URL"
+)
 @click.option("--api-key", envvar="MODELX_API_KEY", help="ModelX API key")
 @click.pass_context
 def tui(ctx, api_url, api_key):
     """Launch the Terminal User Interface."""
     from src.cli.tui.app import ModelXTUI
-    
+
     app = ModelXTUI(api_url=api_url, api_key=api_key)
     app.run()
 

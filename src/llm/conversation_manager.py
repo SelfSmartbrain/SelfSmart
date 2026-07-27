@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Conversation:
     """Represents a conversation session"""
+
     id: str
     title: str
     messages: List[Message] = field(default_factory=list)
@@ -75,7 +76,7 @@ class ConversationManager:
         cursor.execute("PRAGMA table_info(conversations)")
         columns = [row[1] for row in cursor.fetchall()]
 
-        if 'user_id' not in columns:
+        if "user_id" not in columns:
             # Rename existing table and migrate if needed, but for prototype we can just drop it
             # This is destructive! Ensure data is backed up.
             cursor.execute("DROP TABLE IF EXISTS conversations")
@@ -108,20 +109,26 @@ class ConversationManager:
         # Create indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users (email)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_conv_user ON conversations (user_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages (conversation_id, timestamp)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations (updated_at DESC)")
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages (conversation_id, timestamp)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations (updated_at DESC)"
+        )
 
         conn.commit()
         conn.close()
 
-    async def create_user(self, email: str, password_hash: str, full_name: Optional[str] = None) -> str:
+    async def create_user(
+        self, email: str, password_hash: str, full_name: Optional[str] = None
+    ) -> str:
         user_id = str(uuid.uuid4())
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         try:
             cursor.execute(
                 "INSERT INTO users (id, email, hashed_password, full_name, created_at) VALUES (?, ?, ?, ?, ?)",
-                (user_id, email, password_hash, full_name, datetime.now().isoformat())
+                (user_id, email, password_hash, full_name, datetime.now().isoformat()),
             )
             conn.commit()
             return user_id
@@ -132,10 +139,17 @@ class ConversationManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT id, email, hashed_password, full_name FROM users WHERE email = ?", (email,))
+            cursor.execute(
+                "SELECT id, email, hashed_password, full_name FROM users WHERE email = ?", (email,)
+            )
             row = cursor.fetchone()
             if row:
-                return {"id": row[0], "email": row[1], "hashed_password": row[2], "full_name": row[3]}
+                return {
+                    "id": row[0],
+                    "email": row[1],
+                    "hashed_password": row[2],
+                    "full_name": row[3],
+                }
             return None
         finally:
             conn.close()
@@ -144,7 +158,7 @@ class ConversationManager:
         self,
         user_id: str,
         title: str = "New Conversation",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Conversation:
         """
         Create a new conversation for a specific user.
@@ -167,8 +181,8 @@ class ConversationManager:
                     title,
                     now.isoformat(),
                     now.isoformat(),
-                    json.dumps(metadata or {})
-                )
+                    json.dumps(metadata or {}),
+                ),
             )
 
             conn.commit()
@@ -178,7 +192,7 @@ class ConversationManager:
                 title=title,
                 created_at=now,
                 updated_at=now,
-                metadata=metadata or {}
+                metadata=metadata or {},
             )
 
             logger.info(f"Created conversation {conversation_id} for user {user_id}")
@@ -196,7 +210,7 @@ class ConversationManager:
         conversation_id: str,
         role: str,
         content: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Message:
         """
         Add a message to a conversation.
@@ -229,8 +243,8 @@ class ConversationManager:
                     role,
                     content,
                     now.isoformat(),
-                    json.dumps(metadata or {})
-                )
+                    json.dumps(metadata or {}),
+                ),
             )
 
             # Update conversation timestamp
@@ -240,17 +254,12 @@ class ConversationManager:
                 SET updated_at = ?
                 WHERE id = ?
                 """,
-                (now.isoformat(), conversation_id)
+                (now.isoformat(), conversation_id),
             )
 
             conn.commit()
 
-            message = Message(
-                role=role,
-                content=content,
-                timestamp=now,
-                metadata=metadata or {}
-            )
+            message = Message(role=role, content=content, timestamp=now, metadata=metadata or {})
 
             logger.debug(f"Added message {message_id} to conversation {conversation_id}")
             return message
@@ -263,9 +272,7 @@ class ConversationManager:
             conn.close()
 
     async def get_conversation(
-        self,
-        conversation_id: str,
-        user_id: Optional[str] = None
+        self, conversation_id: str, user_id: Optional[str] = None
     ) -> Optional[Conversation]:
         """
         Retrieve a conversation by ID, optionally verifying ownership.
@@ -275,7 +282,9 @@ class ConversationManager:
 
         try:
             # Get conversation metadata
-            query = "SELECT id, title, created_at, updated_at, metadata FROM conversations WHERE id = ?"
+            query = (
+                "SELECT id, title, created_at, updated_at, metadata FROM conversations WHERE id = ?"
+            )
             params = [conversation_id]
             if user_id:
                 query += " AND user_id = ?"
@@ -295,17 +304,19 @@ class ConversationManager:
                 WHERE conversation_id = ?
                 ORDER BY timestamp ASC
                 """,
-                (conversation_id,)
+                (conversation_id,),
             )
 
             messages = []
             for msg_row in cursor.fetchall():
-                messages.append(Message(
-                    role=msg_row[0],
-                    content=msg_row[1],
-                    timestamp=datetime.fromisoformat(msg_row[2]),
-                    metadata=json.loads(msg_row[3]) if msg_row[3] else {}
-                ))
+                messages.append(
+                    Message(
+                        role=msg_row[0],
+                        content=msg_row[1],
+                        timestamp=datetime.fromisoformat(msg_row[2]),
+                        metadata=json.loads(msg_row[3]) if msg_row[3] else {},
+                    )
+                )
 
             conversation = Conversation(
                 id=row[0],
@@ -313,7 +324,7 @@ class ConversationManager:
                 messages=messages,
                 created_at=datetime.fromisoformat(row[2]),
                 updated_at=datetime.fromisoformat(row[3]),
-                metadata=json.loads(row[4]) if row[4] else {}
+                metadata=json.loads(row[4]) if row[4] else {},
             )
 
             return conversation
@@ -325,9 +336,7 @@ class ConversationManager:
             conn.close()
 
     async def get_conversation_context(
-        self,
-        conversation_id: str,
-        max_messages: Optional[int] = None
+        self, conversation_id: str, max_messages: Optional[int] = None
     ) -> List[Message]:
         """
         Get context messages for a conversation (last N messages).
@@ -353,17 +362,19 @@ class ConversationManager:
                 ORDER BY timestamp DESC
                 LIMIT ?
                 """,
-                (conversation_id, limit)
+                (conversation_id, limit),
             )
 
             messages = []
             for row in cursor.fetchall():
-                messages.append(Message(
-                    role=row[0],
-                    content=row[1],
-                    timestamp=datetime.fromisoformat(row[2]),
-                    metadata=json.loads(row[3]) if row[3] else {}
-                ))
+                messages.append(
+                    Message(
+                        role=row[0],
+                        content=row[1],
+                        timestamp=datetime.fromisoformat(row[2]),
+                        metadata=json.loads(row[3]) if row[3] else {},
+                    )
+                )
 
             # Reverse to get chronological order
             messages.reverse()
@@ -377,10 +388,7 @@ class ConversationManager:
             conn.close()
 
     async def list_conversations(
-        self,
-        user_id: str,
-        limit: int = 50,
-        offset: int = 0
+        self, user_id: str, limit: int = 50, offset: int = 0
     ) -> List[Conversation]:
         """
         List conversations for a specific user.
@@ -397,18 +405,20 @@ class ConversationManager:
                 ORDER BY updated_at DESC
                 LIMIT ? OFFSET ?
                 """,
-                (user_id, limit, offset)
+                (user_id, limit, offset),
             )
 
             conversations = []
             for row in cursor.fetchall():
-                conversations.append(Conversation(
-                    id=row[0],
-                    title=row[1],
-                    created_at=datetime.fromisoformat(row[2]),
-                    updated_at=datetime.fromisoformat(row[3]),
-                    metadata=json.loads(row[4]) if row[4] else {}
-                ))
+                conversations.append(
+                    Conversation(
+                        id=row[0],
+                        title=row[1],
+                        created_at=datetime.fromisoformat(row[2]),
+                        updated_at=datetime.fromisoformat(row[3]),
+                        metadata=json.loads(row[4]) if row[4] else {},
+                    )
+                )
 
             return conversations
 
@@ -418,11 +428,7 @@ class ConversationManager:
         finally:
             conn.close()
 
-    async def update_conversation_title(
-        self,
-        conversation_id: str,
-        title: str
-    ) -> bool:
+    async def update_conversation_title(self, conversation_id: str, title: str) -> bool:
         """
         Update conversation title.
 
@@ -443,7 +449,7 @@ class ConversationManager:
                 SET title = ?, updated_at = ?
                 WHERE id = ?
                 """,
-                (title, datetime.now().isoformat(), conversation_id)
+                (title, datetime.now().isoformat(), conversation_id),
             )
 
             conn.commit()
@@ -476,7 +482,7 @@ class ConversationManager:
                 DELETE FROM conversations
                 WHERE id = ?
                 """,
-                (conversation_id,)
+                (conversation_id,),
             )
 
             conn.commit()
@@ -507,7 +513,7 @@ class ConversationManager:
                 DELETE FROM conversations
                 WHERE created_at < ?
                 """,
-                (cutoff_date.isoformat(),)
+                (cutoff_date.isoformat(),),
             )
 
             deleted_count = cursor.rowcount
@@ -545,7 +551,7 @@ class ConversationManager:
                 "total_messages": total_messages,
                 "average_messages_per_conversation": round(avg_messages, 2),
                 "max_context_messages": self.max_context_messages,
-                "database_path": self.db_path
+                "database_path": self.db_path,
             }
 
         except Exception as e:

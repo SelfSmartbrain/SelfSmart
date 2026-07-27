@@ -19,11 +19,13 @@ logger = logging.getLogger(__name__)
 
 class SynthesizedStrategy(BaseModel):
     """Output format for a dynamically synthesized strategy."""
-    
+
     name: str = Field(description="A concise name for the custom strategy.")
     description: str = Field(description="A detailed description of the approach.")
     steps: list[dict[str, Any]] = Field(description="The sequential steps to execute.")
-    skills_used: list[str] = Field(description="Names of reusable skills leveraged in this strategy.")
+    skills_used: list[str] = Field(
+        description="Names of reusable skills leveraged in this strategy."
+    )
     confidence: float = Field(description="Estimated likelihood of success (0.0 to 1.0).")
     justification: str = Field(description="Why this approach is expected to work.")
 
@@ -43,6 +45,7 @@ class StrategyAgent:
 
         if llm is None:
             from langchain_anthropic import ChatAnthropic
+
             self.llm = ChatAnthropic(
                 model=self.settings.anthropic_model,
                 api_key=self.settings.anthropic_api_key.get_secret_value(),
@@ -71,7 +74,9 @@ class StrategyAgent:
         ]
 
         # Fetch top baseline strategies for inspiration
-        baseline_strategies = await self.strategy_engine.get_strategies(task_type=task_type, limit=3)
+        baseline_strategies = await self.strategy_engine.get_strategies(
+            task_type=task_type, limit=3
+        )
         baselines_summary = [
             f"- {strat.name}: {strat.description} (Success rate: {strat.success_rate:.2f})"
             for strat in baseline_strategies
@@ -84,10 +89,7 @@ class StrategyAgent:
             "while adapting to the unique requirements and constraints of the current goal."
         )
 
-        user_content = (
-            f"Goal: {goal}\n"
-            f"Task Type: {task_type}\n"
-        )
+        user_content = f"Goal: {goal}\n" f"Task Type: {task_type}\n"
         if context:
             user_content += f"Context: {context}\n"
         if constraints:
@@ -105,7 +107,7 @@ class StrategyAgent:
 
         try:
             result: SynthesizedStrategy = await self.structured_llm.ainvoke(messages)
-            
+
             # Optionally, we could immediately save this to the strategy engine in "testing" status
             strategy_record = await self.strategy_engine.create_strategy(
                 task_type=task_type,
@@ -115,7 +117,7 @@ class StrategyAgent:
                 confidence=result.confidence,
                 tags=result.skills_used,
             )
-            
+
             return {
                 "id": str(strategy_record.id),
                 "name": result.name,

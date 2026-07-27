@@ -2,6 +2,7 @@
 Prompt injection protection for SelfSmart AI.
 Blocks known jailbreak and injection patterns before they reach the LLM.
 """
+
 import re
 from fastapi import HTTPException
 
@@ -13,8 +14,8 @@ _INJECTION_PATTERNS = [
     r"act\s+as\s+(if\s+you\s+are|a)\s+(?!an?\s+(helpful|smart|friendly))",
     r"do\s+not\s+(follow|obey)\s+(the\s+)?(rules?|instructions?|guidelines?)",
     r"system\s*:\s*.{0,50}(ignore|bypass|override)",
-    r"<\s*system\s*>",      # XML-style system tag injection
-    r"\[INST\].*override",   # Llama-style instruction injection
+    r"<\s*system\s*>",  # XML-style system tag injection
+    r"\[INST\].*override",  # Llama-style instruction injection
 ]
 
 _COMPILED = [re.compile(p, re.IGNORECASE | re.DOTALL) for p in _INJECTION_PATTERNS]

@@ -7,11 +7,12 @@ from src.core.service_registry import get_registry
 
 logger = get_logger(__name__)
 
+
 @retry(
     wait=wait_exponential(multiplier=1, min=4, max=10),
     stop=stop_after_attempt(3),
     retry=retry_if_exception_type(Exception),
-    reraise=True
+    reraise=True,
 )
 async def run_reflection_cycle() -> None:
     logger.info("Starting reflection cycle.")

@@ -6,11 +6,13 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+
 class ReportRequest(BaseModel):
     start_date: datetime
     end_date: datetime
     filters: Optional[Dict[str, Any]] = None
     model_config = {"from_attributes": True}
+
 
 class ReportResponse(BaseModel):
     id: UUID

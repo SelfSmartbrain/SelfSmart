@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class TheoryType(str, Enum):
     """Types of theories that can be generated."""
+
     CAUSAL = "causal"  # X causes Y
     CORRELATIONAL = "correlational"  # X correlates with Y
     PREDICTIVE = "predictive"  # If X then Y with probability P
@@ -31,6 +32,7 @@ class TheoryType(str, Enum):
 
 class TheoryStrength(str, Enum):
     """Confidence levels for theories."""
+
     HYPOTHESIS = "hypothesis"  # Initial speculation
     TENTATIVE = "tentative"  # Some evidence
     SUPPORTED = "supported"  # Good evidence
@@ -41,6 +43,7 @@ class TheoryStrength(str, Enum):
 @dataclass
 class Theory:
     """A generalized theory abstracted from observations."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     description: str = ""
@@ -56,7 +59,7 @@ class Theory:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -78,11 +81,11 @@ class Theory:
 
 class TheoryGenerator:
     """Generates theories from concepts and observations."""
-    
+
     def __init__(self):
         self.theories: Dict[str, Theory] = {}
         logger.info("TheoryGenerator initialized")
-    
+
     def generate_from_pattern(
         self,
         pattern_name: str,
@@ -101,17 +104,17 @@ class TheoryGenerator:
             source_concepts=concepts,
             domain=domain,
         )
-        
+
         # Extract conditions from observations
         theory.conditions = self._extract_conditions(observations)
-        
+
         # Generate predictions
         theory.predictions = self._generate_predictions(theory.conditions)
-        
+
         self.theories[theory.id] = theory
         logger.info(f"Generated pattern theory: {theory.name}")
         return theory
-    
+
     def generate_causal_theory(
         self,
         cause: str,
@@ -133,11 +136,11 @@ class TheoryGenerator:
             source_concepts=[cause, effect],
             domain=domain,
         )
-        
+
         self.theories[theory.id] = theory
         logger.info(f"Generated causal theory: {theory.name}")
         return theory
-    
+
     def generate_optimization_theory(
         self,
         goal: str,
@@ -151,7 +154,9 @@ class TheoryGenerator:
             name=f"Optimization: {goal}",
             description=f"{strategy} improves {goal} by {improvement_value:.1%}",
             theory_type=TheoryType.OPTIMIZATION,
-            strength=TheoryStrength.SUPPORTED if improvement_value > 0.1 else TheoryStrength.TENTATIVE,
+            strength=(
+                TheoryStrength.SUPPORTED if improvement_value > 0.1 else TheoryStrength.TENTATIVE
+            ),
             confidence=min(0.95, 0.5 + improvement_value),
             conditions=[f"When applying {strategy}"],
             predictions=[f"{improvement_metric} improves by {improvement_value:.1%}"],
@@ -159,11 +164,11 @@ class TheoryGenerator:
             source_concepts=[goal, strategy],
             domain="optimization",
         )
-        
+
         self.theories[theory.id] = theory
         logger.info(f"Generated optimization theory: {theory.name}")
         return theory
-    
+
     def generate_generalization(
         self,
         specific_cases: List[str],
@@ -183,11 +188,11 @@ class TheoryGenerator:
             source_concepts=[general_concept] + specific_cases[:3],
             domain="generalization",
         )
-        
+
         self.theories[theory.id] = theory
         logger.info(f"Generated generalization theory: {theory.name}")
         return theory
-    
+
     def generate_predictive_theory(
         self,
         antecedent: str,
@@ -209,11 +214,11 @@ class TheoryGenerator:
             source_concepts=[antecedent, consequent],
             domain=domain,
         )
-        
+
         self.theories[theory.id] = theory
         logger.info(f"Generated predictive theory: {theory.name}")
         return theory
-    
+
     def strengthen_theory(
         self,
         theory_id: str,
@@ -223,16 +228,16 @@ class TheoryGenerator:
         """Strengthen a theory with new evidence."""
         if theory_id not in self.theories:
             return None
-        
+
         theory = self.theories[theory_id]
         theory.evidence.append(new_evidence)
         theory.confidence = min(1.0, theory.confidence + confidence_boost)
         theory.strength = self._strength_from_confidence(theory.confidence)
         theory.updated_at = datetime.now(timezone.utc)
-        
+
         logger.info(f"Strengthened theory {theory_id}: confidence {theory.confidence:.2f}")
         return theory
-    
+
     def weaken_theory(
         self,
         theory_id: str,
@@ -242,31 +247,32 @@ class TheoryGenerator:
         """Weaken a theory with a counterexample."""
         if theory_id not in self.theories:
             return None
-        
+
         theory = self.theories[theory_id]
         theory.counterexamples.append(counterexample)
         theory.confidence = max(0.0, theory.confidence - confidence_penalty)
         theory.strength = self._strength_from_confidence(theory.confidence)
         theory.updated_at = datetime.now(timezone.utc)
-        
+
         logger.info(f"Weakened theory {theory_id}: confidence {theory.confidence:.2f}")
         return theory
-    
+
     def find_theories_by_concept(self, concept: str) -> List[Theory]:
         """Find all theories involving a specific concept."""
         return [
-            t for t in self.theories.values()
+            t
+            for t in self.theories.values()
             if concept in t.source_concepts or concept in t.name.lower()
         ]
-    
+
     def find_theories_by_domain(self, domain: str) -> List[Theory]:
         """Find all theories in a specific domain."""
         return [t for t in self.theories.values() if t.domain == domain]
-    
+
     def get_theory(self, theory_id: str) -> Optional[Theory]:
         """Retrieve a theory by ID."""
         return self.theories.get(theory_id)
-    
+
     def list_theories(
         self,
         min_confidence: float = 0.0,
@@ -274,31 +280,31 @@ class TheoryGenerator:
     ) -> List[Theory]:
         """List theories with optional filters."""
         theories = list(self.theories.values())
-        
+
         if min_confidence > 0:
             theories = [t for t in theories if t.confidence >= min_confidence]
-        
+
         if theory_type:
             theories = [t for t in theories if t.theory_type == theory_type]
-        
+
         return sorted(theories, key=lambda t: t.confidence, reverse=True)
-    
+
     def _extract_conditions(self, observations: List[str]) -> List[str]:
         """Extract common conditions from observations."""
         # Simple heuristic: look for common prefixes
         if not observations:
             return []
-        
+
         # Find common words across observations
         words_sets = [set(obs.lower().split()) for obs in observations]
         common_words = set.intersection(*words_sets) if words_sets else set()
-        
+
         conditions = []
         if common_words:
             conditions.append(f"When {' and '.join(list(common_words)[:3])} are present")
-        
+
         return conditions
-    
+
     def _generate_predictions(self, conditions: List[str]) -> List[str]:
         """Generate predictions based on conditions."""
         predictions = []
@@ -307,12 +313,12 @@ class TheoryGenerator:
             if "when" in condition.lower():
                 prediction = condition.lower().replace("when", "then")
                 predictions.append(prediction.capitalize())
-        
+
         if not predictions:
             predictions.append("Expected behavior follows pattern")
-        
+
         return predictions
-    
+
     def _strength_from_confidence(self, confidence: float) -> TheoryStrength:
         """Map confidence to theory strength."""
         if confidence >= 0.9:
@@ -325,20 +331,26 @@ class TheoryGenerator:
             return TheoryStrength.TENTATIVE
         else:
             return TheoryStrength.HYPOTHESIS
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Get theory generation statistics."""
         type_counts = {}
         for theory in self.theories.values():
             type_counts[theory.theory_type.value] = type_counts.get(theory.theory_type.value, 0) + 1
-        
+
         strength_counts = {}
         for theory in self.theories.values():
-            strength_counts[theory.strength.value] = strength_counts.get(theory.strength.value, 0) + 1
-        
+            strength_counts[theory.strength.value] = (
+                strength_counts.get(theory.strength.value, 0) + 1
+            )
+
         return {
             "total_theories": len(self.theories),
             "by_type": type_counts,
             "by_strength": strength_counts,
-            "average_confidence": sum(t.confidence for t in self.theories.values()) / len(self.theories) if self.theories else 0.0,
+            "average_confidence": (
+                sum(t.confidence for t in self.theories.values()) / len(self.theories)
+                if self.theories
+                else 0.0
+            ),
         }

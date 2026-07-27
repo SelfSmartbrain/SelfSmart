@@ -1,4 +1,5 @@
 """Skill discovery — identifies, extracts, and registers reusable agent skills from execution logs."""
+
 from __future__ import annotations
 
 import json
@@ -57,12 +58,14 @@ class SkillDiscovery:
             skills: list[dict[str, Any]] = []
             for pattern in patterns:
                 if pattern.get("frequency", 0) >= 2:
-                    skills.append({
-                        "name": pattern.get("name", "unnamed_skill"),
-                        "pattern": pattern,
-                        "frequency": pattern["frequency"],
-                        "confidence": min(pattern["frequency"] / 10.0, 1.0),
-                    })
+                    skills.append(
+                        {
+                            "name": pattern.get("name", "unnamed_skill"),
+                            "pattern": pattern,
+                            "frequency": pattern["frequency"],
+                            "confidence": min(pattern["frequency"] / 10.0, 1.0),
+                        }
+                    )
             logger.info("skills_discovered", count=len(skills))
             return skills
         except Exception as exc:
@@ -91,12 +94,14 @@ class SkillDiscovery:
             patterns: list[dict[str, Any]] = []
             for action, entries in action_groups.items():
                 if len(entries) >= 2:
-                    patterns.append({
-                        "name": f"skill_{action}",
-                        "action": action,
-                        "frequency": len(entries),
-                        "sample_entries": entries[:3],
-                    })
+                    patterns.append(
+                        {
+                            "name": f"skill_{action}",
+                            "action": action,
+                            "frequency": len(entries),
+                            "sample_entries": entries[:3],
+                        }
+                    )
 
             patterns.sort(key=lambda p: p["frequency"], reverse=True)
             logger.info("patterns_extracted", count=len(patterns))
@@ -154,8 +159,7 @@ class SkillDiscovery:
                 return 0.0
 
             successes = sum(
-                1 for e in executions
-                if (isinstance(e, dict) and e.get("success", False))
+                1 for e in executions if (isinstance(e, dict) and e.get("success", False))
             )
             rate = round(successes / len(executions), 4)
 

@@ -1,4 +1,5 @@
 """Cognitive metrics calculator — computes a full suite of system intelligence metrics."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -60,15 +61,11 @@ class CognitiveMetricsCalculator:
             goal_completion_rate = round(1.0 - failure_rate, 4)
 
             # Curiosity efficiency: concepts discovered per research track
-            curiosity_efficiency = round(
-                concept_growth / (research_output + 0.01), 4
-            )
+            curiosity_efficiency = round(concept_growth / (research_output + 0.01), 4)
 
             # Strategy effectiveness: average concept growth weighted by
             # research output
-            strategy_effectiveness = round(
-                (concept_growth * 0.4 + research_output * 0.6), 4
-            )
+            strategy_effectiveness = round((concept_growth * 0.4 + research_output * 0.6), 4)
 
             # Skill utilization: placeholder — requires integration with
             # SkillDiscovery registry

@@ -6,6 +6,7 @@ from src.core.service_registry import get_registry
 
 logger = get_logger(__name__)
 
+
 async def run_reporting_cycle() -> None:
     logger.info("Starting reporting cycle.")
     try:

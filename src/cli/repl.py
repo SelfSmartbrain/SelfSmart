@@ -2,6 +2,7 @@ from src.cli.command_router import CommandRouter
 from src.cli.session import Session
 from src.cli.history import History
 
+
 class REPL:
     def __init__(self):
         self.session = Session()

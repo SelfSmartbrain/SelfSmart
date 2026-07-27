@@ -4,6 +4,7 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
+
 class DataValidator:
     """
     Validation layer to filter out low-quality or poisoned training data.
@@ -16,10 +17,13 @@ class DataValidator:
 
         # Simple spam/poisoning patterns
         self.poison_patterns = [
-            r"buy now", r"special offer", r"click here", # Marketing/SEO
-            r"copyright.*all rights reserved",          # Legal fluff
-            r"\[edit\]", r"edit source",                # Wiki boilerplate
-            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"      # IP addresses (potentially sensitive)
+            r"buy now",
+            r"special offer",
+            r"click here",  # Marketing/SEO
+            r"copyright.*all rights reserved",  # Legal fluff
+            r"\[edit\]",
+            r"edit source",  # Wiki boilerplate
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",  # IP addresses (potentially sensitive)
         ]
         self.compiled_patterns = [re.compile(p, re.IGNORECASE) for p in self.poison_patterns]
 
@@ -43,7 +47,7 @@ class DataValidator:
                 matches += 1
 
         # Penalize score based on matches
-        score -= (matches * 0.2)
+        score -= matches * 0.2
 
         # Check for repetition (potential AI hallucination or spam)
         words = content.split()

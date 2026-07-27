@@ -48,6 +48,7 @@ async def _llm_json(system: str, prompt: str, fallback: Any) -> Any:
         logger.warning("World-model LLM call failed: %s", e)
     return fallback
 
+
 class PatternDiscovery:
     async def discover_patterns(self, data: Any) -> List[Dict[str, Any]]:
         fallback = [{"id": "p1", "pattern": "no_patterns_detected", "confidence": 0.0}]
@@ -60,6 +61,7 @@ class PatternDiscovery:
         )
         return patterns if isinstance(patterns, list) else fallback
 
+
 class CausalReasoning:
     async def infer_causality(self, patterns: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         fallback = []
@@ -71,6 +73,7 @@ class CausalReasoning:
             fallback,
         )
         return links if isinstance(links, list) else fallback
+
 
 class HypothesisGeneration:
     async def generate_hypotheses(self, causal_links: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -90,6 +93,7 @@ class HypothesisGeneration:
         )
         return hypotheses if isinstance(hypotheses, list) else fallback
 
+
 class ExperimentDesign:
     async def design_experiment(self, hypothesis: Dict[str, Any]) -> Dict[str, Any]:
         hypothesis_id = hypothesis.get("id", "unknown")
@@ -107,6 +111,7 @@ class ExperimentDesign:
         )
         return experiment if isinstance(experiment, dict) else fallback
 
+
 class ExperimentExecution:
     async def run_experiment(self, experiment: Dict[str, Any]) -> Dict[str, Any]:
         fallback = {
@@ -122,6 +127,7 @@ class ExperimentExecution:
             fallback,
         )
         return result if isinstance(result, dict) else fallback
+
 
 class BeliefUpdate:
     async def update_beliefs(
@@ -158,6 +164,7 @@ class BeliefUpdate:
 
         return updated
 
+
 class PredictionGeneration:
     async def generate_predictions(self, beliefs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         fallback = [
@@ -176,8 +183,11 @@ class PredictionGeneration:
         )
         return predictions if isinstance(predictions, list) else fallback
 
+
 class WorldModelUpdate:
-    async def update_model(self, beliefs: List[Dict[str, Any]], predictions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def update_model(
+        self, beliefs: List[Dict[str, Any]], predictions: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         fallback = {
             "status": "updated",
             "belief_count": len(beliefs),
@@ -191,6 +201,7 @@ class WorldModelUpdate:
         )
         return model_state if isinstance(model_state, dict) else fallback
 
+
 async def pattern_discovery(state: Dict[str, Any]) -> Dict[str, Any]:
     """Discover patterns in data."""
     logger.info("Running pattern discovery...")
@@ -198,6 +209,7 @@ async def pattern_discovery(state: Dict[str, Any]) -> Dict[str, Any]:
     data = state.get("data", [])
     patterns = await discovery.discover_patterns(data)
     return {"patterns": patterns}
+
 
 async def causal_reasoning(state: Dict[str, Any]) -> Dict[str, Any]:
     """Infer causal links from patterns."""
@@ -207,6 +219,7 @@ async def causal_reasoning(state: Dict[str, Any]) -> Dict[str, Any]:
     causal_links = await reasoning.infer_causality(patterns)
     return {"causal_links": causal_links}
 
+
 async def hypothesis_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     """Generate hypotheses from causal links."""
     logger.info("Running hypothesis generation...")
@@ -214,6 +227,7 @@ async def hypothesis_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     causal_links = state.get("causal_links", [])
     hypotheses = await generator.generate_hypotheses(causal_links)
     return {"hypotheses": hypotheses}
+
 
 async def experiment_design(state: Dict[str, Any]) -> Dict[str, Any]:
     """Design experiments for hypotheses."""
@@ -226,6 +240,7 @@ async def experiment_design(state: Dict[str, Any]) -> Dict[str, Any]:
         experiments.append(exp)
     return {"experiments": experiments}
 
+
 async def experiment_execution(state: Dict[str, Any]) -> Dict[str, Any]:
     """Execute experiments and get results."""
     logger.info("Running experiment execution...")
@@ -237,6 +252,7 @@ async def experiment_execution(state: Dict[str, Any]) -> Dict[str, Any]:
         results.append(res)
     return {"experiment_results": results}
 
+
 async def belief_update(state: Dict[str, Any]) -> Dict[str, Any]:
     """Update beliefs based on experiment results."""
     logger.info("Running belief update...")
@@ -247,6 +263,7 @@ async def belief_update(state: Dict[str, Any]) -> Dict[str, Any]:
         beliefs = await updater.update_beliefs(beliefs, res)
     return {"beliefs": beliefs}
 
+
 async def prediction_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     """Generate predictions based on current beliefs."""
     logger.info("Running prediction generation...")
@@ -254,6 +271,7 @@ async def prediction_generation(state: Dict[str, Any]) -> Dict[str, Any]:
     beliefs = state.get("beliefs", [])
     predictions = await generator.generate_predictions(beliefs)
     return {"predictions": predictions}
+
 
 async def world_model_update(state: Dict[str, Any]) -> Dict[str, Any]:
     """Update the global world model."""

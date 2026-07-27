@@ -9,15 +9,17 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ExecutionPlan(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     project_id: uuid.UUID
     steps: List[str]
     status: str = "pending"
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+
 
 class ExecutionOrchestrator:
     def __init__(self):

@@ -275,10 +275,12 @@ class MemoryAgent:
             existing_memories=json.dumps(existing_summaries),
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a memory analyst. Respond only with valid JSON."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(content="You are a memory analyst. Respond only with valid JSON."),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             analysis = json.loads(response.content)
