@@ -40,13 +40,12 @@ export class ErrorBoundary extends Component<Props, State> {
     });
 
     // Log to error reporting service
-    this.logErrorToService(error, errorInfo);
+    this.logErrorToService(error);
   }
 
-  private logErrorToService(error: Error, errorInfo: ErrorInfo) {
+  private logErrorToService(error: Error) {
     // Send error to monitoring service (Sentry, LogRocket, etc.)
     try {
-      // Example: Sentry.captureException(error, { contexts: { react: { componentStack: errorInfo.componentStack } } });
       console.error("Error logged:", error.message);
     } catch (e) {
       console.error("Failed to log error:", e);
@@ -78,9 +77,9 @@ export class ErrorBoundary extends Component<Props, State> {
                 <AlertCircle className="h-6 w-6" />
               </div>
               <CardTitle className="text-2xl">Something went wrong</CardTitle>
-              <CardDescription className="text-zinc-400">
-                An unexpected error occurred. We've been notified and are working to fix it.
-              </CardDescription>
+               <CardDescription className="text-zinc-400">
+                 An unexpected error occurred. We&apos;ve been notified and are working to fix it.
+               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {process.env.NODE_ENV === "development" && this.state.error && (
