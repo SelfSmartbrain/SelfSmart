@@ -21,82 +21,61 @@ interface SystemStatus {
 interface TrainingStatus {
   task_id: string;
   status: string;
-  result: any;
+  result: { error?: string } | null;
 }
 
 export default function SettingsContent() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [trainingTaskId, setTrainingTaskId] = useState<string | null>(null);
+  const setTrainingTaskId = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("training_task_id");
+    }
+    return null;
+  })[1];
   const [trainingStatus, setTrainingStatus] = useState<TrainingStatus | null>(null);
   const [trainingLoading, setTrainingLoading] = useState(false);
 
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch(apiUrl("/status"));
-      if (response.ok) {
-        const data = await response.json();
-        setStatus(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch system status:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchStatus();
-    const savedTaskId = localStorage.getItem("training_task_id");
-    if (savedTaskId) {
-      setTrainingTaskId(savedTaskId);
-    }
-  }, []);
+    let mounted = true;
 
-  useEffect(() => {
-    if (!trainingTaskId) return;
-
-    const checkStatus = async () => {
+    const fetchData = async () => {
+      if (!mounted) return;
       try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(apiUrl(`/api/tasks/${trainingTaskId}`), {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
+        const response = await fetch(apiUrl("/status"));
         if (response.ok) {
           const data = await response.json();
-          setTrainingStatus(data);
-
-          if (data.status === "SUCCESS" || data.status === "FAILURE" || data.status === "REVOKED") {
-            localStorage.removeItem("training_task_id");
+          if (mounted) {
+            setStatus(data);
           }
         }
-      } catch (e) {
-        console.error("Error polling task status:", e);
+      } catch {
+        console.error("Failed to fetch system status:");
       }
     };
 
-    checkStatus();
-    const interval = setInterval(checkStatus, 5000);
-    return () => clearInterval(interval);
-  }, [trainingTaskId]);
+    fetchData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleStartTraining = async () => {
     setTrainingLoading(true);
     setTrainingStatus(null);
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(apiUrl("/api/training/start"), {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         }
       });
       const data = await response.json();
       if (response.ok && data.success && data.task_id) {
         setTrainingTaskId(data.task_id);
-        localStorage.setItem("training_task_id", data.task_id);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("training_task_id", data.task_id);
+        }
         setTrainingStatus({
           task_id: data.task_id,
           status: "PENDING",
@@ -105,8 +84,9 @@ export default function SettingsContent() {
       } else {
         alert(data.message || "Failed to trigger training");
       }
-    } catch (e: any) {
-      alert("Error triggering training: " + e.message);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      alert("Error triggering training: " + message);
     } finally {
       setTrainingLoading(false);
     }

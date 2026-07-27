@@ -31,7 +31,7 @@ interface ChatState {
   deleteConversation: (id: string) => Promise<void>;
 }
 
-export const useChatStore = create<ChatState>((set, get) => ({
+export const useChatStore = create<ChatState>((set) => ({
   messages: [],
   isLoading: false,
   conversationId: null,
@@ -62,14 +62,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   clearChat: () => set({ messages: [], conversationId: null }),
   setConversations: (conversations) => set({ conversations }),
    fetchConversations: async () => {
-     const token = localStorage.getItem('token');
-     if (!token) return;
      try {
-       const response = await fetch(apiUrl('/api/conversations'), {
-         headers: {
-           'Authorization': `Bearer ${token}`
-         }
-       });
+       const response = await fetch(apiUrl('/api/conversations'));
        if (response.ok) {
          const data = await response.json();
          set({ conversations: data });
@@ -78,41 +72,30 @@ export const useChatStore = create<ChatState>((set, get) => ({
        console.error('Failed to fetch conversations:', e);
      }
    },
-   selectConversation: async (id) => {
-     const token = localStorage.getItem('token');
-     if (!token) return;
-     set({ isLoading: true, conversationId: id });
-     try {
-       const response = await fetch(apiUrl(`/api/conversations/${id}`), {
-         headers: {
-           'Authorization': `Bearer ${token}`
-         }
-       });
-       if (response.ok) {
-         const data = await response.json();
-         // Convert dates if needed, backend sends ISO strings
-         const formattedMessages = data.messages.map((m: any) => ({
-           role: m.role,
-           content: m.content,
-           timestamp: m.timestamp
-         }));
-         set({ messages: formattedMessages });
-       }
-     } catch (e) {
-       console.error('Failed to select conversation:', e);
-     } finally {
-       set({ isLoading: false });
-     }
-   },
+    selectConversation: async (id) => {
+      set({ isLoading: true, conversationId: id });
+      try {
+        const response = await fetch(apiUrl(`/api/conversations/${id}`));
+        if (response.ok) {
+          const data = await response.json();
+          // Convert dates if needed, backend sends ISO strings
+          const formattedMessages = data.messages.map((m: Message) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp
+          }));
+          set({ messages: formattedMessages });
+        }
+      } catch (e) {
+        console.error('Failed to select conversation:', e);
+      } finally {
+        set({ isLoading: false });
+      }
+    },
    deleteConversation: async (id) => {
-     const token = localStorage.getItem('token');
-     if (!token) return;
      try {
        const response = await fetch(apiUrl(`/api/conversations/${id}`), {
-         method: 'DELETE',
-         headers: {
-           'Authorization': `Bearer ${token}`
-         }
+         method: 'DELETE'
        });
        if (response.ok) {
          set((state) => {

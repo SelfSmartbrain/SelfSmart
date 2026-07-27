@@ -23,8 +23,7 @@ export const useStreamingChat = () => {
        const response = await fetch(apiUrl('/api/chat/stream'), {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           message: content,
@@ -59,7 +58,7 @@ export const useStreamingChat = () => {
                 isNewConversation = false; // Prevents multiple calls
                 fetchConversations();
               }
-            } catch (e) {
+            } catch {
               // Sometimes chunks are incomplete, ignore parse errors for partial JSON
               continue;
             }

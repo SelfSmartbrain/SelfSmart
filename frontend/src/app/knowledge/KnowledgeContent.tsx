@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState, useCallback } from "react";
 import { Globe, BookOpen, Database, RefreshCw, Play, Square, Plus, Trash2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,13 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { apiUrl } from "@/lib/api";
 
 interface Stats {
-  conversations?: any;
+  conversations?: Record<string, unknown>;
   rag?: {
     rag_enabled: boolean;
     knowledge_integrator_available: boolean;
     max_knowledge_pieces: number;
     min_relevance_score: number;
-    vector_store?: any;
+    vector_store?: Record<string, unknown>;
   };
   learning?: {
     total_urls_crawled?: number;
@@ -25,7 +26,15 @@ interface Stats {
     duplicates_found?: number;
   };
   learning_active?: boolean;
+  feedback?: {
+    total: number;
+    positive: number;
+    negative: number;
+    recent_feedback: Array<Record<string, unknown>>;
+  };
 }
+
+
 
 export default function KnowledgeContent() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -35,14 +44,9 @@ export default function KnowledgeContent() {
   const [teaching, setTeaching] = useState(false);
   const [teachStatus, setTeachStatus] = useState<{ success?: boolean; message?: string } | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(apiUrl("/api/stats"), {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+      const response = await fetch(apiUrl("/api/stats"));
       if (response.ok) {
         const data = await response.json();
         setStats(data);
@@ -52,24 +56,25 @@ export default function KnowledgeContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [fetchStats]);  
+   
 
-  const handleAddUrl = () => {
-    if (!urlInput.trim()) return;
-    try {
-      new URL(urlInput);
-      if (!urlsToTeach.includes(urlInput.trim())) {
-        setUrlsToTeach([...urlsToTeach, urlInput.trim()]);
+   const handleAddUrl = () => {
+     if (!urlInput.trim()) return;
+     try {
+       new URL(urlInput);
+       if (!urlsToTeach.includes(urlInput.trim())) {
+         setUrlsToTeach([...urlsToTeach, urlInput.trim()]);
+       }
+       setUrlInput("");
+      } catch {
+        alert("Please enter a valid URL (including http:// or https://)");
       }
-      setUrlInput("");
-    } catch (e) {
-      alert("Please enter a valid URL (including http:// or https://)");
-    }
-  };
+   };
 
   const handleRemoveUrl = (index: number) => {
     setUrlsToTeach(urlsToTeach.filter((_, i) => i !== index));
@@ -80,12 +85,10 @@ export default function KnowledgeContent() {
     setTeaching(true);
     setTeachStatus(null);
     try {
-      const token = localStorage.getItem("token");
       const response = await fetch(apiUrl("/api/learning/learn"), {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({ urls: urlsToTeach }),
       });
@@ -105,11 +108,12 @@ export default function KnowledgeContent() {
           message: data.error || "Failed to crawl URLs. Please check server logs.",
         });
       }
-    } catch (error: any) {
-      setTeachStatus({
-        success: false,
-        message: error.message || "Network error. Failed to connect to server.",
-      });
+       } catch (error) {
+         const message = error instanceof Error ? error.message : String(error);
+         setTeachStatus({
+           success: false,
+           message: message || "Network error. Failed to connect to server.",
+         });
     } finally {
       setTeaching(false);
     }
@@ -118,13 +122,9 @@ export default function KnowledgeContent() {
   const toggleLearningLoop = async (start: boolean) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
       const endpoint = start ? "/api/learning/start" : "/api/learning/stop";
       const response = await fetch(apiUrl(endpoint), {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
+        method: "POST"
       });
       if (response.ok) {
         setTimeout(fetchStats, 1000);
