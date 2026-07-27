@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { AuthWrapper } from "@/components/auth/AuthWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -103,14 +102,12 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.selfsmart.ai" />
       </head>
       <body className="min-h-full bg-background text-foreground overflow-hidden">
-        <AuthWrapper>
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto">
-              {children}
-            </main>
-          </div>
-        </AuthWrapper>
+        <div className="flex h-screen overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
