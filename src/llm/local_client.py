@@ -156,7 +156,13 @@ class OllamaClient(BaseLocalClient):
         if not self.session:
             self.session = aiohttp.ClientSession(timeout=self.timeout)
         
+        # Ensure messages are dicts for JSON serialization
         api_messages = self._to_api_messages(messages)
+        # Additional safety: ensure all values are JSON-serializable primitives
+        api_messages = [
+            {"role": str(m.get("role", "")), "content": str(m.get("content", ""))}
+            for m in api_messages
+        ]
         
         payload = {
             "model": self.model,
@@ -165,9 +171,7 @@ class OllamaClient(BaseLocalClient):
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
-                "top_p": kwargs.get('top_p', 0.9),
-                "top_k": kwargs.get('top_k', 40),
-                "repeat_penalty": kwargs.get('repeat_penalty', 1.1),
+                **kwargs
             }
         }
         
@@ -200,7 +204,7 @@ class OllamaClient(BaseLocalClient):
         except Exception as e:
             logger.error(f"Ollama chat failed: {e}")
             raise
-    
+
     async def chat_stream(
         self,
         messages: List[Message],
