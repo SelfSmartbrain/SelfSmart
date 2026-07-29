@@ -19,14 +19,7 @@ class FreeAPIClient:
 
     def __init__(self):
         self.session = None
-        # Disable proxy for API calls to avoid DNS resolution issues
-        self.connector = aiohttp.TCPConnector(
-            limit=10,
-            ttl_dns_cache=300,
-            use_dns_cache=True,
-            force_close=False,
-            enable_cleanup_closed=True,
-        )
+        self.connector = None
         self.base_apis = {
             # Wikipedia API - No auth required
             "wikipedia": {
@@ -153,6 +146,16 @@ class FreeAPIClient:
         else:
             # Use proxy settings if explicitly configured
             proxies = None  # Disable proxy to avoid DNS issues
+
+        # Create connector if it doesn't exist
+        if self.connector is None:
+            self.connector = aiohttp.TCPConnector(
+                limit=10,
+                ttl_dns_cache=300,
+                use_dns_cache=True,
+                force_close=False,
+                enable_cleanup_closed=True,
+            )
 
         self.session = aiohttp.ClientSession(
             timeout=timeout,

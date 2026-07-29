@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { apiUrl } from "@/lib/api";
+import { authFetch } from "@/lib/authFetch";
 
 interface Stats {
   conversations?: Record<string, unknown>;
@@ -46,7 +46,7 @@ export default function KnowledgeContent() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch(apiUrl("/api/stats"));
+      const response = await authFetch("/api/stats");
       if (response.ok) {
         const data = await response.json();
         setStats(data);
@@ -85,7 +85,7 @@ export default function KnowledgeContent() {
     setTeaching(true);
     setTeachStatus(null);
     try {
-      const response = await fetch(apiUrl("/api/learning/learn"), {
+      const response = await authFetch("/api/learning/learn", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -123,7 +123,7 @@ export default function KnowledgeContent() {
     setLoading(true);
     try {
       const endpoint = start ? "/api/learning/start" : "/api/learning/stop";
-      const response = await fetch(apiUrl(endpoint), {
+      const response = await authFetch(endpoint, {
         method: "POST"
       });
       if (response.ok) {

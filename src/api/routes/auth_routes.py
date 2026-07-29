@@ -3,13 +3,19 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import secrets
 
 from src.config.settings import get_settings
-from src.api.auth import create_access_token, get_password_hash, verify_password, User
+from src.api.auth import (
+    create_access_token,
+    get_current_user,
+    get_password_hash,
+    verify_password,
+    User,
+)
 from src.api.dependencies import get_user_repo
 from src.db.repositories.user_repo import UserRepository
 

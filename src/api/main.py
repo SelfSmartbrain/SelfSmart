@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.middleware import setup_middleware
 from src.api.middleware_rate_limit import RateLimitMiddleware
@@ -174,6 +175,15 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestSizeLimitMiddleware, max_size=10 * 1024 * 1024)
     app.add_middleware(TimeoutMiddleware, timeout=60.0)
+    
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:3000"],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
     # Add rate limiting middleware after CORS
     app.add_middleware(RateLimitMiddleware)
@@ -237,6 +247,14 @@ def create_app() -> FastAPI:
             "debug": settings.debug,
             "llm_provider": settings.llm_provider,
             "llm_api_key_configured": chat_runtime.llm_api_key_configured(),
+            "embeddings": "sentence-transformers",
+            "features": [
+                "rag",
+                "continuous_learning",
+                "streaming_chat",
+                "feedback",
+                "conversation_history",
+            ],
         }
 
     @app.exception_handler(Exception)

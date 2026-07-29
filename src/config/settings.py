@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     deepseek_api_key: Optional[str] = Field(default=None, env="DEEPSEEK_API_KEY")
     gemini_api_key: Optional[str] = Field(default=None, env="GEMINI_API_KEY")
     gemini_model: str = Field(default="gemini-flash-latest", env="GEMINI_MODEL")
-    # gemini (free-tier friendly via Google AI Studio) | deepseek — must match get_llm_client() in web_server
+    # gemini (free-tier friendly via Google AI Studio) | deepseek — must match get_llm_client() in chat_runtime
     llm_provider: str = Field(default="deepseek", env="LLM_PROVIDER")
 
     # Server

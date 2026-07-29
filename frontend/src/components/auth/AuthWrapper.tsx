@@ -45,6 +45,9 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       }
 
       localStorage.setItem("token", data.access_token);
+      if (data.full_name) {
+        localStorage.setItem("userName", data.full_name);
+      }
       setToken(data.access_token);
       window.dispatchEvent(new Event("auth-changed"));
     } catch (err) {

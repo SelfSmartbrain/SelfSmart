@@ -26,7 +26,7 @@ class UserLogin(BaseModel):
 
 @router.post("/register")
 @limiter.limit("3/minute")
-async def register(user_data: UserCreate, request_obj: Request):
+async def register(user_data: UserCreate, request: Request):
     existing_user = await chat_runtime.conversation_manager.get_user_by_email(user_data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -42,7 +42,7 @@ async def register(user_data: UserCreate, request_obj: Request):
 
 @router.post("/login")
 @limiter.limit("5/minute")
-async def login(credentials: UserLogin, request_obj: Request):
+async def login(credentials: UserLogin, request: Request):
     user = await chat_runtime.conversation_manager.get_user_by_email(credentials.email)
     if not user or not verify_password(credentials.password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")

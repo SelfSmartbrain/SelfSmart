@@ -38,6 +38,8 @@ backend_pid.txt
 backend_test.log
 
 # Data (download at runtime)
+*.db
+*.sqlite3
 data/
 training_data/
 processed_data/

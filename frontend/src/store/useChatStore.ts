@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { apiUrl } from '@/lib/api';
+import { authFetch } from '@/lib/authFetch';
 
 export interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -63,7 +63,7 @@ export const useChatStore = create<ChatState>((set) => ({
   setConversations: (conversations) => set({ conversations }),
    fetchConversations: async () => {
      try {
-       const response = await fetch(apiUrl('/api/conversations'));
+       const response = await authFetch('/api/conversations');
        if (response.ok) {
          const data = await response.json();
          set({ conversations: data });
@@ -75,7 +75,7 @@ export const useChatStore = create<ChatState>((set) => ({
     selectConversation: async (id) => {
       set({ isLoading: true, conversationId: id });
       try {
-        const response = await fetch(apiUrl(`/api/conversations/${id}`));
+        const response = await authFetch(`/api/conversations/${id}`);
         if (response.ok) {
           const data = await response.json();
           // Convert dates if needed, backend sends ISO strings
@@ -94,7 +94,7 @@ export const useChatStore = create<ChatState>((set) => ({
     },
    deleteConversation: async (id) => {
      try {
-       const response = await fetch(apiUrl(`/api/conversations/${id}`), {
+       const response = await authFetch(`/api/conversations/${id}`, {
          method: 'DELETE'
        });
        if (response.ok) {
