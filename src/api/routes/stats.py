@@ -23,18 +23,43 @@ async def get_stats(current_user: TokenData = Depends(get_current_user)):
         rag_stats = chat_runtime.rag_service.get_rag_stats()
 
         learning_stats = {}
-        if hasattr(chat_runtime.learner, "integration_stats"):
-            learning_stats = chat_runtime.learner.integration_stats
+        if hasattr(chat_runtime.learner, "stats"):
+            from dataclasses import asdict
+
+            learning_stats = asdict(chat_runtime.learner.stats)
+
+        # Compute feedback stats from feedback.jsonl
+        feedback_path = settings.data_dir / "feedback.jsonl"
+        feedback_total, feedback_positive = 0, 0
+        if feedback_path.exists():
+            try:
+                with open(feedback_path) as fh:
+                    for raw in fh:
+                        raw = raw.strip()
+                        if not raw:
+                            continue
+                        try:
+                            entry = json.loads(raw)
+                            feedback_total += 1
+                            if entry.get("is_positive"):
+                                feedback_positive += 1
+                        except json.JSONDecodeError:
+                            continue
+            except OSError:
+                pass
 
         return {
             "conversations": conv_stats,
             "rag": rag_stats,
             "learning": learning_stats,
-            "learning_active": (
-                chat_runtime.learner.is_running
-                if hasattr(chat_runtime.learner, "is_running")
-                else True
-            ),
+            "learning_active": chat_runtime._learning_active,
+            "feedback": {
+                "total": feedback_total,
+                "positive": feedback_positive,
+                "satisfaction_rate": (
+                    round(feedback_positive / feedback_total, 2) if feedback_total > 0 else 0.0
+                ),
+            },
         }
     except Exception as e:
         logger.error("stats_error", error=str(e), exc_info=True)

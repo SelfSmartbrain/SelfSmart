@@ -85,8 +85,11 @@ async def get_current_user(
     # API Key authentication
     if api_key:
         # Fetch all users that have an API key set
-        stmt = select(User).where(User.api_key_hash.isnot(None))
-        result = await self.session.execute(stmt)
+        from sqlalchemy import select as sa_select
+        from src.db.models import User as UserModel
+
+        stmt = sa_select(UserModel).where(UserModel.api_key_hash.isnot(None))
+        result = await db_session.execute(stmt)
         users = result.scalars().all()
         for user in users:
             if verify_password(api_key, user.api_key_hash):

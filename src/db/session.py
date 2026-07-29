@@ -13,10 +13,8 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
-    Pool,
-    PoolProxiedConnection,
 )
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool, QueuePool, Pool, PoolProxiedConnection
 
 from prometheus_client import Gauge, Histogram
 
@@ -82,6 +80,31 @@ class MonitoredPool(QueuePool):
 def get_engine() -> AsyncEngine:
     """Create and cache the async SQLAlchemy engine with enhanced pooling."""
     settings = get_settings()
+    database_url = settings.database_url
+
+    # ── Fallback coercion: ensure async dialect for SQLite ───────────
+    if database_url.startswith("sqlite:///"):
+        database_url = database_url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+        logger.warning(
+            "coerced_sync_sqlite_url",
+            original=settings.database_url,
+            coerced=database_url,
+        )
+
+    is_sqlite = "sqlite" in database_url
+
+    logger.info(
+        "creating_db_engine",
+        database_url=database_url[:50] + "...",
+    )
+
+    if is_sqlite:
+        # SQLite does not support connection pooling — use NullPool
+        return create_async_engine(
+            database_url,
+            echo=settings.debug,
+            poolclass=NullPool,
+        )
 
     # Determine pool size based on environment
     if settings.is_production:
@@ -92,14 +115,13 @@ def get_engine() -> AsyncEngine:
         max_overflow = 10
 
     logger.info(
-        "creating_db_engine",
+        "creating_db_engine_pool",
         pool_size=pool_size,
         max_overflow=max_overflow,
-        database_url=settings.database_url[:50] + "...",
     )
 
     return create_async_engine(
-        settings.database_url,
+        database_url,
         echo=settings.debug,
         pool_class=MonitoredPool,
         pool_size=pool_size,
@@ -107,14 +129,10 @@ def get_engine() -> AsyncEngine:
         pool_pre_ping=True,  # Verify connections before using
         pool_recycle=3600,  # Recycle connections after 1 hour
         pool_timeout=30,  # Timeout for getting connection
-        connect_args=(
-            {
-                "connect_timeout": 10,
-                "command_timeout": 30,
-            }
-            if "postgresql" in settings.database_url
-            else {}
-        ),
+        connect_args={
+            "connect_timeout": 10,
+            "command_timeout": 30,
+        },
     )
 
 

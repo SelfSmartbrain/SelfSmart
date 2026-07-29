@@ -2,13 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from src.utils.auth import TokenData, get_current_user
+from src.utils.auth import TokenData
+from src.api.deps.legacy_auth import get_current_user
 from src.config.settings import get_settings
 from src.utils.prompt_sanitizer import sanitize_user_message
-from src.agents.conversation_manager import conversation_manager
-from src.rag.rag_service import rag_service
-from src.learning.continuous_learner import learner
-from src.llm.provider import get_llm_client
+from src.api.services.chat_runtime import (
+    conversation_manager,
+    get_llm_client,
+    learner,
+    rag_service,
+)
 from src.api.schemas.chat import ChatRequest, ChatResponse, StreamChatRequest
 import json
 from datetime import datetime
@@ -19,7 +22,7 @@ from typing import List, Optional
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/api", tags=["Chat"])
 limiter = Limiter(key_func=get_remote_address)
 
 
@@ -129,7 +132,7 @@ async def chat(
 @router.post("/chat/stream")
 @limiter.limit("20/minute")
 async def chat_stream(
-    request: StreamChatRequest, current_user: TokenData = Depends(get_current_user)
+    request: StreamChatRequest, request_obj: Request, current_user: TokenData = Depends(get_current_user)
 ):
     """Handle streaming chat requests."""
     try:
