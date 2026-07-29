@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { apiUrl } from "@/lib/api";
+import { authFetch } from "@/lib/authFetch";
 
 interface SystemStatus {
   status: string;
@@ -64,7 +65,7 @@ export default function SettingsContent() {
     setTrainingLoading(true);
     setTrainingStatus(null);
     try {
-      const response = await fetch(apiUrl("/api/training/start"), {
+      const response = await authFetch("/api/training/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

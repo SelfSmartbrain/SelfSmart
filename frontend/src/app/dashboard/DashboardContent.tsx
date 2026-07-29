@@ -17,7 +17,7 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { authFetch } from "@/lib/authFetch";
 
 interface DashboardData {
   knowledge_base: { chunk_count: number; rag_enabled: boolean };
@@ -87,7 +87,7 @@ export default function DashboardContent() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await fetch(apiUrl("/api/dashboard"));
+        const res = await authFetch("/api/dashboard");
         if (!res.ok) throw new Error(`Backend returned HTTP ${res.status}`);
         const json: DashboardData = await res.json();
         setData(json);

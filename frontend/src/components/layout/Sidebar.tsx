@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   MessageSquare,
@@ -11,11 +11,23 @@ import {
   BookOpen,
   ExternalLink,
   PlusCircle,
-  Trash2
+  Trash2,
+  User,
+  LogOut,
+  Activity,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChatStore } from "@/store/useChatStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   { name: "Chat", href: "/", icon: MessageSquare },
@@ -26,6 +38,12 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [userName, setUserName] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("userName");
+    }
+    return null;
+  });
   const {
     clearChat,
     conversations,
@@ -38,6 +56,23 @@ export function Sidebar() {
   useEffect(() => {
     fetchConversations();
   }, [fetchConversations]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userName");
+    window.dispatchEvent(new Event("logout-trigger"));
+    window.location.href = "/";
+  };
+
+  const getUserInitials = () => {
+    if (!userName) return "U";
+    return userName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="flex flex-col w-64 border-r bg-card text-card-foreground h-full overflow-hidden">
@@ -129,6 +164,48 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto p-4 border-t flex flex-col gap-2 shrink-0 bg-muted/20">
+        {/* User Profile Section */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 h-auto py-2"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                  {getUserInitials()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start flex-1">
+                <span className="text-sm font-medium truncate">
+                  {userName || "User"}
+                </span>
+                <span className="text-xs text-muted-foreground">Signed in</span>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Activity Section */}
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <Activity className="w-3 h-3" />
+            Activity
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              <span>{conversations.length} conversations</span>
+            </div>
+          </div>
+        </div>
+
         <Link
           href="https://github.com/genius-0963/SelfSmart"
           target="_blank"
