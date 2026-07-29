@@ -111,7 +111,7 @@ Add your `GEMINI_API_KEY` (used for data synthesis and evaluation) inside `.env`
 ### 3. Start the Ecosystem
 ```bash
 # Terminal 1: Backend API
-python -m src.web_server
+uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Terminal 2: Frontend UI
 cd frontend && npm install && npm run dev
@@ -162,7 +162,7 @@ The SelfSmart architecture could be adapted for various domain-specific use case
 ```
 SelfSmart/
 ├── src/
-│   ├── web_server.py             # FastAPI streaming endpoints & Feedback API
+│   ├── api/main.py               # FastAPI application entry point
 │   ├── llm_training/
 │   │   ├── inference.py          # MLX-powered LocalLLMClient
 │   │   ├── lora_trainer.py       # SFTTrainer Pipeline
