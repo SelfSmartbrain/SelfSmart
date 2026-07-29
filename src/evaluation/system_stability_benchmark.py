@@ -8,6 +8,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class SystemStabilityMetrics(BaseModel):
     id: uuid.UUID
     memory_usage_mb: float
@@ -16,16 +17,14 @@ class SystemStabilityMetrics(BaseModel):
     timestamp: datetime
     model_config = {"from_attributes": True}
 
+
 class SystemStabilityBenchmark:
     """Benchmark framework for evaluating system stability."""
 
     def __init__(self) -> None:
         self.logger = logger
 
-    async def evaluate_stability(
-        self, 
-        db: AsyncSession
-    ) -> Dict[str, Any]:
+    async def evaluate_stability(self, db: AsyncSession) -> Dict[str, Any]:
         """Evaluates memory, CPU, and worker health."""
         self.logger.info("Evaluating system stability metrics")
 
@@ -35,7 +34,7 @@ class SystemStabilityBenchmark:
             memory_usage_mb=512.5,
             cpu_usage_percent=12.4,
             worker_health_score=0.99,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         return metrics.model_dump()

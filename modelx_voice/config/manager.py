@@ -20,11 +20,13 @@ class APIConfig:
     model: str = ""
     base_url: str = ""
 
+
 @dataclass
 class VoiceConfig:
     selected_voice: str = "clear"
     speed: float = 1.0
     pitch: float = 1.0
+
 
 @dataclass
 class AudioConfig:
@@ -32,12 +34,14 @@ class AudioConfig:
     output_device: Optional[int] = None
     sample_rate: int = 16000
 
+
 @dataclass
 class BehaviorConfig:
     wake_word: str = "hey modelx"
     auto_listen: bool = True
     response_delay: float = 0.5
     vad_aggressiveness: int = 2
+
 
 @dataclass
 class ModelXConfig:
@@ -86,7 +90,7 @@ class ConfigManager:
 
     def save(self):
         self.config_dir.mkdir(parents=True, exist_ok=True)
-        
+
         config = self.load()
         data = {
             "api": asdict(config.api),
@@ -132,7 +136,9 @@ class ConfigManager:
     def config(self) -> ModelXConfig:
         return self.load()
 
-    def update_api(self, provider: str = None, api_key: str = None, model: str = None, base_url: str = None):
+    def update_api(
+        self, provider: str = None, api_key: str = None, model: str = None, base_url: str = None
+    ):
         config = self.load()
         if provider is not None:
             config.api.provider = provider
@@ -154,7 +160,9 @@ class ConfigManager:
             config.voice.pitch = pitch
         self.save()
 
-    def update_audio(self, input_device: int = None, output_device: int = None, sample_rate: int = None):
+    def update_audio(
+        self, input_device: int = None, output_device: int = None, sample_rate: int = None
+    ):
         config = self.load()
         if input_device is not None:
             config.audio.input_device = input_device

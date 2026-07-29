@@ -1,2 +1,3 @@
 class ArchitectureScanner:
-    def scan(self, path): pass
+    def scan(self, path):
+        pass

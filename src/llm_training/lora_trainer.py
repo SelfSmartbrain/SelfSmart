@@ -25,11 +25,7 @@ class LoRATrainer:
     """
 
     def __init__(
-        self,
-        model,
-        tokenizer,
-        output_dir: str = "./model_checkpoints",
-        max_seq_length: int = 512
+        self, model, tokenizer, output_dir: str = "./model_checkpoints", max_seq_length: int = 512
     ):
         """
         Initialize LoRA trainer.
@@ -56,7 +52,7 @@ class LoRATrainer:
         r: int = 16,
         lora_alpha: int = 32,
         lora_dropout: float = 0.05,
-        target_modules: Optional[List[str]] = None
+        target_modules: Optional[List[str]] = None,
     ) -> LoraConfig:
         """
         Get LoRA configuration.
@@ -80,7 +76,7 @@ class LoRATrainer:
             target_modules=target_modules,
             lora_dropout=lora_dropout,
             bias="none",
-            task_type="CAUSAL_LM"
+            task_type="CAUSAL_LM",
         )
 
     def prepare_model(self, lora_config: LoraConfig):
@@ -101,11 +97,7 @@ class LoRATrainer:
 
         logger.info("Model prepared with LoRA adapters")
 
-    def load_training_data(
-        self,
-        data_path: str,
-        format_type: str = "instruction"
-    ) -> Dataset:
+    def load_training_data(self, data_path: str, format_type: str = "instruction") -> Dataset:
         """
         Load training data from JSON file.
 
@@ -118,7 +110,7 @@ class LoRATrainer:
         """
         logger.info(f"Loading training data from {data_path}")
 
-        with open(data_path, 'r', encoding='utf-8') as f:
+        with open(data_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Format data based on type
@@ -133,7 +125,9 @@ class LoRATrainer:
                 if input_text:
                     training_text = f"### Instruction:\n{instruction}\n\n### Input:\n{input_text}\n\n### Response:\n{output_text}"
                 else:
-                    training_text = f"### Instruction:\n{instruction}\n\n### Response:\n{output_text}"
+                    training_text = (
+                        f"### Instruction:\n{instruction}\n\n### Response:\n{output_text}"
+                    )
 
                 formatted_data.append({"text": training_text})
 
@@ -158,7 +152,7 @@ class LoRATrainer:
         logging_steps: int = 10,
         save_steps: int = 500,
         eval_steps: int = 500,
-        save_total_limit: int = 3
+        save_total_limit: int = 3,
     ) -> SFTConfig:
         """
         Get training arguments.
@@ -204,7 +198,7 @@ class LoRATrainer:
             weight_decay=0.01,
             max_grad_norm=1.0,
             dataloader_num_workers=4,
-            remove_unused_columns=False
+            remove_unused_columns=False,
         )
 
     def train(
@@ -213,7 +207,7 @@ class LoRATrainer:
         val_data_path: Optional[str] = None,
         lora_config: Optional[LoraConfig] = None,
         training_args: Optional[TrainingArguments] = None,
-        data_hash: Optional[str] = None
+        data_hash: Optional[str] = None,
     ):
         """
         Train the model with LoRA.
@@ -234,7 +228,7 @@ class LoRATrainer:
         # Create versioned output directory
         version_output_dir = self.output_dir / version_id
         version_output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Save data hash to a file for easy verification
         data_hash_file = version_output_dir / "DATA_HASH.txt"
         with open(data_hash_file, "w") as f:
@@ -245,12 +239,16 @@ class LoRATrainer:
             "version_id": version_id,
             "timestamp": timestamp,
             "data_hash": data_hash,
-            "base_model": getattr(self.model, 'name_or_path', 'unknown'),
-            "lora_config": {
-                "r": lora_config.r if lora_config else 16,
-                "lora_alpha": lora_config.lora_alpha if lora_config else 32,
-                "lora_dropout": lora_config.lora_dropout if lora_config else 0.05
-            } if lora_config else None
+            "base_model": getattr(self.model, "name_or_path", "unknown"),
+            "lora_config": (
+                {
+                    "r": lora_config.r if lora_config else 16,
+                    "lora_alpha": lora_config.lora_alpha if lora_config else 32,
+                    "lora_dropout": lora_config.lora_dropout if lora_config else 0.05,
+                }
+                if lora_config
+                else None
+            ),
         }
 
         # Load training data
@@ -282,7 +280,7 @@ class LoRATrainer:
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             tokenizer=self.tokenizer,
-            args=training_args
+            args=training_args,
         )
 
         # Train
@@ -323,11 +321,7 @@ class LoRATrainer:
 
         return version_output_dir
 
-    def evaluate_model(
-        self,
-        eval_dataset: Dataset,
-        max_samples: int = 10
-    ) -> Dict[str, Any]:
+    def evaluate_model(self, eval_dataset: Dataset, max_samples: int = 10) -> Dict[str, Any]:
         """
         Basic evaluation gate to detect catastrophic forgetting.
         Evaluates model on a small sample of the evaluation dataset.
@@ -356,14 +350,11 @@ class LoRATrainer:
             return {
                 "status": "success",
                 "metrics": eval_results,
-                "samples_evaluated": min(max_samples, len(eval_dataset))
+                "samples_evaluated": min(max_samples, len(eval_dataset)),
             }
         except Exception as e:
             logger.error(f"Evaluation failed: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def save_model(self, output_dir: Optional[str] = None):
         """
@@ -397,10 +388,7 @@ class LoRATrainer:
         logger.info(f"Loading fine-tuned model from {checkpoint_path}")
 
         # Load LoRA adapters
-        self.model = PeftModel.from_pretrained(
-            self.model,
-            checkpoint_path
-        )
+        self.model = PeftModel.from_pretrained(self.model, checkpoint_path)
 
         # Load tokenizer
         self.tokenizer = self.tokenizer.from_pretrained(checkpoint_path)
@@ -422,5 +410,5 @@ class LoRATrainer:
             "global_step": state.global_step,
             "epoch": state.epoch,
             "max_steps": state.max_steps,
-            "log_history": state.log_history[-10:]  # Last 10 logs
+            "log_history": state.log_history[-10:],  # Last 10 logs
         }

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class PlanStep(BaseModel):
     """A single step in a long-horizon plan."""
+
     id: str = Field(description="Unique string ID for the step, e.g. 'step_1'")
     title: str = Field(description="Title of the step")
     description: str = Field(description="Detailed instructions")
@@ -25,8 +26,11 @@ class PlanStep(BaseModel):
 
 class LongHorizonPlan(BaseModel):
     """The complete long-horizon plan."""
+
     steps: list[PlanStep] = Field(description="List of all steps required to complete the goal")
-    estimated_resources: str = Field(description="Estimation of resources (APIs, tools, tokens) needed")
+    estimated_resources: str = Field(
+        description="Estimation of resources (APIs, tools, tokens) needed"
+    )
 
 
 class LongHorizonPlanner:
@@ -42,6 +46,7 @@ class LongHorizonPlanner:
 
         if llm is None:
             from langchain_anthropic import ChatAnthropic
+
             # We use a large context model for 100+ step planning
             self.llm = ChatAnthropic(
                 model=self.settings.anthropic_model,
@@ -57,7 +62,7 @@ class LongHorizonPlanner:
     async def create_plan(self, goal: GeneratedGoal) -> Any:
         """Generate a 100+ step capable plan and store it in the GoalTree."""
         logger.info(f"Generating long-horizon plan for goal {goal.id}")
-        
+
         system_prompt = (
             "You are an elite autonomous research planner. Break down the provided research goal "
             "into a highly detailed, long-horizon plan. You must outline dependencies clearly. "
@@ -73,7 +78,7 @@ class LongHorizonPlanner:
 
         try:
             result: LongHorizonPlan = await self.structured_llm.ainvoke(messages)
-            
+
             # Convert to dictionary format expected by GoalTreeEngine
             plan_steps = [
                 {
@@ -84,11 +89,11 @@ class LongHorizonPlanner:
                 }
                 for step in result.steps
             ]
-            
+
             tree = await self.tree_engine.generate_hierarchy(goal, plan_steps)
             logger.info(f"Long-horizon plan created successfully in Tree {tree.id}")
             return tree
-            
+
         except Exception as e:
             logger.error(f"Long-horizon planning failed: {e}")
             return None

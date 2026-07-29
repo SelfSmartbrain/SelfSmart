@@ -39,7 +39,7 @@ class SkillLibrary:
     ) -> Skill:
         """Add a new draft skill to the library and index it."""
         logger.info(f"Ingesting new skill: {name}")
-        
+
         # Check if skill exists
         existing = await self.repo.get_by_name(name)
         if existing:
@@ -48,7 +48,7 @@ class SkillLibrary:
         # Embed for semantic search
         embedding_content = f"{name}: {description}"
         embedding = await self.embedding_service.embed_text(embedding_content)
-        
+
         # Create DB record
         skill = await self.repo.create(
             name=name,
@@ -58,11 +58,11 @@ class SkillLibrary:
             tags=tags,
             status=SkillStatus.DRAFT,
         )
-        
+
         # Update with embedding id
         embedding_id = str(skill.id)
         skill = await self.repo.update(skill.id, embedding_id=embedding_id)
-        
+
         # Upsert to Qdrant
         if skill and embedding:
             await self.vector_store.upsert(
@@ -74,9 +74,9 @@ class SkillLibrary:
                     "description": skill.description,
                     "status": skill.status.value,
                     "task_types": skill.task_types,
-                }
+                },
             )
-            
+
         return skill
 
     async def verify_skill(self, skill_id: UUID) -> Skill | None:
@@ -84,11 +84,11 @@ class SkillLibrary:
         skill = await self.repo.get_by_id(skill_id)
         if not skill:
             return None
-            
+
         if skill.status == SkillStatus.DRAFT:
             skill = await self.repo.update(skill_id, status=SkillStatus.ACTIVE)
             logger.info(f"Skill '{skill.name}' promoted to active.")
-            
+
         return skill
 
     async def find_relevant_skills(
@@ -101,7 +101,7 @@ class SkillLibrary:
         query_vector = await self.embedding_service.embed_text(query)
         if not query_vector:
             return await self.repo.search(task_type=task_type, limit=limit)
-            
+
         filters = {"status": "active"}
         if task_type:
             # We can't do an array intersection filter easily in all vector DBs,
@@ -114,19 +114,19 @@ class SkillLibrary:
             limit=limit * 2,  # Fetch extra for post-filtering
             filters=filters,
         )
-        
+
         relevant_skills = []
         for result in search_results:
             skill_id = UUID(str(result.id))
             skill = await self.repo.get_by_id(skill_id)
             if not skill:
                 continue
-                
+
             if task_type and task_type not in skill.task_types:
                 continue
-                
+
             relevant_skills.append(skill)
             if len(relevant_skills) >= limit:
                 break
-                
+
         return relevant_skills

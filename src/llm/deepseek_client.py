@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 @dataclass
 class Message:
     """Represents a conversation message"""
+
     role: str  # 'system', 'user', 'assistant'
     content: str
     timestamp: datetime = field(default_factory=datetime.now)
@@ -30,6 +31,7 @@ class Message:
 @dataclass
 class LLMResponse:
     """Represents an LLM response"""
+
     content: str
     finish_reason: str
     usage: Dict[str, int]
@@ -75,19 +77,19 @@ class DeepSeekClient:
             use_dns_cache=True,
             force_close=False,
             enable_cleanup_closed=True,
-            limit_per_host=5  # Limit connections per host to avoid rate limiting
+            limit_per_host=5,  # Limit connections per host to avoid rate limiting
         )
 
         self.session = aiohttp.ClientSession(
             timeout=timeout,
             connector=connector,
             headers={
-                'Authorization': f'Bearer {self.api_key}',
-                'Content-Type': 'application/json',
-                'User-Agent': 'SmartSelf-AI/1.0'
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "SmartSelf-AI/1.0",
             },
             trust_env=False,  # Don't use system proxy
-            skip_auto_headers=['Accept-Encoding']  # Skip auto headers that might cause issues
+            skip_auto_headers=["Accept-Encoding"],  # Skip auto headers that might cause issues
         )
         return self
 
@@ -97,9 +99,7 @@ class DeepSeekClient:
             await self.session.close()
 
     async def _make_request_with_retry(
-        self,
-        endpoint: str,
-        payload: Dict[str, Any]
+        self, endpoint: str, payload: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Make API request with retry logic and rate limiting.
@@ -116,7 +116,9 @@ class DeepSeekClient:
                             return await response.json()
                         elif response.status == 429:
                             # Rate limit hit
-                            retry_after = float(response.headers.get('Retry-After', self.retry_delay))
+                            retry_after = float(
+                                response.headers.get("Retry-After", self.retry_delay)
+                            )
                             logger.warning(f"Rate limited, waiting {retry_after}s")
                             await asyncio.sleep(retry_after)
                             continue
@@ -125,34 +127,42 @@ class DeepSeekClient:
                             error_text = await response.text()
                             logger.error(f"Server error (attempt {attempt + 1}): {error_text}")
                             if attempt < self.max_retries - 1:
-                                await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                                await asyncio.sleep(self.retry_delay * (2**attempt))
                                 continue
                             else:
                                 raise Exception(f"Server error after {self.max_retries} attempts")
                         else:
                             # Client error
                             error_text = await response.text()
-                            error_data = await response.json() if response.headers.get('content-type') == 'application/json' else {}
-                            raise Exception(f"API error {response.status}: {error_text} - {error_data}")
+                            error_data = (
+                                await response.json()
+                                if response.headers.get("content-type") == "application/json"
+                                else {}
+                            )
+                            raise Exception(
+                                f"API error {response.status}: {error_text} - {error_data}"
+                            )
 
                 except asyncio.TimeoutError as e:
                     logger.error(f"Timeout error (attempt {attempt + 1}): {e}")
                     if attempt < self.max_retries - 1:
-                        await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                        await asyncio.sleep(self.retry_delay * (2**attempt))
                         continue
                     else:
-                        raise Exception(f"Connection timeout after {self.max_retries} attempts: {e}")
+                        raise Exception(
+                            f"Connection timeout after {self.max_retries} attempts: {e}"
+                        )
                 except aiohttp.ClientConnectorError as e:
                     logger.error(f"Connection error (attempt {attempt + 1}): {e}")
                     if attempt < self.max_retries - 1:
-                        await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                        await asyncio.sleep(self.retry_delay * (2**attempt))
                         continue
                     else:
                         raise Exception(f"Connection failed after {self.max_retries} attempts: {e}")
                 except aiohttp.ClientError as e:
                     logger.error(f"Network error (attempt {attempt + 1}): {e}")
                     if attempt < self.max_retries - 1:
-                        await asyncio.sleep(self.retry_delay * (2 ** attempt))
+                        await asyncio.sleep(self.retry_delay * (2**attempt))
                         continue
                     else:
                         raise Exception(f"Network error after {self.max_retries} attempts: {e}")
@@ -164,7 +174,7 @@ class DeepSeekClient:
         messages: List[Message],
         temperature: float = 0.7,
         max_tokens: int = 2000,
-        stream: bool = False
+        stream: bool = False,
     ) -> LLMResponse:
         """
         Send chat completion request to DeepSeek API.
@@ -182,20 +192,14 @@ class DeepSeekClient:
             raise RuntimeError("Client not initialized. Use async context manager.")
 
         # Convert Message objects to API format
-        api_messages = [
-            {
-                "role": msg.role,
-                "content": msg.content
-            }
-            for msg in messages
-        ]
+        api_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         payload = {
             "model": self.model,
             "messages": api_messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "stream": stream
+            "stream": stream,
         }
 
         try:
@@ -207,8 +211,12 @@ class DeepSeekClient:
             LLM_LATENCY.labels(provider="deepseek", model=self.model).observe(latency)
             usage = response_data.get("usage", {})
             if usage:
-                TOKEN_USAGE.labels(provider="deepseek", model=self.model, token_type="prompt").inc(usage.get("prompt_tokens", 0))
-                TOKEN_USAGE.labels(provider="deepseek", model=self.model, token_type="completion").inc(usage.get("completion_tokens", 0))
+                TOKEN_USAGE.labels(provider="deepseek", model=self.model, token_type="prompt").inc(
+                    usage.get("prompt_tokens", 0)
+                )
+                TOKEN_USAGE.labels(
+                    provider="deepseek", model=self.model, token_type="completion"
+                ).inc(usage.get("completion_tokens", 0))
 
             choice = response_data["choices"][0]
 
@@ -216,7 +224,7 @@ class DeepSeekClient:
                 content=choice["message"]["content"],
                 finish_reason=choice.get("finish_reason", "stop"),
                 usage=usage,
-                model=response_data.get("model", self.model)
+                model=response_data.get("model", self.model),
             )
 
         except Exception as e:
@@ -224,10 +232,7 @@ class DeepSeekClient:
             raise
 
     async def chat_stream(
-        self,
-        messages: List[Message],
-        temperature: float = 0.7,
-        max_tokens: int = 2000
+        self, messages: List[Message], temperature: float = 0.7, max_tokens: int = 2000
     ) -> AsyncGenerator[str, None]:
         """
         Stream chat completion response from DeepSeek API.
@@ -245,20 +250,14 @@ class DeepSeekClient:
             raise RuntimeError("Client not initialized. Use async context manager.")
 
         # Convert Message objects to API format
-        api_messages = [
-            {
-                "role": msg.role,
-                "content": msg.content
-            }
-            for msg in messages
-        ]
+        api_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         payload = {
             "model": self.model,
             "messages": api_messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
-            "stream": True
+            "stream": True,
         }
 
         async with self.request_semaphore:
@@ -272,16 +271,16 @@ class DeepSeekClient:
                         raise Exception(f"Stream API error {response.status}: {error_text}")
 
                     async for line in response.content:
-                        line = line.decode('utf-8').strip()
-                        if not line or line == 'data: [DONE]':
+                        line = line.decode("utf-8").strip()
+                        if not line or line == "data: [DONE]":
                             continue
 
-                        if line.startswith('data: '):
+                        if line.startswith("data: "):
                             try:
                                 data = json.loads(line[6:])
-                                if 'choices' in data and len(data['choices']) > 0:
-                                    delta = data['choices'][0].get('delta', {})
-                                    content = delta.get('content', '')
+                                if "choices" in data and len(data["choices"]) > 0:
+                                    delta = data["choices"][0].get("delta", {})
+                                    content = delta.get("content", "")
                                     if content:
                                         yield content
                             except json.JSONDecodeError as e:

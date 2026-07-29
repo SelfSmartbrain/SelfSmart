@@ -25,16 +25,13 @@ class FreeAPIClient:
             ttl_dns_cache=300,
             use_dns_cache=True,
             force_close=False,
-            enable_cleanup_closed=True
+            enable_cleanup_closed=True,
         )
         self.base_apis = {
             # Wikipedia API - No auth required
             "wikipedia": {
                 "base_url": "https://en.wikipedia.org/api/rest_v1",
-                "endpoints": {
-                    "random": "/page/random/summary",
-                    "search": "/page/summary/{title}"
-                }
+                "endpoints": {"random": "/page/random/summary", "search": "/page/summary/{title}"},
             },
             # Hacker News - No auth required
             "hacker_news": {
@@ -43,146 +40,102 @@ class FreeAPIClient:
                     "top_stories": "/topstories.json",
                     "new_stories": "/newstories.json",
                     "best_stories": "/beststories.json",
-                    "item": "/item/{id}.json"
-                }
+                    "item": "/item/{id}.json",
+                },
             },
             # GitHub Public Events - No auth required (rate limited)
             "github": {
                 "base_url": "https://api.github.com",
                 "endpoints": {
                     "events": "/events",
-                    "trending": "/search/repositories?q=stars:>1000&sort=stars&order=desc&per_page=10"
-                }
+                    "trending": "/search/repositories?q=stars:>1000&sort=stars&order=desc&per_page=10",
+                },
             },
             # JSONPlaceholder - Fake data for testing
             "jsonplaceholder": {
                 "base_url": "https://jsonplaceholder.typicode.com",
-                "endpoints": {
-                    "posts": "/posts",
-                    "users": "/users",
-                    "comments": "/comments"
-                }
+                "endpoints": {"posts": "/posts", "users": "/users", "comments": "/comments"},
             },
             # Chuck Norris Jokes - No auth
             "chuck_norris": {
                 "base_url": "https://api.chucknorris.io/jokes",
-                "endpoints": {
-                    "random": "/random",
-                    "categories": "/categories"
-                }
+                "endpoints": {"random": "/random", "categories": "/categories"},
             },
             # Official Joke API - No auth
             "official_jokes": {
                 "base_url": "https://official-joke-api.appspot.com",
-                "endpoints": {
-                    "random": "/random_joke",
-                    "programming": "/jokes/programming/random"
-                }
+                "endpoints": {"random": "/random_joke", "programming": "/jokes/programming/random"},
             },
             # Dog CEO - Dog images - No auth
             "dog_ceo": {
                 "base_url": "https://dog.ceo/api",
-                "endpoints": {
-                    "random": "/breeds/image/random",
-                    "all_breeds": "/breeds/list/all"
-                }
+                "endpoints": {"random": "/breeds/image/random", "all_breeds": "/breeds/list/all"},
             },
             # Cat Facts - No auth
             "cat_facts": {
                 "base_url": "https://cat-fact.herokuapp.com",
-                "endpoints": {
-                    "random": "/facts/random"
-                }
+                "endpoints": {"random": "/facts/random"},
             },
             # Bored API - Activity suggestions - No auth
             "bored": {
                 "base_url": "https://www.boredapi.com/api",
-                "endpoints": {
-                    "random": "/activity"
-                }
+                "endpoints": {"random": "/activity"},
             },
             # Agify - Age prediction - No auth
-            "agify": {
-                "base_url": "https://api.agify.io",
-                "endpoints": {
-                    "predict": "?name={name}"
-                }
-            },
+            "agify": {"base_url": "https://api.agify.io", "endpoints": {"predict": "?name={name}"}},
             # Genderize - Gender prediction - No auth
             "genderize": {
                 "base_url": "https://api.genderize.io",
-                "endpoints": {
-                    "predict": "?name={name}"
-                }
+                "endpoints": {"predict": "?name={name}"},
             },
             # Nationalize - Nationality prediction - No auth
             "nationalize": {
                 "base_url": "https://api.nationalize.io",
-                "endpoints": {
-                    "predict": "?name={name}"
-                }
+                "endpoints": {"predict": "?name={name}"},
             },
             # Advice Slip - Advice API - No auth
             "advice": {
                 "base_url": "https://api.adviceslip.com",
-                "endpoints": {
-                    "random": "/advice"
-                }
+                "endpoints": {"random": "/advice"},
             },
             # Quotable - Quotes API - No auth
             "quotable": {
                 "base_url": "https://api.quotable.io",
-                "endpoints": {
-                    "random": "/random",
-                    "quotes": "/quotes?limit=10"
-                }
+                "endpoints": {"random": "/random", "quotes": "/quotes?limit=10"},
             },
             # Trivia - Trivia questions - No auth
             "trivia": {
                 "base_url": "https://opentdb.com",
-                "endpoints": {
-                    "random": "/api.php?amount=1&type=multiple"
-                }
+                "endpoints": {"random": "/api.php?amount=1&type=multiple"},
             },
             # Fake Store - E-commerce data - No auth
             "fake_store": {
                 "base_url": "https://fakestoreapi.com",
-                "endpoints": {
-                    "products": "/products",
-                    "categories": "/products/categories"
-                }
+                "endpoints": {"products": "/products", "categories": "/products/categories"},
             },
             # CoinGecko - Crypto prices - No auth (rate limited)
             "coingecko": {
                 "base_url": "https://api.coingecko.com/api/v3",
                 "endpoints": {
                     "ping": "/ping",
-                    "coins": "/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false"
-                }
+                    "coins": "/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false",
+                },
             },
             # Open Library - Books API - No auth
             "open_library": {
                 "base_url": "https://openlibrary.org",
                 "endpoints": {
                     "random": "/api/books?bibkeys=OLID:OL1M&jscmd=data&format=json",
-                    "search": "/search.json?q={query}"
-                }
+                    "search": "/search.json?q={query}",
+                },
             },
             # Rest Countries - Country data - No auth
             "rest_countries": {
                 "base_url": "https://restcountries.com/v3.1",
-                "endpoints": {
-                    "all": "/all",
-                    "random": "/random"
-                }
+                "endpoints": {"all": "/all", "random": "/random"},
             },
             # IP API - IP geolocation - No auth
-            "ip_api": {
-                "base_url": "http://ip-api.com/json",
-                "endpoints": {
-                    "lookup": "/{ip}"
-                }
-            }
+            "ip_api": {"base_url": "http://ip-api.com/json", "endpoints": {"lookup": "/{ip}"}},
         }
 
     async def __aenter__(self):
@@ -192,8 +145,9 @@ class FreeAPIClient:
 
         # Clear proxy environment variables to avoid DNS resolution issues
         import os
+
         proxies = None
-        if not os.getenv('NO_PROXY'):
+        if not os.getenv("NO_PROXY"):
             # If no NO_PROXY is set, try without proxy
             proxies = None
         else:
@@ -203,8 +157,8 @@ class FreeAPIClient:
         self.session = aiohttp.ClientSession(
             timeout=timeout,
             connector=self.connector,
-            headers={'User-Agent': 'SmartSelf-Learning-Chatbot/1.0'},
-            trust_env=False  # Don't use system proxy settings
+            headers={"User-Agent": "SmartSelf-Learning-Chatbot/1.0"},
+            trust_env=False,  # Don't use system proxy settings
         )
         return self
 
@@ -221,10 +175,10 @@ class FreeAPIClient:
                 if response.status == 200:
                     data = await response.json()
                     return {
-                        'source': 'wikipedia',
-                        'title': data.get('title'),
-                        'extract': data.get('extract'),
-                        'url': data.get('content_urls', {}).get('desktop', {}).get('page')
+                        "source": "wikipedia",
+                        "title": data.get("title"),
+                        "extract": data.get("extract"),
+                        "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
                     }
         except Exception as e:
             logger.error(f"Error fetching Wikipedia: {e}")
@@ -233,29 +187,27 @@ class FreeAPIClient:
     async def fetch_wikipedia_search(self, title: str) -> Optional[Dict[str, Any]]:
         """Search Wikipedia for a specific title"""
         try:
-            endpoint = self.base_apis['wikipedia']['endpoints']['search'].format(title=title)
+            endpoint = self.base_apis["wikipedia"]["endpoints"]["search"].format(title=title)
             url = f"{self.base_apis['wikipedia']['base_url']}{endpoint}"
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
                     return {
-                        'source': 'wikipedia',
-                        'title': data.get('title'),
-                        'extract': data.get('extract'),
-                        'url': data.get('content_urls', {}).get('desktop', {}).get('page')
+                        "source": "wikipedia",
+                        "title": data.get("title"),
+                        "extract": data.get("extract"),
+                        "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
                     }
         except Exception as e:
             logger.error(f"Error searching Wikipedia: {e}")
         return None
 
-    async def fetch_hacker_news_stories(self, story_type: str = "top", limit: int = 5) -> List[Dict[str, Any]]:
+    async def fetch_hacker_news_stories(
+        self, story_type: str = "top", limit: int = 5
+    ) -> List[Dict[str, Any]]:
         """Fetch Hacker News stories"""
         try:
-            story_types = {
-                "top": "top_stories",
-                "new": "new_stories",
-                "best": "best_stories"
-            }
+            story_types = {"top": "top_stories", "new": "new_stories", "best": "best_stories"}
 
             # Get story IDs
             endpoint = story_types.get(story_type, "top_stories")
@@ -269,18 +221,24 @@ class FreeAPIClient:
                     # Fetch story details
                     stories = []
                     for story_id in story_ids:
-                        story_url = f"{self.base_apis['hacker_news']['base_url']}/item/{story_id}.json"
+                        story_url = (
+                            f"{self.base_apis['hacker_news']['base_url']}/item/{story_id}.json"
+                        )
                         async with self.session.get(story_url) as story_response:
                             if story_response.status == 200:
                                 story_data = await story_response.json()
-                                stories.append({
-                                    'source': 'hacker_news',
-                                    'title': story_data.get('title'),
-                                    'url': story_data.get('url'),
-                                    'score': story_data.get('score'),
-                                    'by': story_data.get('by'),
-                                    'time': datetime.fromtimestamp(story_data.get('time', 0)).isoformat()
-                                })
+                                stories.append(
+                                    {
+                                        "source": "hacker_news",
+                                        "title": story_data.get("title"),
+                                        "url": story_data.get("url"),
+                                        "score": story_data.get("score"),
+                                        "by": story_data.get("by"),
+                                        "time": datetime.fromtimestamp(
+                                            story_data.get("time", 0)
+                                        ).isoformat(),
+                                    }
+                                )
 
                     return stories
         except Exception as e:
@@ -295,15 +253,17 @@ class FreeAPIClient:
                 if response.status == 200:
                     data = await response.json()
                     repos = []
-                    for repo in data.get('items', []):
-                        repos.append({
-                            'source': 'github',
-                            'name': repo.get('full_name'),
-                            'description': repo.get('description'),
-                            'url': repo.get('html_url'),
-                            'stars': repo.get('stargazers_count'),
-                            'language': repo.get('language')
-                        })
+                    for repo in data.get("items", []):
+                        repos.append(
+                            {
+                                "source": "github",
+                                "name": repo.get("full_name"),
+                                "description": repo.get("description"),
+                                "url": repo.get("html_url"),
+                                "stars": repo.get("stargazers_count"),
+                                "language": repo.get("language"),
+                            }
+                        )
                     return repos
         except Exception as e:
             logger.error(f"Error fetching GitHub trending: {e}")
@@ -318,9 +278,9 @@ class FreeAPIClient:
                     if response.status == 200:
                         data = await response.json()
                         return {
-                            'source': 'chuck_norris',
-                            'joke': data.get('value'),
-                            'categories': data.get('categories')
+                            "source": "chuck_norris",
+                            "joke": data.get("value"),
+                            "categories": data.get("categories"),
                         }
             elif joke_type == "official":
                 url = f"{self.base_apis['official_jokes']['base_url']}{self.base_apis['official_jokes']['endpoints']['random']}"
@@ -328,10 +288,10 @@ class FreeAPIClient:
                     if response.status == 200:
                         data = await response.json()
                         return {
-                            'source': 'official_jokes',
-                            'setup': data.get('setup'),
-                            'punchline': data.get('punchline'),
-                            'type': data.get('type')
+                            "source": "official_jokes",
+                            "setup": data.get("setup"),
+                            "punchline": data.get("punchline"),
+                            "type": data.get("type"),
                         }
         except Exception as e:
             logger.error(f"Error fetching joke: {e}")
@@ -345,10 +305,10 @@ class FreeAPIClient:
                 if response.status == 200:
                     data = await response.json()
                     return {
-                        'source': 'quotable',
-                        'content': data.get('content'),
-                        'author': data.get('author'),
-                        'tags': data.get('tags')
+                        "source": "quotable",
+                        "content": data.get("content"),
+                        "author": data.get("author"),
+                        "tags": data.get("tags"),
                     }
         except Exception as e:
             logger.error(f"Error fetching quote: {e}")
@@ -361,10 +321,7 @@ class FreeAPIClient:
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return {
-                        'source': 'advice',
-                        'advice': data.get('slip', {}).get('advice')
-                    }
+                    return {"source": "advice", "advice": data.get("slip", {}).get("advice")}
         except Exception as e:
             logger.error(f"Error fetching advice: {e}")
         return None
@@ -376,15 +333,15 @@ class FreeAPIClient:
             async with self.session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if data.get('response_code') == 0 and data.get('results'):
-                        question = data['results'][0]
+                    if data.get("response_code") == 0 and data.get("results"):
+                        question = data["results"][0]
                         return {
-                            'source': 'trivia',
-                            'question': question.get('question'),
-                            'correct_answer': question.get('correct_answer'),
-                            'incorrect_answers': question.get('incorrect_answers'),
-                            'category': question.get('category'),
-                            'difficulty': question.get('difficulty')
+                            "source": "trivia",
+                            "question": question.get("question"),
+                            "correct_answer": question.get("correct_answer"),
+                            "incorrect_answers": question.get("incorrect_answers"),
+                            "category": question.get("category"),
+                            "difficulty": question.get("difficulty"),
                         }
         except Exception as e:
             logger.error(f"Error fetching trivia: {e}")
@@ -399,14 +356,16 @@ class FreeAPIClient:
                     data = await response.json()
                     countries = []
                     for country in data[:limit]:
-                        countries.append({
-                            'source': 'rest_countries',
-                            'name': country.get('name', {}).get('common'),
-                            'capital': country.get('capital'),
-                            'region': country.get('region'),
-                            'population': country.get('population'),
-                            'languages': country.get('languages')
-                        })
+                        countries.append(
+                            {
+                                "source": "rest_countries",
+                                "name": country.get("name", {}).get("common"),
+                                "capital": country.get("capital"),
+                                "region": country.get("region"),
+                                "population": country.get("population"),
+                                "languages": country.get("languages"),
+                            }
+                        )
                     return countries
         except Exception as e:
             logger.error(f"Error fetching countries: {e}")
@@ -421,14 +380,16 @@ class FreeAPIClient:
                     data = await response.json()
                     cryptos = []
                     for coin in data:
-                        cryptos.append({
-                            'source': 'coingecko',
-                            'name': coin.get('name'),
-                            'symbol': coin.get('symbol'),
-                            'current_price': coin.get('current_price'),
-                            'market_cap': coin.get('market_cap'),
-                            'price_change_24h': coin.get('price_change_percentage_24h')
-                        })
+                        cryptos.append(
+                            {
+                                "source": "coingecko",
+                                "name": coin.get("name"),
+                                "symbol": coin.get("symbol"),
+                                "current_price": coin.get("current_price"),
+                                "market_cap": coin.get("market_cap"),
+                                "price_change_24h": coin.get("price_change_percentage_24h"),
+                            }
+                        )
                     return cryptos
         except Exception as e:
             logger.error(f"Error fetching crypto prices: {e}")
@@ -442,11 +403,11 @@ class FreeAPIClient:
                 if response.status == 200:
                     data = await response.json()
                     return {
-                        'source': 'bored',
-                        'activity': data.get('activity'),
-                        'type': data.get('type'),
-                        'participants': data.get('participants'),
-                        'price': data.get('price')
+                        "source": "bored",
+                        "activity": data.get("activity"),
+                        "type": data.get("type"),
+                        "participants": data.get("participants"),
+                        "price": data.get("price"),
                     }
         except Exception as e:
             logger.error(f"Error fetching activity: {e}")
@@ -463,10 +424,10 @@ class FreeAPIClient:
             self.fetch_quote(),
             self.fetch_advice(),
             self.fetch_activity_suggestion(),
-            self.fetch_trivia()
+            self.fetch_trivia(),
         ]
 
-        api_names = ['wikipedia', 'joke', 'quote', 'advice', 'activity', 'trivia']
+        api_names = ["wikipedia", "joke", "quote", "advice", "activity", "trivia"]
 
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 

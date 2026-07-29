@@ -44,14 +44,10 @@ async def health_check() -> dict:
         mlx_status = "healthy" if chat_runtime.local_llm_client is not None else "unhealthy"
         external_api_status = "not_applicable"
     else:
-        external_api_status = (
-            "healthy" if chat_runtime.llm_api_key_configured() else "unhealthy"
-        )
+        external_api_status = "healthy" if chat_runtime.llm_api_key_configured() else "unhealthy"
 
     critical_healthy = (
-        mlx_status == "healthy"
-        if settings.use_local_llm
-        else external_api_status == "healthy"
+        mlx_status == "healthy" if settings.use_local_llm else external_api_status == "healthy"
     )
 
     return {
@@ -107,9 +103,11 @@ async def health_detailed() -> dict:
             overall_status = "degraded"
 
     components["local_llm"] = {
-        "status": "ok"
-        if (chat_runtime.use_local_llm and chat_runtime.local_llm_client is not None)
-        else "not_loaded",
+        "status": (
+            "ok"
+            if (chat_runtime.use_local_llm and chat_runtime.local_llm_client is not None)
+            else "not_loaded"
+        ),
         "enabled": chat_runtime.use_local_llm,
     }
 

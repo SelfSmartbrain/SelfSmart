@@ -8,27 +8,30 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class CapabilityGap(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     id: str
     description: str
     context: Optional[str] = None
 
+
 class ToolSpec(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     name: str
     description: str
     inputs: List[Dict[str, Any]]
     outputs: List[Dict[str, Any]]
     dependencies: List[str]
 
+
 class ToolSpecGenerator:
     """
     Generates a structured ToolSpec using an LLM based on a provided CapabilityGap.
     """
-    
+
     def __init__(self, llm_client: Any):
         """
         Initialize with an LLM client capable of text generation.
@@ -41,7 +44,7 @@ class ToolSpecGenerator:
         """
         logger.info(f"Generating tool spec for gap: {gap.id}")
         prompt = self._build_prompt(gap)
-        
+
         try:
             # Assumes llm_client has an async generate_text method
             response_text = await self.llm_client.generate_text(prompt)
@@ -72,5 +75,5 @@ class ToolSpecGenerator:
             text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
-            
+
         return json.loads(text.strip())

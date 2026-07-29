@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ObjectivePriority(Enum):
     """Priority levels for autonomous objectives."""
+
     CRITICAL = 0
     HIGH = 1
     MEDIUM = 2
@@ -30,6 +31,7 @@ class ObjectivePriority(Enum):
 @dataclass(order=True)
 class ScheduledObjective:
     """An objective scheduled for execution."""
+
     priority: ObjectivePriority
     timestamp: float = field(compare=False)
     objective: Objective = field(compare=False)
@@ -42,7 +44,7 @@ class ScheduledObjective:
 class RuntimeSchedule:
     """
     Manages scheduling and execution of autonomous objectives.
-    
+
     Features:
     - Priority-based execution queue
     - Pause/resume/cancel objectives
@@ -58,13 +60,13 @@ class RuntimeSchedule:
         self.objective_manager = objective_manager
         self.checkpoint_manager = checkpoint_manager
         self.runtime_recovery = RuntimeRecovery(checkpoint_manager) if checkpoint_manager else None
-        
+
         self._priority_queue: list[ScheduledObjective] = []
         self._running = False
         self._lock = asyncio.Lock()
         self._active_objectives: dict[str, asyncio.Task] = {}
         self._paused_objectives: dict[str, ScheduledObjective] = {}
-        
+
         # Metrics
         self._objectives_scheduled = 0
         self._objectives_completed = 0
@@ -92,7 +94,9 @@ class RuntimeSchedule:
             )
             heapq.heappush(self._priority_queue, scheduled)
             self._objectives_scheduled += 1
-            logger.info(f"Scheduled objective {objective.objective_id} with priority {priority.name}")
+            logger.info(
+                f"Scheduled objective {objective.objective_id} with priority {priority.name}"
+            )
 
     async def pause_objective(self, objective_id: str) -> bool:
         """Pause an active objective."""
@@ -106,7 +110,7 @@ class RuntimeSchedule:
                     await self.objective_manager.pause_objective(objective_id)
                     logger.info(f"Paused objective {objective_id}")
                     return True
-            
+
             # Check if it's currently executing
             if objective_id in self._active_objectives:
                 task = self._active_objectives[objective_id]
@@ -115,7 +119,7 @@ class RuntimeSchedule:
                 await self.objective_manager.pause_objective(objective_id)
                 logger.info(f"Cancelled and paused objective {objective_id}")
                 return True
-            
+
             return False
 
     async def resume_objective(self, objective_id: str) -> bool:
@@ -141,7 +145,7 @@ class RuntimeSchedule:
                     self._objectives_cancelled += 1
                     logger.info(f"Cancelled objective {objective_id}")
                     return True
-            
+
             # Cancel if active
             if objective_id in self._active_objectives:
                 task = self._active_objectives[objective_id]
@@ -151,7 +155,7 @@ class RuntimeSchedule:
                 self._objectives_cancelled += 1
                 logger.info(f"Cancelled active objective {objective_id}")
                 return True
-            
+
             # Remove from paused
             if objective_id in self._paused_objectives:
                 del self._paused_objectives[objective_id]
@@ -159,7 +163,7 @@ class RuntimeSchedule:
                 self._objectives_cancelled += 1
                 logger.info(f"Cancelled paused objective {objective_id}")
                 return True
-            
+
             return False
 
     async def get_next_objective(self) -> ScheduledObjective | None:
@@ -207,16 +211,20 @@ class RuntimeSchedule:
 
         except asyncio.TimeoutError:
             logger.warning(f"Objective {objective_id} timed out after {scheduled.timeout}s")
-            
+
             # Retry if possible
             if scheduled.retries < scheduled.max_retries:
                 scheduled.retries += 1
                 heapq.heappush(self._priority_queue, scheduled)
-                logger.info(f"Retrying objective {objective_id} (attempt {scheduled.retries}/{scheduled.max_retries})")
+                logger.info(
+                    f"Retrying objective {objective_id} (attempt {scheduled.retries}/{scheduled.max_retries})"
+                )
             else:
                 await self.objective_manager.fail_objective(objective_id)
                 self._objectives_failed += 1
-                logger.error(f"Objective {objective_id} failed after {scheduled.max_retries} retries")
+                logger.error(
+                    f"Objective {objective_id} failed after {scheduled.max_retries} retries"
+                )
 
         except asyncio.CancelledError:
             logger.info(f"Objective {objective_id} was cancelled")
@@ -262,7 +270,7 @@ class RuntimeSchedule:
             if self._objectives_completed > 0
             else 0.0
         )
-        
+
         return {
             "objectives_scheduled": self._objectives_scheduled,
             "objectives_completed": self._objectives_completed,

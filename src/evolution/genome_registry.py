@@ -8,7 +8,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.logging import get_logger
-from src.evolution.cognitive_genome import CognitiveGenomeCreate, CognitiveGenomeData, CognitiveGenomeResponse
+from src.evolution.cognitive_genome import (
+    CognitiveGenomeCreate,
+    CognitiveGenomeData,
+    CognitiveGenomeResponse,
+)
 
 logger = get_logger(__name__)
 
@@ -24,16 +28,16 @@ class GenomeRegistry:
             VALUES (:generation_id, :parent_ids, :genome_data, :fitness_score, :is_active)
             RETURNING id, generation_id, parent_ids, genome_data, fitness_score, is_active, created_at, updated_at
         """)
-        
+
         result = await self.session.execute(
             query,
             {
                 "generation_id": genome.generation_id,
                 "parent_ids": genome.parent_ids,
-                "genome_data": genome.genome_data.model_dump(mode='json'),
+                "genome_data": genome.genome_data.model_dump(mode="json"),
                 "fitness_score": genome.fitness_score,
-                "is_active": genome.is_active
-            }
+                "is_active": genome.is_active,
+            },
         )
         row = result.fetchone()
         await self.session.commit()
@@ -51,7 +55,9 @@ class GenomeRegistry:
             return CognitiveGenomeResponse.model_validate(row)
         return None
 
-    async def update_fitness(self, genome_id: UUID, fitness_score: float) -> Optional[CognitiveGenomeResponse]:
+    async def update_fitness(
+        self, genome_id: UUID, fitness_score: float
+    ) -> Optional[CognitiveGenomeResponse]:
         logger.info(f"Updating fitness for genome {genome_id} to {fitness_score}")
         query = text("""
             UPDATE cognitive_genomes
@@ -59,23 +65,24 @@ class GenomeRegistry:
             WHERE id = :id
             RETURNING id, generation_id, parent_ids, genome_data, fitness_score, is_active, created_at, updated_at
         """)
-        result = await self.session.execute(query, {"fitness_score": fitness_score, "id": genome_id})
+        result = await self.session.execute(
+            query, {"fitness_score": fitness_score, "id": genome_id}
+        )
         row = result.fetchone()
-        
+
         if row:
             # Record fitness history
             hist_query = text("""
                 INSERT INTO fitness_histories (genome_id, fitness_score, components)
                 VALUES (:genome_id, :fitness_score, :components)
             """)
-            await self.session.execute(hist_query, {
-                "genome_id": genome_id,
-                "fitness_score": fitness_score,
-                "components": "{}"
-            })
+            await self.session.execute(
+                hist_query,
+                {"genome_id": genome_id, "fitness_score": fitness_score, "components": "{}"},
+            )
             await self.session.commit()
             return CognitiveGenomeResponse.model_validate(row)
-        
+
         await self.session.rollback()
         return None
 

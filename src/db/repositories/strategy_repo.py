@@ -29,10 +29,10 @@ class StrategyRepository(BaseRepository[Strategy]):
         stmt = select(Strategy).where(Strategy.task_type == task_type)
         if active_only:
             stmt = stmt.where(Strategy.status == "active")
-        
+
         # Order by success_rate and confidence descending
         stmt = stmt.order_by(Strategy.success_rate.desc(), Strategy.confidence.desc()).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
@@ -59,14 +59,16 @@ class StrategyRepository(BaseRepository[Strategy]):
             metadata_=metadata,
         )
         self.session.add(execution)
-        
+
         # Update strategy stats (simplified version, should ideally be bulk updated)
         strategy = await self.get_by_id(strategy_id)
         if strategy:
             strategy.usage_count += 1
             # Recalculate success rate (moving average)
-            total_successes = (strategy.success_rate * (strategy.usage_count - 1)) + (1 if success else 0)
+            total_successes = (strategy.success_rate * (strategy.usage_count - 1)) + (
+                1 if success else 0
+            )
             strategy.success_rate = total_successes / strategy.usage_count
-            
+
         await self.session.flush()
         return execution

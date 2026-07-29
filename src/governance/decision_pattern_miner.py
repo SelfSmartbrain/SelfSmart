@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 
 class PatternType(str, Enum):
     """Types of decision patterns."""
+
     CONTEXTUAL = "contextual"
     TEMPORAL = "temporal"
     SEQUENTIAL = "sequential"
@@ -35,6 +36,7 @@ class PatternType(str, Enum):
 
 class PatternStrength(str, Enum):
     """Strength of a pattern."""
+
     WEAK = "weak"
     MODERATE = "moderate"
     STRONG = "strong"
@@ -44,6 +46,7 @@ class PatternStrength(str, Enum):
 @dataclass
 class DecisionPattern:
     """A discovered pattern in decision-making."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     pattern_type: PatternType = PatternType.CONTEXTUAL
     description: str = ""
@@ -57,7 +60,7 @@ class DecisionPattern:
     first_seen: Optional[datetime] = None
     last_seen: Optional[datetime] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -78,73 +81,75 @@ class DecisionPattern:
 
 class DecisionPatternMiner:
     """Mines patterns from decision history."""
-    
+
     def __init__(self):
         self.patterns: Dict[str, DecisionPattern] = {}
         self.decision_history: List[Dict[str, Any]] = []
         logger.info("DecisionPatternMiner initialized")
-    
+
     def add_decision(self, decision_data: Dict[str, Any]) -> None:
         """Add a decision to the history for pattern mining."""
         self.decision_history.append(decision_data)
-        
+
         # Re-mine patterns periodically
         if len(self.decision_history) % 10 == 0:
             self.mine_patterns()
-    
+
     def mine_patterns(self) -> List[DecisionPattern]:
         """Mine patterns from the decision history."""
         if len(self.decision_history) < 3:
             logger.info("Not enough decisions to mine patterns")
             return []
-        
+
         patterns = []
-        
+
         # Mine contextual patterns
         patterns.extend(self._mine_contextual_patterns())
-        
+
         # Mine temporal patterns
         patterns.extend(self._mine_temporal_patterns())
-        
+
         # Mine sequential patterns
         patterns.extend(self._mine_sequential_patterns())
-        
+
         # Mine outcome-correlated patterns
         patterns.extend(self._mine_outcome_patterns())
-        
+
         # Store patterns
         for pattern in patterns:
             self.patterns[pattern.id] = pattern
-        
+
         logger.info(f"Mined {len(patterns)} decision patterns")
-        
+
         return patterns
-    
+
     def _mine_contextual_patterns(self) -> List[DecisionPattern]:
         """Mine patterns based on decision context."""
         patterns = []
-        
+
         # Group by context features
         context_groups = defaultdict(list)
-        
+
         for decision in self.decision_history:
             context = decision.get("context", {})
             time_horizon = context.get("time_horizon", "unknown")
             risk_tolerance = context.get("risk_tolerance", 0.5)
-            
+
             key = (time_horizon, round(risk_tolerance, 1))
             context_groups[key].append(decision)
-        
+
         # Find patterns in groups
         for key, decisions in context_groups.items():
             if len(decisions) >= 3:
                 time_horizon, risk_tolerance = key
-                
+
                 # Analyze common outcomes
                 outcomes = [d.get("outcome") for d in decisions if d.get("outcome")]
                 if outcomes:
-                    success_rate = sum(1 for o in outcomes if o.get("success", False)) / len(outcomes)
-                    
+                    success_rate = sum(1 for o in outcomes if o.get("success", False)) / len(
+                        outcomes
+                    )
+
                     pattern = DecisionPattern(
                         pattern_type=PatternType.CONTEXTUAL,
                         description=f"Decisions with time_horizon={time_horizon}, risk_tolerance={risk_tolerance}",
@@ -157,20 +162,22 @@ class DecisionPatternMiner:
                         total_decisions=len(self.decision_history),
                         support=len(decisions) / len(self.decision_history),
                         confidence=success_rate,
-                        strength=self._calculate_strength(len(decisions), len(self.decision_history)),
+                        strength=self._calculate_strength(
+                            len(decisions), len(self.decision_history)
+                        ),
                         examples=[d.get("id", "") for d in decisions[:3]],
                     )
                     patterns.append(pattern)
-        
+
         return patterns
-    
+
     def _mine_temporal_patterns(self) -> List[DecisionPattern]:
         """Mine patterns based on time."""
         patterns = []
-        
+
         # Group by time of day
         hour_groups = defaultdict(list)
-        
+
         for decision in self.decision_history:
             created_at = decision.get("created_at")
             if created_at:
@@ -181,17 +188,19 @@ class DecisionPatternMiner:
                         continue
                 else:
                     dt = created_at
-                
+
                 hour = dt.hour
                 hour_groups[hour].append(decision)
-        
+
         # Find patterns in hour groups
         for hour, decisions in hour_groups.items():
             if len(decisions) >= 3:
                 outcomes = [d.get("outcome") for d in decisions if d.get("outcome")]
                 if outcomes:
-                    success_rate = sum(1 for o in outcomes if o.get("success", False)) / len(outcomes)
-                    
+                    success_rate = sum(1 for o in outcomes if o.get("success", False)) / len(
+                        outcomes
+                    )
+
                     pattern = DecisionPattern(
                         pattern_type=PatternType.TEMPORAL,
                         description=f"Decisions made around hour {hour}",
@@ -203,20 +212,22 @@ class DecisionPatternMiner:
                         total_decisions=len(self.decision_history),
                         support=len(decisions) / len(self.decision_history),
                         confidence=success_rate,
-                        strength=self._calculate_strength(len(decisions), len(self.decision_history)),
+                        strength=self._calculate_strength(
+                            len(decisions), len(self.decision_history)
+                        ),
                         examples=[d.get("id", "") for d in decisions[:3]],
                     )
                     patterns.append(pattern)
-        
+
         return patterns
-    
+
     def _mine_sequential_patterns(self) -> List[DecisionPattern]:
         """Mine sequential patterns in decision chains."""
         patterns = []
-        
+
         if len(self.decision_history) < 5:
             return patterns
-        
+
         # Look for common sequences of decision types
         decision_types = []
         for decision in self.decision_history:
@@ -230,14 +241,14 @@ class DecisionPatternMiner:
                 decision_types.append("strategy")
             else:
                 decision_types.append("general")
-        
+
         # Find common 2-grams
         ngrams = []
         for i in range(len(decision_types) - 1):
-            ngrams.append((decision_types[i], decision_types[i+1]))
-        
+            ngrams.append((decision_types[i], decision_types[i + 1]))
+
         ngram_counts = Counter(ngrams)
-        
+
         for ngram, count in ngram_counts.most_common(5):
             if count >= 2:
                 pattern = DecisionPattern(
@@ -254,17 +265,17 @@ class DecisionPatternMiner:
                     examples=[],
                 )
                 patterns.append(pattern)
-        
+
         return patterns
-    
+
     def _mine_outcome_patterns(self) -> List[DecisionPattern]:
         """Mine patterns correlated with outcomes."""
         patterns = []
-        
+
         # Group decisions by outcome
         successful = []
         failed = []
-        
+
         for decision in self.decision_history:
             outcome = decision.get("outcome")
             if outcome:
@@ -272,27 +283,29 @@ class DecisionPatternMiner:
                     successful.append(decision)
                 else:
                     failed.append(decision)
-        
+
         # Analyze successful patterns
         if len(successful) >= 3:
             success_patterns = self._analyze_group_patterns(successful, "success")
             patterns.extend(success_patterns)
-        
+
         # Analyze failure patterns
         if len(failed) >= 3:
             failure_patterns = self._analyze_group_patterns(failed, "failure")
             patterns.extend(failure_patterns)
-        
+
         return patterns
-    
-    def _analyze_group_patterns(self, decisions: List[Dict[str, Any]], outcome_type: str) -> List[DecisionPattern]:
+
+    def _analyze_group_patterns(
+        self, decisions: List[Dict[str, Any]], outcome_type: str
+    ) -> List[DecisionPattern]:
         """Analyze patterns in a group of decisions."""
         patterns = []
-        
+
         # Common context features
         time_horizons = [d.get("context", {}).get("time_horizon") for d in decisions]
         time_horizon_counter = Counter([h for h in time_horizons if h])
-        
+
         for time_horizon, count in time_horizon_counter.most_common(3):
             if count >= 2:
                 pattern = DecisionPattern(
@@ -310,13 +323,13 @@ class DecisionPatternMiner:
                     examples=[d.get("id", "") for d in decisions[:3]],
                 )
                 patterns.append(pattern)
-        
+
         return patterns
-    
+
     def _calculate_strength(self, frequency: int, total: int) -> PatternStrength:
         """Calculate pattern strength based on frequency and support."""
         support = frequency / total if total > 0 else 0
-        
+
         if support > 0.3:
             return PatternStrength.VERY_STRONG
         elif support > 0.2:
@@ -325,16 +338,18 @@ class DecisionPatternMiner:
             return PatternStrength.MODERATE
         else:
             return PatternStrength.WEAK
-    
+
     def get_pattern(self, pattern_id: str) -> Optional[DecisionPattern]:
         """Get a pattern by ID."""
         return self.patterns.get(pattern_id)
-    
+
     def get_patterns_by_type(self, pattern_type: PatternType) -> List[DecisionPattern]:
         """Get all patterns of a specific type."""
         return [p for p in self.patterns.values() if p.pattern_type == pattern_type]
-    
-    def get_strong_patterns(self, min_strength: PatternStrength = PatternStrength.STRONG) -> List[DecisionPattern]:
+
+    def get_strong_patterns(
+        self, min_strength: PatternStrength = PatternStrength.STRONG
+    ) -> List[DecisionPattern]:
         """Get patterns above a strength threshold."""
         strength_order = {
             PatternStrength.WEAK: 1,
@@ -342,28 +357,25 @@ class DecisionPatternMiner:
             PatternStrength.STRONG: 3,
             PatternStrength.VERY_STRONG: 4,
         }
-        
+
         min_level = strength_order.get(min_strength, 2)
-        
-        return [
-            p for p in self.patterns.values()
-            if strength_order.get(p.strength, 0) >= min_level
-        ]
-    
+
+        return [p for p in self.patterns.values() if strength_order.get(p.strength, 0) >= min_level]
+
     def get_pattern_statistics(self) -> Dict[str, Any]:
         """Get statistics about patterns."""
         total_patterns = len(self.patterns)
-        
+
         by_type = {
             pattern_type.value: len(self.get_patterns_by_type(pattern_type))
             for pattern_type in PatternType
         }
-        
+
         by_strength = {
             strength.value: len([p for p in self.patterns.values() if p.strength == strength])
             for strength in PatternStrength
         }
-        
+
         return {
             "total_patterns": total_patterns,
             "by_type": by_type,

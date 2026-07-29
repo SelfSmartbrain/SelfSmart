@@ -89,7 +89,7 @@ class VoiceTerminalUI:
     def _update_display(self):
         if not self._live:
             return
-        
+
         self.layout["header"].update(self._render_header())
         self.layout["conversation"].update(self._render_conversation())
         self.layout["sidebar"].update(self._render_sidebar())
@@ -97,15 +97,15 @@ class VoiceTerminalUI:
     def _render_header(self) -> Panel:
         status_icon = "🟢" if self._listening else "🔴" if self._processing else "⚪"
         status_text = f"{status_icon} {self._status}"
-        
+
         voice_bar = self._render_voice_bar()
-        
+
         header_text = Text()
         header_text.append("🎤 ModelX Voice Assistant  ", style="bold cyan")
         header_text.append(status_text, style="bold")
         header_text.append("  ")
         header_text.append(voice_bar)
-        
+
         return Panel(Align.center(header_text), style="cyan", box=ROUNDED)
 
     def _render_voice_bar(self) -> Text:
@@ -117,38 +117,38 @@ class VoiceTerminalUI:
 
     def _render_conversation(self) -> Panel:
         content = Text()
-        
+
         if self._user_text:
             content.append("You: ", style="bold blue")
             content.append(self._user_text + "\n\n", style="blue")
-        
+
         if self._assistant_text:
             content.append("ModelX: ", style="bold green")
             content.append(self._assistant_text, style="green")
-        
+
         if not self._user_text and not self._assistant_text:
             content.append("Press Ctrl+Space to start talking...", style="dim italic")
-        
+
         return Panel(content, title="Conversation", border_style="blue", box=ROUNDED)
 
     def _render_sidebar(self) -> Panel:
         table = Table(box=None, show_header=False, padding=(0, 1))
         table.add_column("Key", style="cyan")
         table.add_column("Value", style="white")
-        
+
         if self._stats:
             table.add_row("Provider", self._stats.get("provider", "N/A"))
             table.add_row("Model", self._stats.get("model", "N/A"))
             table.add_row("Turns", str(self._stats.get("turns", 0)))
             table.add_row("Tokens", str(self._stats.get("total_tokens", 0)))
-        
+
         table.add_row("", "")
         table.add_row("Controls", "")
         table.add_row("Ctrl+Space", "Push-to-talk")
         table.add_row("Ctrl+C", "Quit")
         table.add_row("Ctrl+L", "Clear history")
         table.add_row("Ctrl+S", "Save conversation")
-        
+
         return Panel(table, title="Status", border_style="green", box=ROUNDED)
 
 

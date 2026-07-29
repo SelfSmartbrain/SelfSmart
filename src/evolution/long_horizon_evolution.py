@@ -11,27 +11,29 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 logger = get_logger(__name__)
 
+
 class EvolutionMetrics(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     best_fitness: float
     average_fitness: float
     diversity_score: float
+
 
 class LongHorizonEvolutionTracker:
     def __init__(self):
         self.history: List[EvolutionMetrics] = []
         self.goals: Dict[str, float] = {}
         self.scheduler = AsyncIOScheduler()
-        
+
     async def start_tracking(self) -> None:
         logger.info("Starting long horizon tracking...")
         self.scheduler.start()
         # Schedule periodic reviews
-        self.scheduler.add_job(self.review_24h, 'interval', hours=24, id='review_24h')
-        self.scheduler.add_job(self.review_72h, 'interval', hours=72, id='review_72h')
-        self.scheduler.add_job(self.review_7d, 'interval', days=7, id='review_7d')
+        self.scheduler.add_job(self.review_24h, "interval", hours=24, id="review_24h")
+        self.scheduler.add_job(self.review_72h, "interval", hours=72, id="review_72h")
+        self.scheduler.add_job(self.review_7d, "interval", days=7, id="review_7d")
 
     async def stop_tracking(self) -> None:
         logger.info("Stopping long horizon tracking.")
@@ -39,9 +41,7 @@ class LongHorizonEvolutionTracker:
 
     async def record_metrics(self, best: float, avg: float, diversity: float) -> None:
         metrics = EvolutionMetrics(
-            best_fitness=best,
-            average_fitness=avg,
-            diversity_score=diversity
+            best_fitness=best, average_fitness=avg, diversity_score=diversity
         )
         self.history.append(metrics)
         logger.debug(f"Recorded metrics: best={best}, avg={avg}")
@@ -73,9 +73,9 @@ class LongHorizonEvolutionTracker:
         if not metrics:
             logger.warning(f"No metrics available for {window_name} review.")
             return
-            
+
         start_fitness = metrics[0].best_fitness
         end_fitness = metrics[-1].best_fitness
         improvement = end_fitness - start_fitness
-        
+
         logger.info(f"[{window_name} Review] Improvement: {improvement:.2f}")

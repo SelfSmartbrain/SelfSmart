@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from src.config.logging import get_logger
+
 # Import database sessions/clients here in a real implementation
 # from src.db.session import get_db
 # from src.db.redis import get_redis
@@ -41,6 +42,7 @@ async def check_redis() -> Dict[str, Any]:
     """Check Redis connection."""
     import redis
     from src.config.settings import get_settings
+
     settings = get_settings()
     start = time.time()
     try:
@@ -63,14 +65,12 @@ async def check_qdrant() -> Dict[str, Any]:
     """Check Qdrant vector store connection."""
     import httpx
     from src.config.settings import get_settings
+
     settings = get_settings()
     start = time.time()
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{settings.qdrant_endpoint}/healthz",
-                timeout=5
-            )
+            resp = await client.get(f"{settings.qdrant_endpoint}/healthz", timeout=5)
             latency = time.time() - start
             if resp.status_code == 200:
                 return {"status": "up", "latency_ms": round(latency * 1000, 2)}
@@ -87,13 +87,11 @@ async def get_system_health(db_session: AsyncSession) -> Dict[str, Any]:
     redis_task = asyncio.create_task(check_redis())
     neo4j_task = asyncio.create_task(check_neo4j())
     qdrant_task = asyncio.create_task(check_qdrant())
-    
-    pg, redis, neo4j, qdrant = await asyncio.gather(
-        pg_task, redis_task, neo4j_task, qdrant_task
-    )
-    
+
+    pg, redis, neo4j, qdrant = await asyncio.gather(pg_task, redis_task, neo4j_task, qdrant_task)
+
     all_up = all(c["status"] == "up" for c in [pg, redis, neo4j, qdrant])
-    
+
     return {
         "status": "healthy" if all_up else "degraded",
         "timestamp": time.time(),
@@ -102,5 +100,5 @@ async def get_system_health(db_session: AsyncSession) -> Dict[str, Any]:
             "redis": redis,
             "neo4j": neo4j,
             "qdrant": qdrant,
-        }
+        },
     }

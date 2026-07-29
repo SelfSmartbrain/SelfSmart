@@ -84,9 +84,11 @@ class ExecutionLoop:
                     else None
                 )
                 await self.runtime_recovery.auto_checkpoint_on_progress(
-                    objective_id=objective.objective_id
-                    if hasattr(objective, "objective_id")
-                    else objective.objective_id,
+                    objective_id=(
+                        objective.objective_id
+                        if hasattr(objective, "objective_id")
+                        else objective.objective_id
+                    ),
                     session=session,
                     state_snapshot=state_snapshot,
                     progress_snapshot=progress_snapshot,
@@ -142,9 +144,11 @@ class ExecutionLoop:
                         "running": self.running,
                     }
                     await self.runtime_recovery.auto_checkpoint_before_critical(
-                        objective_id=objective.objective_id
-                        if hasattr(objective, "objective_id")
-                        else objective.objective_id,
+                        objective_id=(
+                            objective.objective_id
+                            if hasattr(objective, "objective_id")
+                            else objective.objective_id
+                        ),
                         session=session,
                         state_snapshot=state_snapshot,
                         progress_snapshot=None,

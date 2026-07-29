@@ -1,4 +1,5 @@
 """Cognition engine package — reflection, meta-learning, and self-improvement."""
+
 from __future__ import annotations
 
 from src.cognition.reflection_agent import CognitionReflectionAgent

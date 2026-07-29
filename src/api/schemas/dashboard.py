@@ -5,10 +5,12 @@ from typing import List
 
 from pydantic import BaseModel
 
+
 class ChartDataPoint(BaseModel):
     timestamp: datetime
     value: float
     model_config = {"from_attributes": True}
+
 
 class DashboardMetrics(BaseModel):
     total_tasks: int

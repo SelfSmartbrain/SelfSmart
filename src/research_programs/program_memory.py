@@ -17,7 +17,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 import json
 
-
 logger = logging.getLogger(__name__)
 
 

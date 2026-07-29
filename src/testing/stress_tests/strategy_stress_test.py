@@ -6,11 +6,13 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class StrategyMetrics(BaseModel):
     concurrent_requests: int
     successful_strategies: int
     throughput: float
     model_config = {"from_attributes": True}
+
 
 class StrategyStressTester:
     async def mock_generate_strategy(self) -> bool:
@@ -31,5 +33,5 @@ class StrategyStressTester:
         return StrategyMetrics(
             concurrent_requests=concurrent_requests,
             successful_strategies=successful,
-            throughput=concurrent_requests / duration if duration > 0 else 0.0
+            throughput=concurrent_requests / duration if duration > 0 else 0.0,
         )

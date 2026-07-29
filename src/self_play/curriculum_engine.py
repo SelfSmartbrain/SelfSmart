@@ -25,6 +25,7 @@ logger = get_logger(__name__)
 
 class ProblemDomain(Enum):
     """Domains of problems for curriculum."""
+
     ALGORITHMIC = "algorithmic"
     DEBUGGING = "debugging"
     OPTIMIZATION = "optimization"
@@ -39,6 +40,7 @@ class ProblemDomain(Enum):
 
 class SkillTag(Enum):
     """Specific skills that problems can test."""
+
     RECURSION = "recursion"
     DYNAMIC_PROGRAMMING = "dynamic_programming"
     GRAPH_ALGORITHMS = "graph_algorithms"
@@ -59,6 +61,7 @@ class SkillTag(Enum):
 @dataclass
 class ProblemSpec:
     """Specification for a generated problem."""
+
     problem_id: str
     domain: ProblemDomain
     skills: List[SkillTag]
@@ -76,6 +79,7 @@ class ProblemSpec:
 @dataclass
 class ProblemAttempt:
     """Record of a problem attempt."""
+
     problem_id: str
     timestamp: datetime
     success: bool
@@ -90,28 +94,29 @@ class ProblemAttempt:
 @dataclass
 class SkillProfile:
     """Tracks proficiency in each skill."""
+
     skill: SkillTag
     proficiency: float = 0.5  # 0.0 to 1.0
     attempts: int = 0
     successes: int = 0
     last_practiced: Optional[datetime] = None
     decay_rate: float = 0.01  # Per day
-    
+
     def update(self, success: bool, score: float = 1.0):
         """Update proficiency based on attempt."""
         self.attempts += 1
         if success:
             self.successes += 1
-        
+
         # Update proficiency with exponential moving average
         alpha = 0.3
         self.proficiency = (1 - alpha) * self.proficiency + alpha * (score if success else 0)
         self.last_practiced = datetime.utcnow()
-    
+
     def apply_decay(self, days: float):
         """Apply time-based decay."""
         self.proficiency = max(0.0, self.proficiency - self.decay_rate * days)
-    
+
     @property
     def success_rate(self) -> float:
         if self.attempts == 0:
@@ -122,7 +127,7 @@ class SkillProfile:
 class CurriculumEngine:
     """
     Advanced curriculum engine with adaptive difficulty and skill tracking.
-    
+
     Features:
     - Multi-dimensional skill tracking
     - Adaptive difficulty based on performance
@@ -130,14 +135,14 @@ class CurriculumEngine:
     - Problem generation from templates
     - Transfer learning detection
     """
-    
+
     def __init__(
         self,
         problem_generator: Optional[Callable[[], Awaitable[List[ProblemSpec]]]] = None,
         initial_difficulty: int = 3,
         max_difficulty: int = 10,
         advancement_threshold: float = 0.75,  # Success rate to advance
-        regression_threshold: float = 0.4,    # Success rate to regress
+        regression_threshold: float = 0.4,  # Success rate to regress
         min_problems_per_level: int = 5,
         spaced_repetition_interval_hours: float = 24,
     ):
@@ -147,7 +152,7 @@ class CurriculumEngine:
         self.regression_threshold = regression_threshold
         self.min_problems_per_level = min_problems_per_level
         self.spaced_repetition_interval = spaced_repetition_interval_hours
-        
+
         # State
         self.current_difficulty = initial_difficulty
         self.problems_attempted: List[ProblemAttempt] = []
@@ -155,13 +160,13 @@ class CurriculumEngine:
             skill: SkillProfile(skill=skill) for skill in SkillTag
         }
         self.domain_performance: Dict[ProblemDomain, List[bool]] = defaultdict(list)
-        
+
         # Problem pools by difficulty and domain
         self.problem_pools: Dict[int, Dict[ProblemDomain, List[ProblemSpec]]] = defaultdict(
             lambda: defaultdict(list)
         )
         self.used_problems: Set[str] = set()
-        
+
         # Statistics
         self.stats = {
             "total_attempts": 0,
@@ -170,7 +175,7 @@ class CurriculumEngine:
             "best_streak": 0,
             "level_changes": 0,
         }
-    
+
     async def initialize(self):
         """Initialize problem pools by generating problems."""
         if self.problem_generator:
@@ -180,9 +185,11 @@ class CurriculumEngine:
         else:
             # Generate default problems
             await self._generate_default_problems()
-        
-        logger.info(f"Curriculum initialized with {sum(len(p) for d in self.problem_pools.values() for p in d.values())} problems")
-    
+
+        logger.info(
+            f"Curriculum initialized with {sum(len(p) for d in self.problem_pools.values() for p in d.values())} problems"
+        )
+
     async def _generate_default_problems(self):
         """Generate default problem set for each domain/difficulty."""
         for domain in ProblemDomain:
@@ -198,49 +205,63 @@ class CurriculumEngine:
                         test_cases=self._generate_test_cases(domain, difficulty),
                     )
                     self.problem_pools[difficulty][domain].append(prob)
-    
+
     def _get_skills_for_domain(self, domain: ProblemDomain, difficulty: int) -> List[SkillTag]:
         """Map domain and difficulty to relevant skills."""
         domain_skills = {
             ProblemDomain.ALGORITHMIC: [
-                SkillTag.RECURSION, SkillTag.DYNAMIC_PROGRAMMING,
-                SkillTag.GRAPH_ALGORITHMS, SkillTag.SORTING_SEARCHING,
+                SkillTag.RECURSION,
+                SkillTag.DYNAMIC_PROGRAMMING,
+                SkillTag.GRAPH_ALGORITHMS,
+                SkillTag.SORTING_SEARCHING,
             ],
             ProblemDomain.DEBUGGING: [
-                SkillTag.ERROR_HANDLING, SkillTag.MEMORY_MANAGEMENT,
+                SkillTag.ERROR_HANDLING,
+                SkillTag.MEMORY_MANAGEMENT,
             ],
             ProblemDomain.OPTIMIZATION: [
-                SkillTag.PERFORMANCE_PROFILING, SkillTag.DYNAMIC_PROGRAMMING,
+                SkillTag.PERFORMANCE_PROFILING,
+                SkillTag.DYNAMIC_PROGRAMMING,
             ],
             ProblemDomain.ARCHITECTURE: [
-                SkillTag.DESIGN_PATTERNS, SkillTag.API_DESIGN,
-                SkillTag.DATABASE_DESIGN, SkillTag.DISTRIBUTED_SYSTEMS,
+                SkillTag.DESIGN_PATTERNS,
+                SkillTag.API_DESIGN,
+                SkillTag.DATABASE_DESIGN,
+                SkillTag.DISTRIBUTED_SYSTEMS,
             ],
             ProblemDomain.REFACTORING: [
-                SkillTag.DESIGN_PATTERNS, SkillTag.ERROR_HANDLING,
+                SkillTag.DESIGN_PATTERNS,
+                SkillTag.ERROR_HANDLING,
             ],
             ProblemDomain.TESTING: [
-                SkillTag.TEST_DESIGN, SkillTag.ERROR_HANDLING,
+                SkillTag.TEST_DESIGN,
+                SkillTag.ERROR_HANDLING,
             ],
             ProblemDomain.SECURITY: [
-                SkillTag.SECURITY_AUDITING, SkillTag.ERROR_HANDLING,
+                SkillTag.SECURITY_AUDITING,
+                SkillTag.ERROR_HANDLING,
             ],
             ProblemDomain.CONCURRENCY: [
-                SkillTag.MEMORY_MANAGEMENT, SkillTag.DISTRIBUTED_SYSTEMS,
+                SkillTag.MEMORY_MANAGEMENT,
+                SkillTag.DISTRIBUTED_SYSTEMS,
             ],
             ProblemDomain.DATA_STRUCTURES: [
-                SkillTag.TREE_TRAVERSAL, SkillTag.GRAPH_ALGORITHMS,
-                SkillTag.SORTING_SEARCHING, SkillTag.RECURSION,
+                SkillTag.TREE_TRAVERSAL,
+                SkillTag.GRAPH_ALGORITHMS,
+                SkillTag.SORTING_SEARCHING,
+                SkillTag.RECURSION,
             ],
             ProblemDomain.SYSTEM_DESIGN: [
-                SkillTag.DISTRIBUTED_SYSTEMS, SkillTag.API_DESIGN,
-                SkillTag.DATABASE_DESIGN, SkillTag.DESIGN_PATTERNS,
+                SkillTag.DISTRIBUTED_SYSTEMS,
+                SkillTag.API_DESIGN,
+                SkillTag.DATABASE_DESIGN,
+                SkillTag.DESIGN_PATTERNS,
             ],
         }
         skills = domain_skills.get(domain, [])
         # Return subset based on difficulty
-        return skills[:min(len(skills), max(1, difficulty // 2))]
-    
+        return skills[: min(len(skills), max(1, difficulty // 2))]
+
     def _generate_description(self, domain: ProblemDomain, difficulty: int) -> str:
         """Generate problem description template."""
         templates = {
@@ -285,14 +306,14 @@ class CurriculumEngine:
                 "Architect a {system_type} that handles {scale} requests/second.",
             ],
         }
-        
+
         domain_templates = templates.get(domain, ["Solve the following problem."])
         template = random.choice(domain_templates)
-        
+
         # Fill in template variables based on difficulty
         complexity = "n log n" if difficulty <= 5 else "n"
         metrics = ["time complexity", "space complexity", "execution time"]
-        
+
         return template.format(
             task=f"a difficulty-{difficulty} problem",
             complexity=complexity,
@@ -316,7 +337,7 @@ class CurriculumEngine:
             use_case="real-time analytics",
             scale_int=difficulty * 1000,
         )
-    
+
     def _generate_starter_code(self, domain: ProblemDomain, difficulty: int) -> str:
         """Generate starter code template."""
         templates = {
@@ -358,7 +379,7 @@ def slow_function(items):
 ''',
         }
         return templates.get(domain, templates[ProblemDomain.ALGORITHMIC])
-    
+
     def _generate_test_cases(self, domain: ProblemDomain, difficulty: int) -> List[Dict[str, Any]]:
         """Generate test cases for the problem."""
         base_cases = [
@@ -366,15 +387,23 @@ def slow_function(items):
             {"input": [], "expected": [], "description": "Empty input"},
             {"input": [0], "expected": [0], "description": "Single element"},
         ]
-        
+
         # Add difficulty-specific cases
         if difficulty >= 3:
-            base_cases.append({"input": [-1, -2, 3], "expected": [-2, -4, 6], "description": "Negative numbers"})
+            base_cases.append(
+                {"input": [-1, -2, 3], "expected": [-2, -4, 6], "description": "Negative numbers"}
+            )
         if difficulty >= 5:
-            base_cases.append({"input": list(range(1000)), "expected": list(range(0, 2000, 2)), "description": "Large input"})
-        
+            base_cases.append(
+                {
+                    "input": list(range(1000)),
+                    "expected": list(range(0, 2000, 2)),
+                    "description": "Large input",
+                }
+            )
+
         return base_cases
-    
+
     async def get_next_problem(
         self,
         domain: Optional[ProblemDomain] = None,
@@ -382,7 +411,7 @@ def slow_function(items):
     ) -> Optional[ProblemSpec]:
         """
         Get the next problem to attempt.
-        
+
         Selects based on:
         - Current difficulty level
         - Domain preference
@@ -391,50 +420,50 @@ def slow_function(items):
         """
         # Apply decay to skills
         self._apply_skill_decay()
-        
+
         # Determine candidate difficulties
         candidate_difficulties = self._get_candidate_difficulties()
-        
+
         # Find best problem
         best_problem = None
         best_score = -1
-        
+
         for difficulty in candidate_difficulties:
             domains_to_check = [domain] if domain else list(ProblemDomain)
-            
+
             for d in domains_to_check:
                 pool = self.problem_pools[difficulty][d]
-                
+
                 for prob in pool:
                     if prob.problem_id in self.used_problems:
                         continue
-                    
+
                     # Score problem based on relevance
                     score = self._score_problem(prob, preferred_skills)
-                    
+
                     if score > best_score:
                         best_score = score
                         best_problem = prob
-        
+
         if best_problem:
             self.used_problems.add(best_problem.problem_id)
             return best_problem
-        
+
         # If no unused problems, allow reuse of oldest
         return self._get_oldest_unused_problem(domain)
-    
+
     def _get_candidate_difficulties(self) -> List[int]:
         """Get list of difficulty levels to consider."""
         # Current level ± 1
         candidates = [self.current_difficulty]
-        
+
         if self.current_difficulty > 1:
             candidates.append(self.current_difficulty - 1)
         if self.current_difficulty < self.max_difficulty:
             candidates.append(self.current_difficulty + 1)
-        
+
         return sorted(candidates)
-    
+
     def _score_problem(
         self,
         problem: ProblemSpec,
@@ -442,36 +471,36 @@ def slow_function(items):
     ) -> float:
         """Score a problem for selection."""
         score = 0.0
-        
+
         # Base score from difficulty match
         diff_diff = abs(problem.difficulty - self.current_difficulty)
         score += 10.0 / (1.0 + diff_diff)
-        
+
         # Boost for skills needing practice
         for skill in problem.skills:
             profile = self.skill_profiles[skill]
-            
+
             # Spaced repetition: boost if not practiced recently
             if profile.last_practiced:
                 hours_since = (datetime.utcnow() - profile.last_practiced).total_seconds() / 3600
                 if hours_since > self.spaced_repetition_interval:
                     score += 5.0 * (1.0 - profile.proficiency)
-            
+
             # Boost for low proficiency skills
             score += 3.0 * (1.0 - profile.proficiency)
-            
+
             # Boost for preferred skills
             if preferred_skills and skill in preferred_skills:
                 score += 2.0
-        
+
         # Boost for domains with low performance
         domain_perf = self.domain_performance.get(problem.domain, [])
         if domain_perf:
             success_rate = sum(domain_perf) / len(domain_perf)
             score += 4.0 * (1.0 - success_rate)
-        
+
         return score
-    
+
     def _apply_skill_decay(self):
         """Apply time-based decay to all skills."""
         now = datetime.utcnow()
@@ -479,7 +508,7 @@ def slow_function(items):
             if profile.last_practiced:
                 days = (now - profile.last_practiced).total_seconds() / 86400
                 profile.apply_decay(days)
-    
+
     def _get_oldest_unused_problem(self, domain: Optional[ProblemDomain]) -> Optional[ProblemSpec]:
         """Get the oldest problem that was used longest ago."""
         # In practice, would track last used time
@@ -490,34 +519,36 @@ def slow_function(items):
             if pool:
                 return random.choice(pool)
         return None
-    
+
     def record_attempt(self, attempt: ProblemAttempt):
         """Record a problem attempt and update curriculum."""
         self.problems_attempted.append(attempt)
         self.stats["total_attempts"] += 1
-        
+
         if attempt.success:
             self.stats["total_successes"] += 1
             self.stats["current_streak"] += 1
             self.stats["best_streak"] = max(self.stats["best_streak"], self.stats["current_streak"])
         else:
             self.stats["current_streak"] = 0
-        
+
         # Update domain performance
         # Need to find the problem to get domain
         problem = self._find_problem(attempt.problem_id)
         if problem:
             self.domain_performance[problem.domain].append(attempt.success)
-        
+
         # Update skill profiles
         for skill, score in attempt.skill_scores.items():
             self.skill_profiles[skill].update(attempt.success, score)
-        
+
         # Check for difficulty adjustment
         self._check_difficulty_adjustment()
-        
-        logger.info(f"Attempt recorded: {attempt.problem_id} - {'Success' if attempt.success else 'Failed'}")
-    
+
+        logger.info(
+            f"Attempt recorded: {attempt.problem_id} - {'Success' if attempt.success else 'Failed'}"
+        )
+
     def _find_problem(self, problem_id: str) -> Optional[ProblemSpec]:
         """Find a problem by ID."""
         for pool_dict in self.problem_pools.values():
@@ -526,29 +557,36 @@ def slow_function(items):
                     if prob.problem_id == problem_id:
                         return prob
         return None
-    
+
     def _check_difficulty_adjustment(self):
         """Check if difficulty should be adjusted based on recent performance."""
         if len(self.problems_attempted) < self.min_problems_per_level:
             return
-        
+
         # Look at recent performance at current difficulty
-        recent = [a for a in self.problems_attempted[-self.min_problems_per_level:]]
+        recent = [a for a in self.problems_attempted[-self.min_problems_per_level :]]
         if not recent:
             return
-        
+
         success_rate = sum(1 for a in recent if a.success) / len(recent)
-        
-        if success_rate >= self.advancement_threshold and self.current_difficulty < self.max_difficulty:
+
+        if (
+            success_rate >= self.advancement_threshold
+            and self.current_difficulty < self.max_difficulty
+        ):
             self.current_difficulty += 1
             self.stats["level_changes"] += 1
-            logger.info(f"Difficulty increased to {self.current_difficulty} (success rate: {success_rate:.2f})")
-        
+            logger.info(
+                f"Difficulty increased to {self.current_difficulty} (success rate: {success_rate:.2f})"
+            )
+
         elif success_rate <= self.regression_threshold and self.current_difficulty > 1:
             self.current_difficulty -= 1
             self.stats["level_changes"] += 1
-            logger.info(f"Difficulty decreased to {self.current_difficulty} (success rate: {success_rate:.2f})")
-    
+            logger.info(
+                f"Difficulty decreased to {self.current_difficulty} (success rate: {success_rate:.2f})"
+            )
+
     def get_stats(self) -> Dict[str, Any]:
         """Get curriculum statistics."""
         skill_stats = {}
@@ -558,9 +596,11 @@ def slow_function(items):
                     "proficiency": profile.proficiency,
                     "success_rate": profile.success_rate,
                     "attempts": profile.attempts,
-                    "last_practiced": profile.last_practiced.isoformat() if profile.last_practiced else None,
+                    "last_practiced": (
+                        profile.last_practiced.isoformat() if profile.last_practiced else None
+                    ),
                 }
-        
+
         domain_stats = {}
         for domain, results in self.domain_performance.items():
             if results:
@@ -568,7 +608,7 @@ def slow_function(items):
                     "success_rate": sum(results) / len(results),
                     "attempts": len(results),
                 }
-        
+
         return {
             "current_difficulty": self.current_difficulty,
             "max_difficulty": self.max_difficulty,
@@ -576,7 +616,8 @@ def slow_function(items):
             "total_successes": self.stats["total_successes"],
             "overall_success_rate": (
                 self.stats["total_successes"] / self.stats["total_attempts"]
-                if self.stats["total_attempts"] > 0 else 0
+                if self.stats["total_attempts"] > 0
+                else 0
             ),
             "current_streak": self.stats["current_streak"],
             "best_streak": self.stats["best_streak"],
@@ -585,7 +626,7 @@ def slow_function(items):
             "skills": skill_stats,
             "domains": domain_stats,
         }
-    
+
     def get_skill_recommendations(self, top_n: int = 5) -> List[Dict[str, Any]]:
         """Get recommended skills to practice."""
         skills = [
@@ -593,14 +634,16 @@ def slow_function(items):
                 "skill": skill.value,
                 "proficiency": profile.proficiency,
                 "success_rate": profile.success_rate,
-                "needs_practice": profile.proficiency < 0.6 or (
-                    profile.last_practiced and
-                    (datetime.utcnow() - profile.last_practiced).total_seconds() / 3600 > self.spaced_repetition_interval
+                "needs_practice": profile.proficiency < 0.6
+                or (
+                    profile.last_practiced
+                    and (datetime.utcnow() - profile.last_practiced).total_seconds() / 3600
+                    > self.spaced_repetition_interval
                 ),
             }
             for skill, profile in self.skill_profiles.items()
             if profile.attempts > 0
         ]
-        
+
         skills.sort(key=lambda x: x["proficiency"])
         return skills[:top_n]

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RetrievedKnowledge:
     """Represents retrieved knowledge piece"""
+
     content: str
     source: str
     relevance_score: float
@@ -28,6 +29,7 @@ class RetrievedKnowledge:
 @dataclass
 class RAGContext:
     """Represents the RAG context for a query"""
+
     query: str
     retrieved_knowledge: List[RetrievedKnowledge]
     enhanced_prompt: str
@@ -44,13 +46,14 @@ class RAGService:
         """Initialize RAG service"""
         self.knowledge_integrator = knowledge_integrator
         self.max_knowledge_pieces = 5
-        self.min_relevance_score = 0.3 # Lowered slightly to allow cross-encoder to rescue items
+        self.min_relevance_score = 0.3  # Lowered slightly to allow cross-encoder to rescue items
         self.use_rag = True
         self.reranker = None
 
         try:
             from sentence_transformers import CrossEncoder
-            self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', max_length=512)
+
+            self.reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2", max_length=512)
             logger.info("Cross-Encoder initialized for re-ranking.")
         except Exception as e:
             logger.warning(f"Could not initialize Cross-Encoder: {e}")
@@ -80,7 +83,7 @@ class RAGService:
             "aws.amazon.com": 0.85,
             "hacker_news": 0.7,
             "web_crawl": 0.5,  # Default for unknown web sources
-            "knowledge base": 0.6  # Default for ingested content
+            "knowledge base": 0.6,  # Default for ingested content
         }
 
     def get_source_reputation_score(self, source: str) -> float:
@@ -108,9 +111,7 @@ class RAGService:
         return 0.5
 
     async def retrieve_relevant_knowledge(
-        self,
-        query: str,
-        top_k: int = 5
+        self, query: str, top_k: int = 5
     ) -> List[RetrievedKnowledge]:
         """
         Retrieve relevant knowledge pieces for a query using semantic search.
@@ -126,26 +127,25 @@ class RAGService:
             # 1. Vector Search
             if self.knowledge_integrator.vector_store:
                 search_results = await self.knowledge_integrator.vector_store.search(
-                    query=query,
-                    n_results=top_k * 3  # Fetch more for re-ranking
+                    query=query, n_results=top_k * 3  # Fetch more for re-ranking
                 )
 
                 for result in search_results:
-                    metadata = result.get('metadata', {})
-                    source = metadata.get('source_url', 'knowledge base')
+                    metadata = result.get("metadata", {})
+                    source = metadata.get("source_url", "knowledge base")
 
                     # Get base relevance from semantic search
-                    base_relevance = 1.0 - result.get('distance', 1.0)
+                    base_relevance = 1.0 - result.get("distance", 1.0)
 
                     # Apply source reputation weighting
                     source_reputation = self.get_source_reputation_score(source)
                     weighted_relevance = base_relevance * (0.7 + 0.3 * source_reputation)
 
                     knowledge_piece = RetrievedKnowledge(
-                        content=result.get('document', ''),
+                        content=result.get("document", ""),
                         source=source,
                         relevance_score=weighted_relevance,
-                        metadata=metadata
+                        metadata=metadata,
                     )
                     knowledge_pieces.append(knowledge_piece)
 
@@ -153,24 +153,26 @@ class RAGService:
             expanded_pieces = []
             if self.knowledge_integrator.graph_store and search_results:
                 # Grab the ID of the top hit to expand
-                top_id = search_results[0].get('id')
+                top_id = search_results[0].get("id")
                 if top_id:
                     graph_results = await self.knowledge_integrator.get_related_content(top_id)
                     for gr in graph_results:
-                        content = gr.get('content', '')
-                        source = gr.get('metadata', {}).get('source_url', 'graph base')
-                        metadata = gr.get('metadata', {})
+                        content = gr.get("content", "")
+                        source = gr.get("metadata", {}).get("source_url", "graph base")
+                        metadata = gr.get("metadata", {})
                         # Get base relevance (we don't have distance from graph, so use a default base relevance of 0.5)
                         base_relevance = 0.5
                         # Apply source reputation weighting
                         source_reputation = self.get_source_reputation_score(source)
                         weighted_relevance = base_relevance * (0.7 + 0.3 * source_reputation)
-                        expanded_pieces.append(RetrievedKnowledge(
-                            content=content,
-                            source=source,
-                            relevance_score=weighted_relevance,
-                            metadata=metadata
-                        ))
+                        expanded_pieces.append(
+                            RetrievedKnowledge(
+                                content=content,
+                                source=source,
+                                relevance_score=weighted_relevance,
+                                metadata=metadata,
+                            )
+                        )
 
             # Combine and deduplicate
             all_pieces = knowledge_pieces + expanded_pieces
@@ -198,7 +200,9 @@ class RAGService:
                 deduped.sort(key=lambda x: x.relevance_score, reverse=True)
 
             # Filter by relevance threshold and limit to top_k
-            final_pieces = [p for p in deduped if p.relevance_score >= self.min_relevance_score][:top_k]
+            final_pieces = [p for p in deduped if p.relevance_score >= self.min_relevance_score][
+                :top_k
+            ]
             return final_pieces
 
         except Exception as e:
@@ -209,7 +213,7 @@ class RAGService:
         self,
         query: str,
         knowledge: List[RetrievedKnowledge],
-        conversation_history: Optional[List[Message]] = None
+        conversation_history: Optional[List[Message]] = None,
     ) -> str:
         """
         Build an enhanced prompt that includes retrieved knowledge.
@@ -243,7 +247,7 @@ Answer:"""
         self,
         query: str,
         conversation_history: Optional[List[Message]] = None,
-        llm_client: Optional[Any] = None
+        llm_client: Optional[Any] = None,
     ) -> Tuple[str, List[RetrievedKnowledge]]:
         """
         Enhance a query with retrieved knowledge and optional query transformation.
@@ -256,6 +260,7 @@ Answer:"""
                 transform_prompt = f"Rewrite the following user query to be highly optimized for a vector database search. Output ONLY the optimized query. Original: {query}"
                 # Use duck typing for LLM Client (it has a chat method taking Messages)
                 from src.llm.gemini_client import Message as GMessage
+
                 resp = await llm_client.chat([GMessage(role="user", content=transform_prompt)])
                 search_query = resp.content.strip()
                 logger.info(f"Query transformed: {query} -> {search_query}")
@@ -276,9 +281,7 @@ Answer:"""
         return enhanced_query, knowledge
 
     async def process_llm_response(
-        self,
-        llm_response: LLMResponse,
-        retrieved_knowledge: List[RetrievedKnowledge]
+        self, llm_response: LLMResponse, retrieved_knowledge: List[RetrievedKnowledge]
     ) -> LLMResponse:
         """
         Process LLM response and add knowledge sources.
@@ -292,11 +295,7 @@ Answer:"""
         return llm_response
 
     async def critique_response(
-        self,
-        query: str,
-        response: str,
-        knowledge: List[RetrievedKnowledge],
-        llm_client: Any
+        self, query: str, response: str, knowledge: List[RetrievedKnowledge], llm_client: Any
     ) -> Tuple[str, bool]:
         """
         Critique the LLM response against retrieved knowledge.
@@ -346,7 +345,7 @@ Answer:"""
             "rag_enabled": self.use_rag,
             "knowledge_integrator_available": self.knowledge_integrator is not None,
             "max_knowledge_pieces": self.max_knowledge_pieces,
-            "min_relevance_score": self.min_relevance_score
+            "min_relevance_score": self.min_relevance_score,
         }
 
         if self.knowledge_integrator and self.knowledge_integrator.vector_store:

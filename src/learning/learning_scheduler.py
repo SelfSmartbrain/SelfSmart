@@ -1,10 +1,11 @@
-'''learning_scheduler.py
+"""learning_scheduler.py
 
 Decides when to trigger different learning sub‑processes (consolidation, abstraction, forgetting, model fine‑tuning).
 A simple rule‑based scheduler is provided; it can be extended to a priority queue.
-''' 
+"""
 
 from datetime import datetime, timedelta
+
 
 class LearningScheduler:
     def __init__(self, encoder):
@@ -27,7 +28,7 @@ class LearningScheduler:
 
     def run(self):
         """Execute scheduled learning steps.
-        
+
         Invokes consolidation and fine-tuning engines when needed.
         """
         if self._needs_consolidation():
@@ -37,7 +38,7 @@ class LearningScheduler:
                 from ..memory.memory_consolidation import MemoryConsolidation
                 from ..db.repositories.memory_repo import MemoryRepository
                 from ..rag.embeddings import EmbeddingService
-                
+
                 # This would be properly injected in production
                 consolidation = MemoryConsolidation(None, None, EmbeddingService())
                 # consolidation.run(user_id) would be called here

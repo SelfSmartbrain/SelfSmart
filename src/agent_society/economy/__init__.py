@@ -9,11 +9,47 @@ This module implements:
 - EconomicGovernance: Decentralized governance for economic policies
 """
 
-from .token_system import TokenSystem, Account, Transaction, TokenConfig, TransactionType, TransactionStatus
-from .reputation_system import ReputationSystem, ReputationProfile, ReputationDimension, ReputationEvent
-from .market_mechanism import MarketMechanism, Auction, Bid, MarketConfig, MarketOutcome, AuctionType, AuctionStatus, BidStatus
-from .incentive_system import IncentiveSystem, Reward, IncentivePolicy, IncentiveConfig, RewardType, IncentiveTrigger
-from .governance import EconomicGovernance, Proposal, Vote, GovernanceConfig, ProposalType, ProposalStatus, VoteChoice
+from .token_system import (
+    TokenSystem,
+    Account,
+    Transaction,
+    TokenConfig,
+    TransactionType,
+    TransactionStatus,
+)
+from .reputation_system import (
+    ReputationSystem,
+    ReputationProfile,
+    ReputationDimension,
+    ReputationEvent,
+)
+from .market_mechanism import (
+    MarketMechanism,
+    Auction,
+    Bid,
+    MarketConfig,
+    MarketOutcome,
+    AuctionType,
+    AuctionStatus,
+    BidStatus,
+)
+from .incentive_system import (
+    IncentiveSystem,
+    Reward,
+    IncentivePolicy,
+    IncentiveConfig,
+    RewardType,
+    IncentiveTrigger,
+)
+from .governance import (
+    EconomicGovernance,
+    Proposal,
+    Vote,
+    GovernanceConfig,
+    ProposalType,
+    ProposalStatus,
+    VoteChoice,
+)
 
 __all__ = [
     # Token System
@@ -23,13 +59,11 @@ __all__ = [
     "TokenConfig",
     "TransactionType",
     "TransactionStatus",
-    
     # Reputation System
     "ReputationSystem",
     "ReputationProfile",
     "ReputationDimension",
     "ReputationEvent",
-    
     # Market Mechanism
     "MarketMechanism",
     "Auction",
@@ -39,7 +73,6 @@ __all__ = [
     "AuctionType",
     "AuctionStatus",
     "BidStatus",
-    
     # Incentive System
     "IncentiveSystem",
     "Reward",
@@ -47,7 +80,6 @@ __all__ = [
     "IncentiveConfig",
     "RewardType",
     "IncentiveTrigger",
-    
     # Governance
     "EconomicGovernance",
     "Proposal",

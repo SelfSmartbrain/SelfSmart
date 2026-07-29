@@ -284,4 +284,3 @@ class ObjectiveStatus(str, enum.Enum):
     FAILED = "failed"
     PAUSED = "paused"
     CANCELLED = "cancelled"
-

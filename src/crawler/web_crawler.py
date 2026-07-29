@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CrawlResult:
     """Result from crawling a URL"""
+
     url: str
     title: str
     content: str
@@ -58,13 +59,13 @@ class WebCrawler:
 
         # User agent and headers
         self.headers = {
-            'User-Agent': 'SmartSelf-Learning-Bot/1.0 (Educational Purpose)',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
+            "User-Agent": "SmartSelf-Learning-Bot/1.0 (Educational Purpose)",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
         }
 
         logger.info("Web crawler initialized")
@@ -74,7 +75,7 @@ class WebCrawler:
         self.session = aiohttp.ClientSession(
             headers=self.headers,
             timeout=aiohttp.ClientTimeout(total=30),
-            connector=aiohttp.TCPConnector(limit=self.max_concurrent)
+            connector=aiohttp.TCPConnector(limit=self.max_concurrent),
         )
         return self
 
@@ -117,8 +118,8 @@ class WebCrawler:
                             logger.warning(f"HTTP {response.status} for {url}")
                             return None
 
-                        content_type = response.headers.get('content-type', '').lower()
-                        if 'text/html' not in content_type:
+                        content_type = response.headers.get("content-type", "").lower()
+                        if "text/html" not in content_type:
                             logger.debug(f"Skipping non-HTML content: {content_type}")
                             return None
 
@@ -128,12 +129,14 @@ class WebCrawler:
                         result = await self._extract_content(url, html, source_type)
 
                         if result and result.quality_score > 0.3:
-                            self.crawl_history.append({
-                                'url': url,
-                                'timestamp': datetime.utcnow(),
-                                'success': True,
-                                'quality_score': result.quality_score
-                            })
+                            self.crawl_history.append(
+                                {
+                                    "url": url,
+                                    "timestamp": datetime.utcnow(),
+                                    "success": True,
+                                    "quality_score": result.quality_score,
+                                }
+                            )
                             return result
                         else:
                             logger.debug(f"Low quality content for {url}")
@@ -141,15 +144,14 @@ class WebCrawler:
 
         except Exception as e:
             logger.error(f"Error crawling {url}: {e}")
-            self.crawl_history.append({
-                'url': url,
-                'timestamp': datetime.utcnow(),
-                'success': False,
-                'error': str(e)
-            })
+            self.crawl_history.append(
+                {"url": url, "timestamp": datetime.utcnow(), "success": False, "error": str(e)}
+            )
             return None
 
-    async def _extract_content(self, url: str, html: str, source_type: str) -> Optional[CrawlResult]:
+    async def _extract_content(
+        self, url: str, html: str, source_type: str
+    ) -> Optional[CrawlResult]:
         """Extract high-quality content from HTML"""
         try:
             # Method 1: Newspaper3k for news articles
@@ -164,18 +166,20 @@ class WebCrawler:
                         title=article.title,
                         content=article.text,
                         metadata={
-                            'authors': article.authors,
-                            'publish_date': article.publish_date.isoformat() if article.publish_date else None,
-                            'top_image': article.top_image,
-                            'movies': article.movies,
-                            'keywords': article.keywords,
-                            'summary': article.summary,
-                            'extraction_method': 'newspaper3k'
+                            "authors": article.authors,
+                            "publish_date": (
+                                article.publish_date.isoformat() if article.publish_date else None
+                            ),
+                            "top_image": article.top_image,
+                            "movies": article.movies,
+                            "keywords": article.keywords,
+                            "summary": article.summary,
+                            "extraction_method": "newspaper3k",
                         },
                         timestamp=datetime.utcnow(),
                         source_type=source_type,
                         quality_score=self._calculate_quality_score(article.text),
-                        language=article.meta_lang or 'en'
+                        language=article.meta_lang or "en",
                     )
 
             # Method 2: Trafilatura for general content
@@ -184,68 +188,64 @@ class WebCrawler:
                 include_comments=False,
                 include_tables=True,
                 include_formatting=True,
-                include_links=True
+                include_links=True,
             )
 
             if extracted and len(extracted) > 200:
-                soup = BeautifulSoup(html, 'html.parser')
-                title = soup.find('title')
-                title_text = title.get_text().strip() if title else ''
+                soup = BeautifulSoup(html, "html.parser")
+                title = soup.find("title")
+                title_text = title.get_text().strip() if title else ""
 
                 return CrawlResult(
                     url=url,
                     title=title_text,
                     content=extracted,
-                    metadata={
-                        'extraction_method': 'trafilatura',
-                        'content_length': len(extracted)
-                    },
+                    metadata={"extraction_method": "trafilatura", "content_length": len(extracted)},
                     timestamp=datetime.utcnow(),
                     source_type=source_type,
                     quality_score=self._calculate_quality_score(extracted),
-                        language='en'  # Default, can be detected later
+                    language="en",  # Default, can be detected later
                 )
 
             # Method 3: BeautifulSoup fallback
-            soup = BeautifulSoup(html, 'html.parser')
+            soup = BeautifulSoup(html, "html.parser")
 
             # Remove script and style elements
             for script in soup(["script", "style", "nav", "footer", "header"]):
                 script.decompose()
 
-            title = soup.find('title')
-            title_text = title.get_text().strip() if title else ''
+            title = soup.find("title")
+            title_text = title.get_text().strip() if title else ""
 
             # Try to find main content
             main_content = (
-                soup.find('main') or
-                soup.find('article') or
-                soup.find('div', class_=lambda x: x and ('content' in x.lower() or 'main' in x.lower()))
+                soup.find("main")
+                or soup.find("article")
+                or soup.find(
+                    "div", class_=lambda x: x and ("content" in x.lower() or "main" in x.lower())
+                )
             )
 
             if main_content:
-                text = main_content.get_text(separator=' ', strip=True)
+                text = main_content.get_text(separator=" ", strip=True)
             else:
-                text = soup.get_text(separator=' ', strip=True)
+                text = soup.get_text(separator=" ", strip=True)
 
             # Clean up text
             lines = (line.strip() for line in text.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            text = ' '.join(chunk for chunk in chunks if chunk)
+            text = " ".join(chunk for chunk in chunks if chunk)
 
             if len(text) > 200:
                 return CrawlResult(
                     url=url,
                     title=title_text,
                     content=text,
-                    metadata={
-                        'extraction_method': 'beautifulsoup',
-                        'content_length': len(text)
-                    },
+                    metadata={"extraction_method": "beautifulsoup", "content_length": len(text)},
                     timestamp=datetime.utcnow(),
                     source_type=source_type,
                     quality_score=self._calculate_quality_score(text),
-                    language='en'
+                    language="en",
                 )
 
             return None
@@ -269,7 +269,7 @@ class WebCrawler:
             score += 0.2
 
         # Sentence structure
-        sentences = text.split('.')
+        sentences = text.split(".")
         if len(sentences) > 5:
             score += 0.2
 
@@ -280,7 +280,14 @@ class WebCrawler:
             score += 0.2
 
         # Content indicators
-        content_indicators = ['however', 'therefore', 'because', 'although', 'moreover', 'furthermore']
+        content_indicators = [
+            "however",
+            "therefore",
+            "because",
+            "although",
+            "moreover",
+            "furthermore",
+        ]
         if any(indicator in text.lower() for indicator in content_indicators):
             score += 0.2
 
@@ -290,7 +297,9 @@ class WebCrawler:
 
         return max(0.0, min(1.0, score))
 
-    async def crawl_urls_batch(self, urls: List[str], source_type: str = "web") -> List[CrawlResult]:
+    async def crawl_urls_batch(
+        self, urls: List[str], source_type: str = "web"
+    ) -> List[CrawlResult]:
         """Crawl multiple URLs concurrently"""
         tasks = [self.crawl_url(url, source_type) for url in urls]
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -307,21 +316,23 @@ class WebCrawler:
 
     def get_crawl_stats(self) -> Dict[str, Any]:
         """Get crawling statistics"""
-        successful = sum(1 for h in self.crawl_history if h.get('success', False))
+        successful = sum(1 for h in self.crawl_history if h.get("success", False))
         total = len(self.crawl_history)
 
         return {
-            'total_urls_crawled': total,
-            'successful_crawls': successful,
-            'success_rate': successful / max(total, 1),
-            'unique_urls_visited': len(self.visited_urls),
-            'active_domains': len(self.domain_limiters),
-            'last_crawl_time': max([h['timestamp'] for h in self.crawl_history]) if self.crawl_history else None
+            "total_urls_crawled": total,
+            "successful_crawls": successful,
+            "success_rate": successful / max(total, 1),
+            "unique_urls_visited": len(self.visited_urls),
+            "active_domains": len(self.domain_limiters),
+            "last_crawl_time": (
+                max([h["timestamp"] for h in self.crawl_history]) if self.crawl_history else None
+            ),
         }
 
     def export_crawl_history(self, filename: str):
         """Export crawl history to file"""
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(self.crawl_history, f, indent=2, default=str)
         logger.info(f"Crawl history exported to {filename}")
 
@@ -353,25 +364,25 @@ class RSSCrawler:
 
             for entry in feed.entries:
                 # Extract article URL
-                article_url = entry.get('link')
+                article_url = entry.get("link")
                 if not article_url:
                     continue
 
                 # Create basic article info
-                title = entry.get('title', '')
-                summary = entry.get('summary', '') or entry.get('description', '')
+                title = entry.get("title", "")
+                summary = entry.get("summary", "") or entry.get("description", "")
 
                 # Combine title and summary for content
                 content = f"{title}\n\n{summary}"
 
                 # Extract metadata
                 metadata = {
-                    'feed_url': feed_url,
-                    'feed_title': feed.feed.get('title', ''),
-                    'published': entry.get('published'),
-                    'author': entry.get('author'),
-                    'tags': [tag.get('term') for tag in entry.get('tags', [])],
-                    'source_type': 'rss'
+                    "feed_url": feed_url,
+                    "feed_title": feed.feed.get("title", ""),
+                    "published": entry.get("published"),
+                    "author": entry.get("author"),
+                    "tags": [tag.get("term") for tag in entry.get("tags", [])],
+                    "source_type": "rss",
                 }
 
                 article = CrawlResult(
@@ -380,9 +391,9 @@ class RSSCrawler:
                     content=content,
                     metadata=metadata,
                     timestamp=datetime.utcnow(),
-                    source_type='rss',
+                    source_type="rss",
                     quality_score=0.7,  # RSS feeds generally have good quality
-                    language='en'
+                    language="en",
                 )
 
                 articles.append(article)
@@ -410,5 +421,5 @@ DEFAULT_CRAWL_DOMAINS = [
     "stackoverflow.com",
     "medium.com",
     "dev.to",
-    "towardsdatascience.com"
+    "towardsdatascience.com",
 ]

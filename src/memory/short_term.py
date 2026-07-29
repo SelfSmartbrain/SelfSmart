@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 class ShortTermMemory:
     """
     Redis-backed short-term memory system.
-    
+
     Used for session context, intermediate agent states, and fast caching.
     All data is stored with an expiration (TTL).
     """
@@ -98,7 +98,7 @@ class ShortTermMemory:
         """
         pattern = f"session:{session_id}:*"
         result: dict[str, Any] = {}
-        
+
         try:
             cursor = 0
             while True:
@@ -110,13 +110,15 @@ class ShortTermMemory:
                             # Extract the original key name
                             short_key = k.split(":")[-1]
                             result[short_key] = json.loads(v)
-                
+
                 if cursor == 0:
                     break
-                    
+
             return result
         except Exception as e:
-            logger.error("Failed to retrieve all short-term memory", error=str(e), session=session_id)
+            logger.error(
+                "Failed to retrieve all short-term memory", error=str(e), session=session_id
+            )
             return {}
 
     async def delete(

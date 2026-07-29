@@ -34,7 +34,9 @@ class FailureRecord(BaseModel):
 class ImprovementStrategy(BaseModel):
     """An actionable improvement strategy derived from reflection."""
 
-    category: str = Field(description="Area of improvement (e.g., 'planning', 'research', 'execution')")
+    category: str = Field(
+        description="Area of improvement (e.g., 'planning', 'research', 'execution')"
+    )
     description: str
     priority: str = "medium"
     applicable_scenarios: list[str] = Field(default_factory=list)

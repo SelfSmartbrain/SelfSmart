@@ -10,17 +10,18 @@ from src.programs.long_horizon_program import LongHorizonProgram
 
 logger = get_logger(__name__)
 
+
 class ResearchProgramManager(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     active_programs: Dict[UUID, LongHorizonProgram] = Field(default_factory=dict)
 
-    async def create_program(self, name: str, objective: str, duration_months: int) -> LongHorizonProgram:
+    async def create_program(
+        self, name: str, objective: str, duration_months: int
+    ) -> LongHorizonProgram:
         logger.info(f"Creating new research program: {name}")
         program = LongHorizonProgram(
-            name=name,
-            objective=objective,
-            duration_months=duration_months
+            name=name, objective=objective, duration_months=duration_months
         )
         self.active_programs[program.program_id] = program
         return program
@@ -37,7 +38,7 @@ class ResearchProgramManager(BaseModel):
         program = self.active_programs.get(program_id)
         if not program or not program.milestones:
             return 0.0
-            
+
         completed = sum(1 for ms in program.milestones if ms.is_completed)
         progress = completed / len(program.milestones)
         logger.info(f"Program {program_id} progress: {progress * 100}%")

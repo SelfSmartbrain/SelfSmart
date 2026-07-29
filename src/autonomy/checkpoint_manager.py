@@ -64,8 +64,7 @@ class CheckpointManager:
     ) -> ObjectiveCheckpointModel | None:
         """Get a specific checkpoint by name."""
         result = await session.execute(
-            select(ObjectiveCheckpointModel)
-            .where(
+            select(ObjectiveCheckpointModel).where(
                 ObjectiveCheckpointModel.objective_id == objective_id,
                 ObjectiveCheckpointModel.checkpoint_name == checkpoint_name,
             )
@@ -140,9 +139,7 @@ class RuntimeRecovery:
                 objective_id, checkpoint_name, session
             )
         else:
-            checkpoint = await self.checkpoint_manager.get_latest_checkpoint(
-                objective_id, session
-            )
+            checkpoint = await self.checkpoint_manager.get_latest_checkpoint(objective_id, session)
 
         if not checkpoint:
             return None

@@ -1,8 +1,8 @@
-'''reasoning_engine.py
- 
+"""reasoning_engine.py
+
 Core System‑2 reasoning component. Provides multi‑step planning, multi‑step planning, hypothesis generation, and counterfactual simulation.
 Uses a simple tree search over generated hypotheses.
-''' 
+"""
 
 import logging
 from typing import List, Any
@@ -13,6 +13,7 @@ from src.agents.world_model_nodes import _llm_json
 
 logger = logging.getLogger(__name__)
 
+
 class ReasoningEngine:
     def __init__(self, search_engine: SearchEngine, counterfactual_engine: CounterfactualEngine):
         self.search = search_engine
@@ -20,7 +21,7 @@ class ReasoningEngine:
 
     def plan(self, goal: str, context: List[Any]) -> List[str]:
         """Generate a sequential plan to achieve `goal`.
-        
+
         This method:
         1. Retrieve relevant memories via search.
         2. Generate hypotheses (steps) via LLM.
@@ -50,7 +51,7 @@ class ReasoningEngine:
         except Exception as e:
             logger.warning("LLM hypothesis generation failed: %s", e)
             hypotheses = [f"Step {i+1}: {goal} subtask" for i in range(3)]
-        
+
         tree = HypothesisTree(hypotheses)
         best_path = tree.select_best()
         return best_path

@@ -24,6 +24,7 @@ logger = get_logger(__name__)
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class ArxivSearchInput(BaseModel):
     """Input schema for ArxivSearchTool."""
 
@@ -44,6 +45,7 @@ class ArxivSearchInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class ArxivSearchTool(AgentTool):
     """Search the arXiv preprint repository for academic papers.

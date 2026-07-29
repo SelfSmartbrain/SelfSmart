@@ -1,9 +1,11 @@
 """
 Permission manager — controls what actions agents can take.
 """
+
 from enum import Enum
 from typing import Set
 from src.config.settings import get_settings
+
 
 class Permission(Enum):
     READ_FILES = "read_files"
@@ -12,11 +14,13 @@ class Permission(Enum):
     WEB_SEARCH = "web_search"
     SEND_REQUESTS = "send_requests"
 
+
 class PermissionManager:
     """
     Enforces a whitelist of permissions for agent actions.
     Configured via settings; defaults to read-only + web search.
     """
+
     DEFAULT_GRANTS: Set[Permission] = {
         Permission.READ_FILES,
         Permission.WEB_SEARCH,

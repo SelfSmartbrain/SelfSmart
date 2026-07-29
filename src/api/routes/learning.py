@@ -46,9 +46,7 @@ async def stop_learning(current_user: TokenData = Depends(get_current_user)):
 
 
 @router.post("/learning/learn")
-async def learn_urls(
-    request: LearnRequest, current_user: TokenData = Depends(get_current_user)
-):
+async def learn_urls(request: LearnRequest, current_user: TokenData = Depends(get_current_user)):
     try:
         result = await chat_runtime.learner.manual_learning_session(request.urls)
         return result

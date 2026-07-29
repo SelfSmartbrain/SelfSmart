@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class ProposalStatus(str, Enum):
     """Status of a decision proposal."""
+
     PENDING = "pending"
     UNDER_REVIEW = "under_review"
     ACCEPTED = "accepted"
@@ -31,6 +32,7 @@ class ProposalStatus(str, Enum):
 @dataclass
 class DecisionProposal:
     """A proposal for a decision from an agent."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     agent_id: str = ""
     agent_name: str = ""
@@ -49,7 +51,7 @@ class DecisionProposal:
     reviewed_at: Optional[datetime] = None
     score: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -76,6 +78,7 @@ class DecisionProposal:
 @dataclass
 class MarketplaceListing:
     """A listing in the decision marketplace."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     query: str = ""
     description: str = ""
@@ -87,7 +90,7 @@ class MarketplaceListing:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     closed_at: Optional[datetime] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -106,13 +109,13 @@ class MarketplaceListing:
 
 class DecisionMarketplace:
     """Marketplace for competing decision proposals."""
-    
+
     def __init__(self):
         self.listings: Dict[str, MarketplaceListing] = {}
         self.proposals: Dict[str, DecisionProposal] = {}
         self.agent_reputation: Dict[str, float] = {}  # agent_id -> reputation score
         logger.info("DecisionMarketplace initialized")
-    
+
     def create_listing(
         self,
         query: str,
@@ -127,12 +130,12 @@ class DecisionMarketplace:
             context=context or {},
             deadline=deadline,
         )
-        
+
         self.listings[listing.id] = listing
         logger.info(f"Created marketplace listing: {listing.id}")
-        
+
         return listing
-    
+
     def submit_proposal(
         self,
         listing_id: str,
@@ -152,13 +155,13 @@ class DecisionMarketplace:
         listing = self.listings.get(listing_id)
         if listing is None:
             raise ValueError(f"Listing {listing_id} not found")
-        
+
         if listing.status != "open":
             raise ValueError(f"Listing {listing_id} is not open for proposals")
-        
+
         if listing.deadline and datetime.now(timezone.utc) > listing.deadline:
             raise ValueError(f"Listing {listing_id} has passed deadline")
-        
+
         proposal = DecisionProposal(
             agent_id=agent_id,
             agent_name=agent_name,
@@ -173,14 +176,14 @@ class DecisionMarketplace:
             time_estimate=time_estimate,
             risk_assessment=risk_assessment or {},
         )
-        
+
         listing.proposals.append(proposal)
         self.proposals[proposal.id] = proposal
-        
+
         logger.info(f"Submitted proposal {proposal.id} to listing {listing_id}")
-        
+
         return proposal
-    
+
     def evaluate_proposals(
         self,
         listing_id: str,
@@ -193,41 +196,41 @@ class DecisionMarketplace:
         listing = self.listings.get(listing_id)
         if listing is None:
             raise ValueError(f"Listing {listing_id} not found")
-        
+
         scored_proposals = []
-        
+
         for proposal in listing.proposals:
             # Calculate composite score
             value_score = proposal.predicted_value
             confidence_score = proposal.confidence
-            
+
             # Calculate risk score (lower risk = higher score)
             if proposal.risk_assessment:
                 avg_risk = sum(proposal.risk_assessment.values()) / len(proposal.risk_assessment)
                 risk_score = 1.0 - avg_risk
             else:
                 risk_score = 0.5
-            
+
             # Get reputation score
             reputation_score = self.agent_reputation.get(proposal.agent_id, 0.5)
-            
+
             # Composite score
             proposal.score = (
-                value_score * value_weight +
-                confidence_score * confidence_weight +
-                risk_score * risk_weight +
-                reputation_score * reputation_weight
+                value_score * value_weight
+                + confidence_score * confidence_weight
+                + risk_score * risk_weight
+                + reputation_score * reputation_weight
             )
-            
+
             scored_proposals.append(proposal)
-        
+
         # Sort by score descending
         scored_proposals.sort(key=lambda p: p.score, reverse=True)
-        
+
         logger.info(f"Evaluated {len(scored_proposals)} proposals for listing {listing_id}")
-        
+
         return scored_proposals
-    
+
     def select_proposal(
         self,
         listing_id: str,
@@ -237,7 +240,7 @@ class DecisionMarketplace:
         listing = self.listings.get(listing_id)
         if listing is None:
             raise ValueError(f"Listing {listing_id} not found")
-        
+
         if proposal_id is None:
             # Auto-select best proposal
             scored_proposals = self.evaluate_proposals(listing_id)
@@ -251,41 +254,41 @@ class DecisionMarketplace:
             )
             if selected is None:
                 raise ValueError(f"Proposal {proposal_id} not found")
-        
+
         # Update statuses
         selected.status = ProposalStatus.ACCEPTED
         selected.reviewed_at = datetime.now(timezone.utc)
-        
+
         # Mark others as rejected
         for proposal in listing.proposals:
             if proposal.id != selected.id:
                 proposal.status = ProposalStatus.REJECTED
-        
+
         listing.selected_proposal_id = selected.id
         listing.status = "awarded"
         listing.closed_at = datetime.now(timezone.utc)
-        
+
         # Update agent reputation
         self._update_reputation(selected.agent_id, success=True)
-        
+
         logger.info(f"Selected proposal {selected.id} for listing {listing_id}")
-        
+
         return selected
-    
+
     def _update_reputation(self, agent_id: str, success: bool) -> None:
         """Update agent reputation based on outcome."""
         current_rep = self.agent_reputation.get(agent_id, 0.5)
-        
+
         if success:
             # Increase reputation
             new_rep = min(1.0, current_rep + 0.05)
         else:
             # Decrease reputation
             new_rep = max(0.0, current_rep - 0.1)
-        
+
         self.agent_reputation[agent_id] = new_rep
         logger.info(f"Updated reputation for agent {agent_id}: {current_rep:.2f} -> {new_rep:.2f}")
-    
+
     def record_outcome(
         self,
         proposal_id: str,
@@ -296,54 +299,55 @@ class DecisionMarketplace:
         proposal = self.proposals.get(proposal_id)
         if proposal is None:
             raise ValueError(f"Proposal {proposal_id} not found")
-        
+
         proposal.metadata["actual_outcome"] = actual_outcome
         proposal.metadata["success"] = success
-        
+
         # Update reputation based on success
         self._update_reputation(proposal.agent_id, success)
-        
+
         logger.info(f"Recorded outcome for proposal {proposal_id}: success={success}")
-    
+
     def get_listing(self, listing_id: str) -> Optional[MarketplaceListing]:
         """Get a listing by ID."""
         return self.listings.get(listing_id)
-    
+
     def get_proposal(self, proposal_id: str) -> Optional[DecisionProposal]:
         """Get a proposal by ID."""
         return self.proposals.get(proposal_id)
-    
+
     def list_listings(self, status: Optional[str] = None) -> List[MarketplaceListing]:
         """List all listings, optionally filtered by status."""
         if status:
             return [l for l in self.listings.values() if l.status == status]
         return list(self.listings.values())
-    
+
     def list_proposals(self, listing_id: str) -> List[DecisionProposal]:
         """List all proposals for a listing."""
         listing = self.listings.get(listing_id)
         if listing is None:
             return []
         return listing.proposals
-    
+
     def get_agent_reputation(self, agent_id: str) -> float:
         """Get an agent's reputation score."""
         return self.agent_reputation.get(agent_id, 0.5)
-    
+
     def get_marketplace_statistics(self) -> Dict[str, Any]:
         """Get statistics about the marketplace."""
         total_listings = len(self.listings)
         total_proposals = len(self.proposals)
-        
+
         accepted_proposals = sum(
             1 for p in self.proposals.values() if p.status == ProposalStatus.ACCEPTED
         )
-        
+
         avg_confidence = (
             sum(p.confidence for p in self.proposals.values()) / total_proposals
-            if total_proposals > 0 else 0.0
+            if total_proposals > 0
+            else 0.0
         )
-        
+
         return {
             "total_listings": total_listings,
             "total_proposals": total_proposals,

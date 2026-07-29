@@ -9,6 +9,7 @@ from typing_extensions import TypedDict
 
 logger = get_logger(__name__)
 
+
 class AgentStateDict(TypedDict, total=False):
     architecture_id: str
     version: str
@@ -80,6 +81,7 @@ async def architecture_analysis(state: AgentStateDict) -> AgentStateDict:
     )
     return {"status": "architecture_analysis_complete", "architecture_analysis": analysis}
 
+
 async def dependency_analysis(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running dependency_analysis node")
     dependencies = state.get("dependencies", [])
@@ -90,6 +92,7 @@ async def dependency_analysis(state: AgentStateDict) -> AgentStateDict:
         fallback,
     )
     return {"status": "dependency_analysis_complete", "dependency_analysis": analysis}
+
 
 async def component_analysis(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running component_analysis node")
@@ -102,6 +105,7 @@ async def component_analysis(state: AgentStateDict) -> AgentStateDict:
     )
     return {"status": "component_analysis_complete", "component_analysis": analysis}
 
+
 async def bottleneck_detection(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running bottleneck_detection node")
     fallback = state.get("bottlenecks", [])
@@ -111,6 +115,7 @@ async def bottleneck_detection(state: AgentStateDict) -> AgentStateDict:
         fallback,
     )
     return {"status": "bottleneck_detection_complete", "bottlenecks": bottlenecks}
+
 
 async def hypothesis_generation(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running hypothesis_generation node")
@@ -122,6 +127,7 @@ async def hypothesis_generation(state: AgentStateDict) -> AgentStateDict:
     )
     return {"status": "hypothesis_generation_complete", "hypotheses": hypotheses}
 
+
 async def candidate_generation(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running candidate_generation node")
     fallback = state.get("candidates", [])
@@ -131,6 +137,7 @@ async def candidate_generation(state: AgentStateDict) -> AgentStateDict:
         fallback,
     )
     return {"status": "candidate_generation_complete", "candidates": candidates}
+
 
 async def sandbox_benchmarking(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running sandbox_benchmarking node")
@@ -147,14 +154,17 @@ async def sandbox_benchmarking(state: AgentStateDict) -> AgentStateDict:
     )
     return {"status": "sandbox_benchmarking_complete", "benchmarks": benchmarks}
 
+
 async def benchmark_reporting(state: AgentStateDict) -> AgentStateDict:
     logger.info("Running benchmark_reporting node")
     benchmarks = state.get("benchmarks", [])
     fallback = {
         "benchmark_count": len(benchmarks),
-        "best_candidate": max(benchmarks, key=lambda item: item.get("score", 0.0), default=None)
-        if all(isinstance(item, dict) for item in benchmarks)
-        else None,
+        "best_candidate": (
+            max(benchmarks, key=lambda item: item.get("score", 0.0), default=None)
+            if all(isinstance(item, dict) for item in benchmarks)
+            else None
+        ),
     }
     report = await _llm_json(
         "You summarize architecture benchmark results. Return a JSON object.",

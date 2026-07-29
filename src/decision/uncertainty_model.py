@@ -20,6 +20,7 @@ logger = get_logger(__name__)
 
 class UncertaintyType(str, Enum):
     """Types of uncertainty."""
+
     EPISTEMIC = "epistemic"  # Knowledge uncertainty
     ALEATORIC = "aleatoric"  # Random uncertainty
     ONTOLOGICAL = "ontological"  # Model uncertainty
@@ -28,6 +29,7 @@ class UncertaintyType(str, Enum):
 @dataclass
 class UncertaintyEstimate:
     """An estimate of uncertainty."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     source: str = ""
     uncertainty_type: UncertaintyType = UncertaintyType.EPISTEMIC
@@ -36,7 +38,7 @@ class UncertaintyEstimate:
     confidence_interval: Tuple[float, float] = (0.0, 1.0)
     sample_size: int = 1
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -52,11 +54,11 @@ class UncertaintyEstimate:
 
 class UncertaintyModel:
     """Models uncertainty in decision-making."""
-    
+
     def __init__(self):
         self.uncertainty_estimates: Dict[str, UncertaintyEstimate] = {}
         logger.info("UncertaintyModel initialized")
-    
+
     def estimate_uncertainty(
         self,
         source: str,
@@ -66,17 +68,20 @@ class UncertaintyModel:
         """Estimate uncertainty from a set of values."""
         if not values:
             raise ValueError("Cannot estimate uncertainty from empty values")
-        
+
         mean = np.mean(values)
         std_dev = np.std(values)
-        
+
         # Calculate 95% confidence interval
         if len(values) > 1:
             from scipy import stats
-            ci = stats.t.interval(0.95, len(values) - 1, loc=mean, scale=std_dev / np.sqrt(len(values)))
+
+            ci = stats.t.interval(
+                0.95, len(values) - 1, loc=mean, scale=std_dev / np.sqrt(len(values))
+            )
         else:
             ci = (mean - std_dev, mean + std_dev)
-        
+
         estimate = UncertaintyEstimate(
             source=source,
             uncertainty_type=uncertainty_type,
@@ -85,12 +90,12 @@ class UncertaintyModel:
             confidence_interval=ci,
             sample_size=len(values),
         )
-        
+
         self.uncertainty_estimates[estimate.id] = estimate
         logger.info(f"Estimated uncertainty for {source}: {std_dev:.3f}")
-        
+
         return estimate
-    
+
     def combine_uncertainties(
         self,
         estimates: List[UncertaintyEstimate],
@@ -99,7 +104,7 @@ class UncertaintyModel:
         """Combine multiple uncertainty estimates."""
         if not estimates:
             raise ValueError("Cannot combine empty estimates")
-        
+
         if method == "weighted_average":
             return self._weighted_average_combine(estimates)
         elif method == "maximum":
@@ -108,26 +113,29 @@ class UncertaintyModel:
             return self._independent_combine(estimates)
         else:
             return self._weighted_average_combine(estimates)
-    
+
     def _weighted_average_combine(
         self,
         estimates: List[UncertaintyEstimate],
     ) -> UncertaintyEstimate:
         """Combine using weighted average (weights by sample size)."""
         total_weight = sum(e.sample_size for e in estimates)
-        
+
         weighted_mean = sum(e.mean * e.sample_size for e in estimates) / total_weight
         weighted_std = sum(e.std_dev * e.sample_size for e in estimates) / total_weight
-        
+
         return UncertaintyEstimate(
             source="combined",
             uncertainty_type=estimates[0].uncertainty_type,
             mean=weighted_mean,
             std_dev=weighted_std,
-            confidence_interval=(weighted_mean - 2 * weighted_std, weighted_mean + 2 * weighted_std),
+            confidence_interval=(
+                weighted_mean - 2 * weighted_std,
+                weighted_mean + 2 * weighted_std,
+            ),
             sample_size=total_weight,
         )
-    
+
     def _maximum_combine(
         self,
         estimates: List[UncertaintyEstimate],
@@ -135,7 +143,7 @@ class UncertaintyModel:
         """Combine using maximum uncertainty (conservative)."""
         max_std = max(e.std_dev for e in estimates)
         mean = np.mean([e.mean for e in estimates])
-        
+
         return UncertaintyEstimate(
             source="combined_max",
             uncertainty_type=estimates[0].uncertainty_type,
@@ -144,18 +152,18 @@ class UncertaintyModel:
             confidence_interval=(mean - 2 * max_std, mean + 2 * max_std),
             sample_size=sum(e.sample_size for e in estimates),
         )
-    
+
     def _independent_combine(
         self,
         estimates: List[UncertaintyEstimate],
     ) -> UncertaintyEstimate:
         """Combine assuming independent uncertainties."""
         mean = np.mean([e.mean for e in estimates])
-        
+
         # Variance adds for independent variables
-        variances = [e.std_dev ** 2 for e in estimates]
+        variances = [e.std_dev**2 for e in estimates]
         combined_std = np.sqrt(sum(variances))
-        
+
         return UncertaintyEstimate(
             source="combined_independent",
             uncertainty_type=estimates[0].uncertainty_type,
@@ -164,7 +172,7 @@ class UncertaintyModel:
             confidence_interval=(mean - 2 * combined_std, mean + 2 * combined_std),
             sample_size=min(e.sample_size for e in estimates),
         )
-    
+
     def reduce_uncertainty(
         self,
         estimate_id: str,
@@ -173,23 +181,25 @@ class UncertaintyModel:
         """Reduce uncertainty by adding more data."""
         if estimate_id not in self.uncertainty_estimates:
             raise ValueError(f"Estimate {estimate_id} not found")
-        
+
         old_estimate = self.uncertainty_estimates[estimate_id]
-        
+
         # Combine old and new data
         all_values = new_values  # In practice, would combine with old data
-        
+
         new_estimate = self.estimate_uncertainty(
             source=old_estimate.source,
             values=all_values,
             uncertainty_type=old_estimate.uncertainty_type,
         )
-        
+
         self.uncertainty_estimates[estimate_id] = new_estimate
-        logger.info(f"Reduced uncertainty for {estimate_id}: {old_estimate.std_dev:.3f} -> {new_estimate.std_dev:.3f}")
-        
+        logger.info(
+            f"Reduced uncertainty for {estimate_id}: {old_estimate.std_dev:.3f} -> {new_estimate.std_dev:.3f}"
+        )
+
         return new_estimate
-    
+
     def calculate_information_gain(
         self,
         before: UncertaintyEstimate,
@@ -197,11 +207,11 @@ class UncertaintyModel:
     ) -> float:
         """Calculate information gain from reducing uncertainty."""
         # Information gain = reduction in variance
-        before_variance = before.std_dev ** 2
-        after_variance = after.std_dev ** 2
-        
+        before_variance = before.std_dev**2
+        after_variance = after.std_dev**2
+
         return before_variance - after_variance
-    
+
     def value_of_information(
         self,
         estimate: UncertaintyEstimate,
@@ -210,17 +220,19 @@ class UncertaintyModel:
         """Calculate the value of reducing uncertainty."""
         # Simple heuristic: value proportional to current uncertainty
         # and decision value
-        uncertainty_ratio = estimate.std_dev / estimate.mean if estimate.mean > 0 else estimate.std_dev
-        
+        uncertainty_ratio = (
+            estimate.std_dev / estimate.mean if estimate.mean > 0 else estimate.std_dev
+        )
+
         return decision_value * uncertainty_ratio
-    
+
     def get_uncertainty_summary(self) -> Dict[str, Any]:
         """Get a summary of all uncertainty estimates."""
         if not self.uncertainty_estimates:
             return {"total_estimates": 0}
-        
+
         estimates = list(self.uncertainty_estimates.values())
-        
+
         return {
             "total_estimates": len(estimates),
             "by_type": {

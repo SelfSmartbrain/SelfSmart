@@ -3,6 +3,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class RollbackValidator:
     @staticmethod
     async def validate_rollback_state(deployment_status: str, failure_rate: float) -> bool:

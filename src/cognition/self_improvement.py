@@ -1,4 +1,5 @@
 """Self-improvement engine — evaluates system health and generates concrete improvements."""
+
 from __future__ import annotations
 
 import json
@@ -78,10 +79,12 @@ class SelfImprovementEngine:
                 f"{json.dumps(skills[:10], indent=2, default=str)}"
             )
 
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             evaluation: dict[str, Any] = json.loads(response.content)
             logger.info("system_evaluated", overall_score=evaluation.get("overall_score"))
             return evaluation
@@ -106,28 +109,34 @@ class SelfImprovementEngine:
             improvements: list[dict[str, Any]] = []
 
             for weakness in evaluation.get("weaknesses", []):
-                improvements.append({
-                    "area": "weakness",
-                    "action": f"Address: {weakness}",
-                    "priority": "high",
-                    "expected_impact": 0.7,
-                })
+                improvements.append(
+                    {
+                        "area": "weakness",
+                        "action": f"Address: {weakness}",
+                        "priority": "high",
+                        "expected_impact": 0.7,
+                    }
+                )
 
             for bottleneck in evaluation.get("bottlenecks", []):
-                improvements.append({
-                    "area": "bottleneck",
-                    "action": f"Resolve: {bottleneck}",
-                    "priority": "critical",
-                    "expected_impact": 0.8,
-                })
+                improvements.append(
+                    {
+                        "area": "bottleneck",
+                        "action": f"Resolve: {bottleneck}",
+                        "priority": "critical",
+                        "expected_impact": 0.8,
+                    }
+                )
 
             for rec in evaluation.get("recommendations", []):
-                improvements.append({
-                    "area": "recommendation",
-                    "action": rec,
-                    "priority": "medium",
-                    "expected_impact": 0.5,
-                })
+                improvements.append(
+                    {
+                        "area": "recommendation",
+                        "action": rec,
+                        "priority": "medium",
+                        "expected_impact": 0.5,
+                    }
+                )
 
             # Sort by expected impact descending
             improvements.sort(key=lambda i: i["expected_impact"], reverse=True)
@@ -164,13 +173,15 @@ class SelfImprovementEngine:
                     + min(tasks / 100.0, 1.0) * 0.2,
                     4,
                 )
-                ranked.append({
-                    "agent": agent_name,
-                    "effectiveness": effectiveness,
-                    "success_rate": success,
-                    "avg_latency": latency,
-                    "task_count": tasks,
-                })
+                ranked.append(
+                    {
+                        "agent": agent_name,
+                        "effectiveness": effectiveness,
+                        "success_rate": success,
+                        "avg_latency": latency,
+                        "task_count": tasks,
+                    }
+                )
 
             ranked.sort(key=lambda a: a["effectiveness"], reverse=True)
             for idx, entry in enumerate(ranked, 1):
@@ -206,10 +217,12 @@ class SelfImprovementEngine:
         human_prompt = f"Current workflow:\n{json.dumps(current_flow, indent=2, default=str)}"
 
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             optimized: dict[str, Any] = json.loads(response.content)
             logger.info("workflows_optimized", speedup=optimized.get("estimated_speedup"))
             return optimized

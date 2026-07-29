@@ -15,12 +15,12 @@ from typing import Any, Dict, List, Optional, Set
 from dataclasses import dataclass, field
 from enum import Enum
 
-
 logger = logging.getLogger(__name__)
 
 
 class ProgramStatus(Enum):
     """Status of a research program"""
+
     DRAFT = "draft"
     ACTIVE = "active"
     PAUSED = "paused"
@@ -32,6 +32,7 @@ class ProgramStatus(Enum):
 @dataclass
 class ResearchHypothesis:
     """A research hypothesis"""
+
     hypothesis_id: str
     statement: str
     confidence: float  # 0.0 to 1.0
@@ -43,6 +44,7 @@ class ResearchHypothesis:
 @dataclass
 class ResearchExperiment:
     """A research experiment"""
+
     experiment_id: str
     description: str
     hypothesis_id: str
@@ -55,6 +57,7 @@ class ResearchExperiment:
 @dataclass
 class ResearchProgram:
     """A long-running research program"""
+
     program_id: str
     title: str
     description: str
@@ -67,18 +70,18 @@ class ResearchProgram:
     started_at: Optional[float] = None
     completed_at: Optional[float] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def progress(self) -> float:
         """Calculate research progress"""
         if not self.hypotheses:
             return 0.0
-        
+
         confirmed = sum(1 for h in self.hypotheses if h.status == "confirmed")
         refuted = sum(1 for h in self.hypotheses if h.status == "refuted")
-        
+
         return (confirmed + refuted) / len(self.hypotheses)
-    
+
     def add_hypothesis(self, statement: str, confidence: float = 0.5) -> ResearchHypothesis:
         """Add a hypothesis to the program"""
         hypothesis = ResearchHypothesis(
@@ -88,7 +91,7 @@ class ResearchProgram:
         )
         self.hypotheses.append(hypothesis)
         return hypothesis
-    
+
     def add_experiment(self, description: str, hypothesis_id: str) -> ResearchExperiment:
         """Add an experiment to the program"""
         experiment = ResearchExperiment(

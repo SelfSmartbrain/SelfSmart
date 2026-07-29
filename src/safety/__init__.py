@@ -38,7 +38,6 @@ __all__ = [
     "PatchSafetyCheck",
     "PatchTestResult",
     "PatchApplicationResult",
-    
     # Static analysis
     "StaticAnalyzer",
     "AnalysisConfig",
@@ -46,7 +45,6 @@ __all__ = [
     "Finding",
     "Severity",
     "FindingType",
-    
     # Safety hypervisor
     "SafetyHypervisor",
     "SafetyEvent",

@@ -16,74 +16,53 @@ from prometheus_client import Counter, Histogram, Gauge, make_asgi_app
 
 # Standard HTTP metrics
 HTTP_REQUESTS_TOTAL = Counter(
-    "http_requests_total",
-    "Total number of HTTP requests",
-    ["method", "endpoint", "status_code"]
+    "http_requests_total", "Total number of HTTP requests", ["method", "endpoint", "status_code"]
 )
 
 HTTP_REQUEST_DURATION_SECONDS = Histogram(
-    "http_request_duration_seconds",
-    "HTTP request duration in seconds",
-    ["method", "endpoint"]
+    "http_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
 )
 
 ACTIVE_REQUESTS = Gauge(
-    "active_requests",
-    "Number of currently active requests",
-    ["method", "endpoint"]
+    "active_requests", "Number of currently active requests", ["method", "endpoint"]
 )
 
 # Cognitive Agent Metrics (Phase 7.5 Integration)
 AGENT_TASKS_COMPLETED = Counter(
     "agent_tasks_completed_total",
     "Total number of tasks completed by agents",
-    ["agent_type", "status"]
+    ["agent_type", "status"],
 )
 
 SYSTEM_AUTONOMY_SCORE = Gauge(
-    "system_autonomy_score",
-    "Current overall autonomy score of the system"
+    "system_autonomy_score", "Current overall autonomy score of the system"
 )
 
-LEARNING_VELOCITY = Gauge(
-    "learning_velocity",
-    "Rate of new knowledge/skill acquisition"
-)
+LEARNING_VELOCITY = Gauge("learning_velocity", "Rate of new knowledge/skill acquisition")
 
 # Phase 17: Runtime Metrics
 OBJECTIVE_COMPLETION_RATE = Gauge(
-    "objective_completion_rate",
-    "Rate of objectives successfully completed"
+    "objective_completion_rate", "Rate of objectives successfully completed"
 )
 
-OBJECTIVE_FAILURE_RATE = Gauge(
-    "objective_failure_rate",
-    "Rate of objectives that failed"
-)
+OBJECTIVE_FAILURE_RATE = Gauge("objective_failure_rate", "Rate of objectives that failed")
 
-RUNTIME_UTILIZATION = Gauge(
-    "runtime_utilization",
-    "Current runtime utilization (0.0 to 1.0)"
-)
+RUNTIME_UTILIZATION = Gauge("runtime_utilization", "Current runtime utilization (0.0 to 1.0)")
 
 AVERAGE_CYCLE_TIME = Gauge(
-    "average_cycle_time_seconds",
-    "Average time to complete an objective cycle"
+    "average_cycle_time_seconds", "Average time to complete an objective cycle"
 )
 
-ACTIVE_OBJECTIVES = Gauge(
-    "active_objectives",
-    "Number of currently active objectives"
-)
+ACTIVE_OBJECTIVES = Gauge("active_objectives", "Number of currently active objectives")
 
 # LLM Metrics
 LLM_LATENCY = Histogram(
-    'llm_request_duration_seconds', 'LLM Request Latency',
-    ['provider', 'model']
+    "llm_request_duration_seconds", "LLM Request Latency", ["provider", "model"]
 )
 TOKEN_USAGE = Counter(
-    'llm_token_usage_total', 'Total LLM Token Usage',
-    ['provider', 'model', 'token_type']  # token_type: prompt or completion
+    "llm_token_usage_total",
+    "Total LLM Token Usage",
+    ["provider", "model", "token_type"],  # token_type: prompt or completion
 )
 
 
@@ -99,13 +78,13 @@ def setup_prometheus(app: FastAPI) -> None:
         method = request.method
         # Extract path without query params, default to unknown if absent
         endpoint = request.url.path if request.url else "unknown"
-        
+
         # We don't want to track high cardinality routes unnecessarily,
         # but for internal apps, path is usually fine.
-        
+
         ACTIVE_REQUESTS.labels(method=method, endpoint=endpoint).inc()
         start_time = time.time()
-        
+
         try:
             response = await call_next(request)
             status_code = response.status_code
@@ -117,11 +96,6 @@ def setup_prometheus(app: FastAPI) -> None:
             duration = time.time() - start_time
             ACTIVE_REQUESTS.labels(method=method, endpoint=endpoint).dec()
             HTTP_REQUESTS_TOTAL.labels(
-                method=method, 
-                endpoint=endpoint, 
-                status_code=status_code
+                method=method, endpoint=endpoint, status_code=status_code
             ).inc()
-            HTTP_REQUEST_DURATION_SECONDS.labels(
-                method=method, 
-                endpoint=endpoint
-            ).observe(duration)
+            HTTP_REQUEST_DURATION_SECONDS.labels(method=method, endpoint=endpoint).observe(duration)

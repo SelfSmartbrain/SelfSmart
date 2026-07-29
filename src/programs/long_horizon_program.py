@@ -9,18 +9,20 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ProgramMilestone(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     milestone_id: UUID = Field(default_factory=uuid4)
     title: str
     description: str
     is_completed: bool = False
     completed_at: Optional[datetime] = None
 
+
 class LongHorizonProgram(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     program_id: UUID = Field(default_factory=uuid4)
     name: str
     objective: str

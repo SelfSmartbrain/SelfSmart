@@ -7,6 +7,7 @@ from src.capability.regression_detector import CapabilityRegression
 
 logger = get_logger(__name__)
 
+
 class GuardianReport(BaseModel):
     model_id: UUID
     total_regressions: int
@@ -16,18 +17,20 @@ class GuardianReport(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 async def review_performance(
-    model_id: UUID,
-    regressions: List[CapabilityRegression]
+    model_id: UUID, regressions: List[CapabilityRegression]
 ) -> GuardianReport:
-    logger.warning(f"Guardian reviewing performance for {model_id}, found {len(regressions)} regressions")
-    
+    logger.warning(
+        f"Guardian reviewing performance for {model_id}, found {len(regressions)} regressions"
+    )
+
     high_severity = [r for r in regressions if r.severity == "HIGH"]
-    
+
     return GuardianReport(
         model_id=model_id,
         total_regressions=len(regressions),
         high_severity_count=len(high_severity),
         regressions=regressions,
-        action_required=len(high_severity) > 0 or len(regressions) > 3
+        action_required=len(high_severity) > 0 or len(regressions) > 3,
     )

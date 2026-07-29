@@ -247,7 +247,7 @@ class ModelSelector:
         return {
             "total_selections": len(self.selection_history),
             "unique_models_selected": len(model_counts),
-            "most_selected_model": max(model_counts.items(), key=lambda x: x[1])
-            if model_counts
-            else None,
+            "most_selected_model": (
+                max(model_counts.items(), key=lambda x: x[1]) if model_counts else None
+            ),
         }

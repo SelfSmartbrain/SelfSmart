@@ -33,10 +33,10 @@ class WhisperTranscriber:
 
     def transcribe(self, audio_data: np.ndarray) -> str:
         self._load_model()
-        
+
         if audio_data.dtype != np.float32:
             audio_data = audio_data.astype(np.float32)
-        
+
         if audio_data.max() > 1.0:
             audio_data = audio_data / 32768.0
 
@@ -65,9 +65,7 @@ class StreamingTranscriber:
         language: Optional[str] = None,
         chunk_length: int = 30,
     ):
-        self.transcriber = WhisperTranscriber(
-            model_size, device, compute_type, language
-        )
+        self.transcriber = WhisperTranscriber(model_size, device, compute_type, language)
         self.chunk_length = chunk_length
         self._buffer = np.array([], dtype=np.float32)
         self.sample_rate = 16000

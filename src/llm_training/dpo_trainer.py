@@ -17,6 +17,7 @@ from datasets import Dataset
 
 logger = logging.getLogger(__name__)
 
+
 class DPOTrainerManager:
     """Manages the Direct Preference Optimization fine-tuning pipeline."""
 
@@ -35,7 +36,11 @@ class DPOTrainerManager:
         self.ref_model = None
 
         # Apple Silicon setup
-        self.device = "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = (
+            "mps"
+            if torch.backends.mps.is_available()
+            else ("cuda" if torch.cuda.is_available() else "cpu")
+        )
 
         # Handle macOS memory constraints by defaulting to fp16
         self.torch_dtype = torch.float16 if self.device != "cpu" else torch.float32
@@ -50,11 +55,12 @@ class DPOTrainerManager:
         kwargs = {
             "device_map": "auto" if self.device == "cuda" else self.device,
             "torch_dtype": self.torch_dtype,
-            "trust_remote_code": True
+            "trust_remote_code": True,
         }
 
         if self.use_4bit and self.device == "cuda":
             from transformers import BitsAndBytesConfig
+
             kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
@@ -97,14 +103,10 @@ class DPOTrainerManager:
             # We format prompt to match the chat template
             p = f"### Instruction:\\n{item['prompt']}\\n\\n### Assistant:\\n"
             prompts.append(p)
-            chosen.append(item['chosen'])
-            rejected.append(item['rejected'])
+            chosen.append(item["chosen"])
+            rejected.append(item["rejected"])
 
-        dataset = Dataset.from_dict({
-            "prompt": prompts,
-            "chosen": chosen,
-            "rejected": rejected
-        })
+        dataset = Dataset.from_dict({"prompt": prompts, "chosen": chosen, "rejected": rejected})
         return dataset
 
     def train(self, dpo_pairs: List[Dict], data_hash: Optional[str] = None):
@@ -120,7 +122,9 @@ class DPOTrainerManager:
             data_str = json.dumps(dpo_pairs, sort_keys=True)
             data_hash = hashlib.sha256(data_str.encode()).hexdigest()[:16]
 
-        logger.info(f"Starting DPO Training on {len(dataset)} preference pairs with data hash: {data_hash}...")
+        logger.info(
+            f"Starting DPO Training on {len(dataset)} preference pairs with data hash: {data_hash}..."
+        )
 
         # Create versioned output directory
         timestamp = datetime.utcnow().isoformat()
@@ -143,12 +147,12 @@ class DPOTrainerManager:
             optim=optim,
             logging_steps=1,
             save_strategy="epoch",
-            report_to="none"
+            report_to="none",
         )
 
         trainer = DPOTrainer(
             model=self.model,
-            ref_model=None, # PEFT handles reference natively
+            ref_model=None,  # PEFT handles reference natively
             args=dpo_config,
             train_dataset=dataset,
             tokenizer=self.tokenizer,
@@ -166,7 +170,7 @@ class DPOTrainerManager:
             "data_hash": data_hash,
             "num_pairs": len(dpo_pairs),
             "model_name": self.model_name,
-            "use_4bit": self.use_4bit
+            "use_4bit": self.use_4bit,
         }
         metadata_path = os.path.join(version_output_dir, "metadata.json")
         with open(metadata_path, "w") as f:

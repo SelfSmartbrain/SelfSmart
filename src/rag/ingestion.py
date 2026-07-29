@@ -390,9 +390,7 @@ class IngestionPipeline:
             )
             existing = result.scalar_one_or_none()
             if existing:
-                raise ValueError(
-                    f"Duplicate document detected — existing document id: {existing}"
-                )
+                raise ValueError(f"Duplicate document detected — existing document id: {existing}")
 
     async def _save_document_record(
         self,

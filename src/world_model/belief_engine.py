@@ -10,12 +10,14 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class Evidence(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     description: str
     credibility: float = Field(..., ge=0.0, le=1.0)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     model_config = {"from_attributes": True}
+
 
 class Belief(BaseModel):
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
@@ -26,12 +28,14 @@ class Belief(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     model_config = {"from_attributes": True}
 
+
 class BeliefUpdateResult(BaseModel):
     belief_id: uuid.UUID
     previous_confidence: float
     new_confidence: float
     status: str
     model_config = {"from_attributes": True}
+
 
 class BeliefEngine:
     """Manages Bayesian-style belief updates and confidence levels."""
@@ -47,7 +51,9 @@ class BeliefEngine:
         self.beliefs[belief.id] = belief
         return belief
 
-    async def evaluate_evidence(self, belief_id: uuid.UUID, evidence_desc: str, credibility: float, impact: float) -> BeliefUpdateResult:
+    async def evaluate_evidence(
+        self, belief_id: uuid.UUID, evidence_desc: str, credibility: float, impact: float
+    ) -> BeliefUpdateResult:
         """Evaluates new evidence and updates belief confidence."""
         if belief_id not in self.beliefs:
             logger.error(f"Belief {belief_id} not found.")
@@ -66,19 +72,25 @@ class BeliefEngine:
         belief.confidence = new_confidence
         belief.updated_at = datetime.now(timezone.utc)
 
-        status = "strengthened" if new_confidence > prev_confidence else ("weakened" if new_confidence < prev_confidence else "unchanged")
+        status = (
+            "strengthened"
+            if new_confidence > prev_confidence
+            else ("weakened" if new_confidence < prev_confidence else "unchanged")
+        )
         if new_confidence == 0.0:
             status = "rejected"
         elif new_confidence == 1.0:
             status = "confirmed"
 
-        logger.info(f"Belief {belief_id} updated: {status} (confidence {prev_confidence:.2f} -> {new_confidence:.2f})")
+        logger.info(
+            f"Belief {belief_id} updated: {status} (confidence {prev_confidence:.2f} -> {new_confidence:.2f})"
+        )
 
         return BeliefUpdateResult(
             belief_id=belief.id,
             previous_confidence=prev_confidence,
             new_confidence=new_confidence,
-            status=status
+            status=status,
         )
 
     async def get_belief(self, belief_id: uuid.UUID) -> Optional[Belief]:

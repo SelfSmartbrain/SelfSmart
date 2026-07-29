@@ -33,19 +33,20 @@ logger = get_logger(__name__)
 
 T = TypeVar("T")
 
+
 class ServiceRegistry:
     """
     Singleton Dependency Injection container.
     Provides lazy loading and async lifecycle management for platform services.
     """
-    
+
     _instance: Optional["ServiceRegistry"] = None
     _lock: Optional[asyncio.Lock] = None
-    
+
     def __init__(self):
         self._services: Dict[str, Any] = {}
         self._initialized: bool = False
-    
+
     @classmethod
     async def get_instance(cls) -> "ServiceRegistry":
         """Get the singleton instance of the service registry."""
@@ -61,44 +62,46 @@ class ServiceRegistry:
         """Initialize and cache all core cognitive services."""
         if self._initialized:
             return
-            
+
         if self._lock is None:
             self._lock = asyncio.Lock()
-            
+
         async with self._lock:
             if self._initialized:
                 return
-            
+
             logger.info("Initializing Service Registry")
-            
+
             # Base trackers
             self._services["performance_tracker"] = PerformanceTracker()
             self._services["learning_velocity"] = LearningVelocityTracker()
-            
+
             # Core cognition
             self._services["reflection_agent"] = CognitionReflectionAgent()
             self._services["failure_analyzer"] = FailureAnalyzer()
             self._services["meta_learning"] = MetaLearningEngine()
             self._services["strategy_synthesizer"] = StrategySynthesizer()
             self._services["skill_discovery"] = SkillDiscovery()
-            
+
             # High-level engines
             self._services["cognitive_metrics"] = CognitiveMetricsCalculator()
             self._services["self_improvement"] = SelfImprovementEngine()
             self._services["intelligence_reporter"] = IntelligenceReporter()
-            
+
             # NOTE: KnowledgeGraphManager, CuriosityEngine, GoalGenerator, ResearchDirector,
             # and LongHorizonPlanner will be instantiated here as they are migrated to the registry.
-            
+
             self._initialized = True
-            logger.info("Service Registry initialized successfully", service_count=len(self._services))
+            logger.info(
+                "Service Registry initialized successfully", service_count=len(self._services)
+            )
 
     def get(self, service_name: str) -> Any:
         """Get a service by name."""
         if service_name not in self._services:
             raise KeyError(f"Service '{service_name}' not found in registry.")
         return self._services[service_name]
-    
+
     def get_typed(self, service_type: Type[T]) -> T:
         """Get a service by its type."""
         for service in self._services.values():

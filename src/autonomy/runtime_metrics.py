@@ -29,7 +29,7 @@ class RuntimeMetricsCollector:
         avg_cycle_time = metrics.get("average_cycle_time", 0.0)
         active_count = metrics.get("active_objectives", 0)
         queue_size = metrics.get("queue_size", 0)
-        
+
         # Calculate utilization (active + queued / max capacity)
         # Assuming max capacity of 10 concurrent objectives
         max_capacity = 10
@@ -47,10 +47,10 @@ class RuntimeMetricsCollector:
         self._completed_objectives += 1
         self._total_objectives += 1
         self._total_cycle_time += cycle_time
-        
+
         completion_rate = self._completed_objectives / self._total_objectives
         avg_cycle_time = self._total_cycle_time / self._completed_objectives
-        
+
         OBJECTIVE_COMPLETION_RATE.set(completion_rate)
         AVERAGE_CYCLE_TIME.set(avg_cycle_time)
 
@@ -58,7 +58,7 @@ class RuntimeMetricsCollector:
         """Record a failed objective."""
         self._failed_objectives += 1
         self._total_objectives += 1
-        
+
         failure_rate = self._failed_objectives / self._total_objectives
         OBJECTIVE_FAILURE_RATE.set(failure_rate)
 
@@ -76,7 +76,7 @@ class RuntimeMetricsCollector:
         self._completed_objectives = 0
         self._failed_objectives = 0
         self._total_cycle_time = 0.0
-        
+
         OBJECTIVE_COMPLETION_RATE.set(0.0)
         OBJECTIVE_FAILURE_RATE.set(0.0)
         RUNTIME_UTILIZATION.set(0.0)

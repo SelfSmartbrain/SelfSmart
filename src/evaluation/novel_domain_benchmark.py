@@ -1,11 +1,12 @@
-'''novel_domain_benchmark.py
+"""novel_domain_benchmark.py
 
 Defines a collection of novel-domain benchmark problems used to test generalization.
 Each benchmark is represented as a simple class with a ``run`` method that returns
 predictions in the format expected by ``TransferValidator``.
-''' 
+"""
 
 from typing import List, Dict
+
 
 class BaseBenchmark:
     def __init__(self, name: str):
@@ -13,7 +14,7 @@ class BaseBenchmark:
 
     def run(self) -> List[Dict[str, str]]:
         """Execute the benchmark and return a list of prediction dicts.
-        
+
         Each dict should contain ``'scenario'`` and ``'predicted_outcome'``.
         This base class returns an empty list; subclasses should override.
         """
@@ -21,6 +22,7 @@ class BaseBenchmark:
 
     def __repr__(self):
         return f"Benchmark(name={self.name})"
+
 
 # Example concrete benchmarks
 class GraphReasoningBenchmark(BaseBenchmark):
@@ -34,6 +36,7 @@ class GraphReasoningBenchmark(BaseBenchmark):
             {"scenario": "Detect cycle in graph", "predicted_outcome": "cycle_exists"},
         ]
 
+
 class MathProblemBenchmark(BaseBenchmark):
     def __init__(self):
         super().__init__("math_problems")
@@ -43,6 +46,7 @@ class MathProblemBenchmark(BaseBenchmark):
             {"scenario": "Integrate x^2", "predicted_outcome": "x^3/3 + C"},
             {"scenario": "Solve 2x + 5 = 13", "predicted_outcome": "x=4"},
         ]
+
 
 def load_benchmarks() -> List[BaseBenchmark]:
     """Instantiate and return all available benchmarks."""

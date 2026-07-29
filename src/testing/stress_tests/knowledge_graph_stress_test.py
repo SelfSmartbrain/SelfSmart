@@ -6,12 +6,14 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class GraphStressMetrics(BaseModel):
     total_inserts: int
     resolved_contradictions: int
     duration_sec: float
     inserts_per_sec: float
     model_config = {"from_attributes": True}
+
 
 class GraphStressTester:
     async def mock_graph_insert(self, idx: int) -> bool:
@@ -47,5 +49,5 @@ class GraphStressTester:
             total_inserts=inserts,
             resolved_contradictions=contradictions_resolved,
             duration_sec=duration,
-            inserts_per_sec=inserts / duration if duration > 0 else 0.0
+            inserts_per_sec=inserts / duration if duration > 0 else 0.0,
         )

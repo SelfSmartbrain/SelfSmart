@@ -4,12 +4,7 @@ Supports Llama 3, Mistral, and Phi-3 models with quantization.
 """
 
 import torch
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    BitsAndBytesConfig,
-    TrainingArguments
-)
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 import logging
 from typing import Optional, Dict, Any
@@ -28,27 +23,27 @@ class ModelLoader:
             "model_name": "mistralai/Mistral-7B-v0.1",
             "requires_vram": 12,  # GB
             "context_length": 8192,
-            "recommended": True
+            "recommended": True,
         },
         "llama-3-8b": {
             "model_name": "meta-llama/Meta-Llama-3-8B",
             "requires_vram": 16,
             "context_length": 8192,
-            "recommended": False
+            "recommended": False,
         },
         "phi-3-mini": {
             "model_name": "microsoft/Phi-3-mini-4k-instruct",
             "requires_vram": 8,
             "context_length": 4096,
-            "recommended": False
-        }
+            "recommended": False,
+        },
     }
 
     def __init__(
         self,
         model_key: str = "mistral-7b",
         use_quantization: bool = True,
-        quantization_bits: int = 4
+        quantization_bits: int = 4,
     ):
         """
         Initialize model loader.
@@ -59,7 +54,9 @@ class ModelLoader:
             quantization_bits: Bits for quantization (4 or 8)
         """
         if model_key not in self.MODEL_CONFIGS:
-            raise ValueError(f"Unknown model: {model_key}. Available: {list(self.MODEL_CONFIGS.keys())}")
+            raise ValueError(
+                f"Unknown model: {model_key}. Available: {list(self.MODEL_CONFIGS.keys())}"
+            )
 
         self.model_key = model_key
         self.model_config = self.MODEL_CONFIGS[model_key]
@@ -82,9 +79,7 @@ class ModelLoader:
         logger.info(f"Loading tokenizer for {self.model_config['model_name']}")
 
         self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_config['model_name'],
-            trust_remote_code=True,
-            padding_side="right"
+            self.model_config["model_name"], trust_remote_code=True, padding_side="right"
         )
 
         # Set pad token if not present
@@ -117,7 +112,9 @@ class ModelLoader:
             device = "cpu"
             logger.info("Using CPU (will be slow)")
 
-        logger.info(f"Loading model {self.model_config['model_name']} with quantization={self.use_quantization}")
+        logger.info(
+            f"Loading model {self.model_config['model_name']} with quantization={self.use_quantization}"
+        )
 
         # Configure quantization (not available on MPS)
         quantization_config = None
@@ -127,7 +124,7 @@ class ModelLoader:
                 load_in_8bit=self.quantization_bits == 8,
                 bnb_4bit_compute_dtype=torch.float16,
                 bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type="nf4"
+                bnb_4bit_quant_type="nf4",
             )
         elif self.use_quantization and device == "mps":
             logger.warning("Quantization not supported on MPS, loading full model")
@@ -135,10 +132,14 @@ class ModelLoader:
 
         # Load model
         self.model = AutoModelForCausalLM.from_pretrained(
-            self.model_config['model_name'],
+            self.model_config["model_name"],
             quantization_config=quantization_config,
-            torch_dtype=torch.float16 if device == "mps" else (torch.float16 if self.use_quantization else torch.float32),
-            trust_remote_code=True
+            torch_dtype=(
+                torch.float16
+                if device == "mps"
+                else (torch.float16 if self.use_quantization else torch.float32)
+            ),
+            trust_remote_code=True,
         )
 
         # Move to device
@@ -175,7 +176,7 @@ class ModelLoader:
         r: int = 16,
         lora_alpha: int = 32,
         lora_dropout: float = 0.05,
-        target_modules: Optional[list] = None
+        target_modules: Optional[list] = None,
     ) -> AutoModelForCausalLM:
         """
         Apply LoRA adapters to the model.
@@ -195,7 +196,15 @@ class ModelLoader:
         # Default target modules based on model
         if target_modules is None:
             if "mistral" in self.model_key or "llama" in self.model_key:
-                target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+                target_modules = [
+                    "q_proj",
+                    "k_proj",
+                    "v_proj",
+                    "o_proj",
+                    "gate_proj",
+                    "up_proj",
+                    "down_proj",
+                ]
             else:
                 target_modules = ["q_proj", "v_proj"]
 
@@ -205,7 +214,7 @@ class ModelLoader:
             target_modules=target_modules,
             lora_dropout=lora_dropout,
             bias="none",
-            task_type="CAUSAL_LM"
+            task_type="CAUSAL_LM",
         )
 
         logger.info(f"Applying LoRA with r={r}, alpha={lora_alpha}")
@@ -226,7 +235,7 @@ class ModelLoader:
         warmup_steps: int = 100,
         logging_steps: int = 10,
         save_steps: int = 500,
-        eval_steps: int = 500
+        eval_steps: int = 500,
     ) -> TrainingArguments:
         """
         Get training arguments for fine-tuning.
@@ -268,7 +277,7 @@ class ModelLoader:
             save_total_limit=3,
             lr_scheduler_type="cosine",
             weight_decay=0.01,
-            max_grad_norm=1.0
+            max_grad_norm=1.0,
         )
 
     def save_model(self, output_dir: str):

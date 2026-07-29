@@ -1,11 +1,18 @@
-from .manager import ConfigManager, ModelXConfig, APIConfig, VoiceConfig, AudioConfig, BehaviorConfig
+from .manager import (
+    ConfigManager,
+    ModelXConfig,
+    APIConfig,
+    VoiceConfig,
+    AudioConfig,
+    BehaviorConfig,
+)
 from .setup_wizard import SetupWizard, run_setup_wizard, quick_setup
 
 __all__ = [
     "ConfigManager",
-    "ModelXConfig", 
+    "ModelXConfig",
     "APIConfig",
-    "VoiceConfig", 
+    "VoiceConfig",
     "AudioConfig",
     "BehaviorConfig",
     "SetupWizard",

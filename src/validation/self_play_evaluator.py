@@ -1,9 +1,9 @@
-'''self_play_evaluator.py
+"""self_play_evaluator.py
 
 Collects statistics from the self‑play manager runs.
 Tracks total iterations, success count, new procedural entries, and computes
 aggregate scores that feed into ``validation.metrics``.
-''' 
+"""
 
 import threading
 from typing import Dict
@@ -16,6 +16,7 @@ _stats = {
     "new_procedural": 0,
 }
 
+
 def record_iteration(success: bool, new_procedural: bool = False) -> None:
     """Call after each self‑play iteration.
     ``success`` indicates whether the synthetic problem was solved.
@@ -27,6 +28,7 @@ def record_iteration(success: bool, new_procedural: bool = False) -> None:
             _stats["successes"] += 1
         if new_procedural:
             _stats["new_procedural"] += 1
+
 
 def compute_metrics() -> Dict[str, float]:
     """Calculate derived metrics for the current run.
@@ -43,6 +45,7 @@ def compute_metrics() -> Dict[str, float]:
         "self_play_skill_growth": skill_growth,
         "self_play_score": self_play_score,
     }
+
 
 def reset() -> None:
     """Reset counters – useful before a new validation run."""

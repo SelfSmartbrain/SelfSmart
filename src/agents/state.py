@@ -14,7 +14,6 @@ from typing import Annotated, Any, Literal
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 
-
 # ---------------------------------------------------------------------------
 # Data classes for structured task and result tracking
 # ---------------------------------------------------------------------------

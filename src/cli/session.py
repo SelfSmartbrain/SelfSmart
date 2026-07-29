@@ -1,6 +1,7 @@
 import os
 import uuid
 
+
 class Session:
     def __init__(self):
         self.session_id = str(uuid.uuid4())

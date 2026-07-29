@@ -4,6 +4,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class FitnessValidator:
     @staticmethod
     async def validate_fitness_score(score: float) -> bool:

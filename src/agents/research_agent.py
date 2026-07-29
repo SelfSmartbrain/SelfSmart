@@ -161,10 +161,14 @@ class ResearchAgent:
             goal=goal,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a research planning expert. Respond only with valid JSON."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a research planning expert. Respond only with valid JSON."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             plan = json.loads(response.content)
@@ -176,12 +180,14 @@ class ResearchAgent:
                 plan = json.loads(content[start:end])
             else:
                 plan = {
-                    "search_queries": [{
-                        "source": "web_search",
-                        "query": task_description,
-                        "priority": 1,
-                        "reason": "Direct search for task",
-                    }],
+                    "search_queries": [
+                        {
+                            "source": "web_search",
+                            "query": task_description,
+                            "priority": 1,
+                            "reason": "Direct search for task",
+                        }
+                    ],
                     "expected_output": "Research findings",
                     "max_sources": 5,
                 }
@@ -213,12 +219,14 @@ class ResearchAgent:
             try:
                 result = await self._execute_single_search(source, query)
                 if result:
-                    findings.append({
-                        "source": source,
-                        "query": query,
-                        "content": result,
-                        "confidence": self._score_result(result),
-                    })
+                    findings.append(
+                        {
+                            "source": source,
+                            "query": query,
+                            "content": result,
+                            "confidence": self._score_result(result),
+                        }
+                    )
             except Exception as e:
                 logger.warning(
                     "Search query failed",
@@ -251,10 +259,12 @@ class ResearchAgent:
             return str(result) if result else None
 
         # Fallback: use LLM knowledge
-        response = await self.llm.ainvoke([
-            SystemMessage(content=f"You are a {source} expert. Provide factual information."),
-            HumanMessage(content=f"Research: {query}"),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(content=f"You are a {source} expert. Provide factual information."),
+                HumanMessage(content=f"Research: {query}"),
+            ]
+        )
         return str(response.content)
 
     async def _synthesize(
@@ -266,22 +276,28 @@ class ResearchAgent:
         if not findings:
             return "No research findings were gathered. The research query may need refinement."
 
-        findings_text = "\n\n".join([
-            f"### Source: {f.get('source', 'unknown')} (confidence: {f.get('confidence', 0):.2f})\n"
-            f"Query: {f.get('query', '')}\n"
-            f"Content: {str(f.get('content', ''))[:2000]}"
-            for f in findings
-        ])
+        findings_text = "\n\n".join(
+            [
+                f"### Source: {f.get('source', 'unknown')} (confidence: {f.get('confidence', 0):.2f})\n"
+                f"Query: {f.get('query', '')}\n"
+                f"Content: {str(f.get('content', ''))[:2000]}"
+                for f in findings
+            ]
+        )
 
         prompt = SYNTHESIS_PROMPT.format(
             task=task,
             findings=findings_text,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a research synthesis expert. Provide thorough, well-cited summaries."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a research synthesis expert. Provide thorough, well-cited summaries."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         return str(response.content)
 

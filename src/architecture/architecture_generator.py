@@ -13,55 +13,62 @@ from src.db.repositories.architecture_candidate_repo import ArchitectureCandidat
 
 logger = get_logger(__name__)
 
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
+
 class ArchitectureCandidate(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     candidate_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     hypothesis_id: uuid.UUID
     source_code_path: str
     status: str = "generated"
     created_at: datetime = Field(default_factory=utc_now)
 
+
 class ArchitectureGenerator:
     """
-    Code generator that takes an ArchitectureHypothesis and generates Python source code 
-    for new agent variants into a candidate_architecture/ directory, registering an 
+    Code generator that takes an ArchitectureHypothesis and generates Python source code
+    for new agent variants into a candidate_architecture/ directory, registering an
     ArchitectureCandidate to the DB.
     """
+
     def __init__(self, output_dir: str = "candidate_architecture", llm_client: Any = None):
         self.output_dir = output_dir
         self.logger = get_logger(self.__class__.__name__)
         self.llm_client = llm_client
         self.settings = get_settings()
 
-    async def generate_architecture(self, hypothesis: ArchitectureHypothesis) -> ArchitectureCandidate:
-        self.logger.info(f"Generating architecture candidate for hypothesis {hypothesis.hypothesis_id}")
-        
+    async def generate_architecture(
+        self, hypothesis: ArchitectureHypothesis
+    ) -> ArchitectureCandidate:
+        self.logger.info(
+            f"Generating architecture candidate for hypothesis {hypothesis.hypothesis_id}"
+        )
+
         # Ensure the candidate architecture directory exists
         os.makedirs(self.output_dir, exist_ok=True)
-        
+
         candidate_filename = f"variant_{hypothesis.hypothesis_id.hex[:8]}.py"
         candidate_path = os.path.join(self.output_dir, candidate_filename)
-        
+
         # Generate source code using LLM
         source_code = await self._generate_source_code(hypothesis)
-        
+
         # Write to file
         with open(candidate_path, "w") as f:
             f.write(source_code)
-            
+
         self.logger.info(f"Generated source code written to {candidate_path}")
-        
+
         candidate = ArchitectureCandidate(
-            hypothesis_id=hypothesis.hypothesis_id,
-            source_code_path=candidate_path
+            hypothesis_id=hypothesis.hypothesis_id, source_code_path=candidate_path
         )
-        
+
         await self._register_candidate(candidate)
-        
+
         return candidate
 
     async def _generate_source_code(self, hypothesis: ArchitectureHypothesis) -> str:
@@ -108,7 +115,7 @@ Generate only the Python code, no explanations."""
         # In production, this would be:
         # response = await self.llm_client.ainvoke(prompt)
         # return response.content
-        
+
         # Placeholder implementation
         return self._generate_template_code(None)
 
@@ -119,7 +126,7 @@ Generate only the Python code, no explanations."""
             raise ValueError("Generated code must include GeneratedAgentVariant class")
         if "async def run" not in code:
             raise ValueError("Generated code must include async run method")
-        
+
         return code.strip()
 
     def _generate_template_code(self, hypothesis: Optional[ArchitectureHypothesis]) -> str:
@@ -130,7 +137,7 @@ Generate only the Python code, no explanations."""
         else:
             solution_desc = "Template implementation"
             hypothesis_id = "template"
-            
+
         return f'''from __future__ import annotations
 
 import asyncio
@@ -187,7 +194,9 @@ class GeneratedAgentVariant:
         """
         Register the ArchitectureCandidate to the DB.
         """
-        self.logger.info(f"Registering architecture candidate {candidate.candidate_id} to database.")
+        self.logger.info(
+            f"Registering architecture candidate {candidate.candidate_id} to database."
+        )
         # In production, this would use the repository to persist to DB
         # Example:
         # repo = ArchitectureCandidateRepository(db_session)

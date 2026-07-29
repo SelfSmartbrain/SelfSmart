@@ -11,13 +11,15 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ResourceSnapshot(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     entity_id: UUID
     timestamp: datetime
     queue_size: int
     memory_usage_mb: float
+
 
 class ResourceAnalyzer:
     def __init__(self, scheduler: AsyncIOScheduler) -> None:
@@ -39,14 +41,13 @@ class ResourceAnalyzer:
 
         async def collect_metrics() -> None:
             snapshot = ResourceSnapshot(
-                entity_id=entity_id,
-                timestamp=datetime.utcnow(),
-                queue_size=0,
-                memory_usage_mb=0.0
+                entity_id=entity_id, timestamp=datetime.utcnow(), queue_size=0, memory_usage_mb=0.0
             )
             await self.record_snapshot(snapshot)
 
-        job = self.scheduler.add_job(collect_metrics, 'interval', seconds=interval_seconds, id=job_id)
+        job = self.scheduler.add_job(
+            collect_metrics, "interval", seconds=interval_seconds, id=job_id
+        )
         self._tracking_jobs[entity_id] = job.id
         logger.info(f"Started continuous resource tracking for {entity_id}")
 
@@ -56,7 +57,7 @@ class ResourceAnalyzer:
             self.scheduler.remove_job(job_id)
             del self._tracking_jobs[entity_id]
             logger.info(f"Stopped resource tracking for {entity_id}")
-            
+
     async def get_latest_snapshot(self, entity_id: UUID) -> Optional[ResourceSnapshot]:
         if entity_id in self.snapshots and self.snapshots[entity_id]:
             return self.snapshots[entity_id][-1]

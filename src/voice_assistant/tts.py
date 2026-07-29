@@ -1,6 +1,7 @@
 """
 Text-to-Speech using Piper (high-quality, local, female voices)
 """
+
 import asyncio
 import subprocess
 import tempfile
@@ -38,7 +39,7 @@ class PiperTTS:
         import urllib.request
 
         base_url = "https://huggingface.co/rhasspy/piper-voices/resolve/main"
-        
+
         # Parse voice: en_US-lessac-medium -> lang=en, country=en_US, name=lessac, quality=medium
         parts = self.voice.split("-")
         if len(parts) >= 3:
@@ -52,7 +53,7 @@ class PiperTTS:
             country = "en_US"
             name = "lessac"
             quality = "medium"
-        
+
         # Path format: en/en_US/lessac/medium/en_US-lessac-medium.onnx
         model_url = f"{base_url}/{lang}/{country}/{name}/{quality}/{self.voice}.onnx"
         config_url = f"{base_url}/{lang}/{country}/{name}/{quality}/{self.voice}.onnx.json"
@@ -74,9 +75,12 @@ class PiperTTS:
         try:
             cmd = [
                 str(self.piper_path / "piper"),
-                "--model", str(self.model_path),
-                "--config", str(self.config_path),
-                "--output_file", output_file,
+                "--model",
+                str(self.model_path),
+                "--config",
+                str(self.config_path),
+                "--output_file",
+                output_file,
             ]
 
             proc = await asyncio.create_subprocess_exec(
@@ -137,6 +141,7 @@ class CoquiTTS:
     def _init_model(self):
         try:
             from TTS.api import TTS
+
             self._tts = TTS(self.model_name, gpu=False)
             logger.info(f"Coqui TTS loaded: {self.model_name}")
         except Exception as e:

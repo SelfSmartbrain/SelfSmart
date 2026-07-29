@@ -7,6 +7,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class GoalStressMetrics(BaseModel):
     goal_count: int
     success_count: int
@@ -16,10 +17,11 @@ class GoalStressMetrics(BaseModel):
     avg_latency_ms: float
     model_config = {"from_attributes": True}
 
+
 class GoalStressTest:
     async def mock_process_goal(self) -> float:
         start = time.perf_counter()
-        await asyncio.sleep(0.01) # Simulated network/db IO
+        await asyncio.sleep(0.01)  # Simulated network/db IO
         return (time.perf_counter() - start) * 1000
 
     async def run_batch(self, count: int) -> GoalStressMetrics:
@@ -42,7 +44,7 @@ class GoalStressTest:
             failure_count=failures,
             total_time_sec=total_time,
             throughput_per_sec=throughput,
-            avg_latency_ms=avg_latency
+            avg_latency_ms=avg_latency,
         )
 
     async def run_all_tiers(self) -> List[GoalStressMetrics]:

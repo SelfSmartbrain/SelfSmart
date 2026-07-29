@@ -24,6 +24,7 @@ logger = get_logger(__name__)
 
 class OutcomeStatus(str, Enum):
     """Status of outcome tracking."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     MEASURED = "measured"
@@ -34,6 +35,7 @@ class OutcomeStatus(str, Enum):
 @dataclass
 class OutcomeMeasurement:
     """A measurement of decision outcome."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     decision_id: str = ""
     metric_name: str = ""
@@ -42,7 +44,7 @@ class OutcomeMeasurement:
     measured_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     time_since_decision: timedelta = field(default_factory=lambda: timedelta(0))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -59,6 +61,7 @@ class OutcomeMeasurement:
 @dataclass
 class OutcomeTracking:
     """Long-term tracking of a decision's outcomes."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     decision_id: str = ""
     decision_made_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -68,7 +71,7 @@ class OutcomeTracking:
     final_assessment: Optional[str] = None
     cumulative_impact: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -85,12 +88,12 @@ class OutcomeTracking:
 
 class OutcomeTracker:
     """Tracks long-term outcomes of decisions."""
-    
+
     def __init__(self):
         self.trackings: Dict[str, OutcomeTracking] = {}
         self.trackings_by_decision: Dict[str, str] = {}  # decision_id -> tracking_id
         logger.info("OutcomeTracker initialized")
-    
+
     def start_tracking(
         self,
         decision_id: str,
@@ -103,14 +106,14 @@ class OutcomeTracker:
             decision_made_at=decision_made_at or datetime.now(timezone.utc),
             expected_outcomes=expected_outcomes or [],
         )
-        
+
         self.trackings[tracking.id] = tracking
         self.trackings_by_decision[decision_id] = tracking.id
-        
+
         logger.info(f"Started outcome tracking for decision {decision_id}")
-        
+
         return tracking
-    
+
     def add_measurement(
         self,
         decision_id: str,
@@ -125,11 +128,11 @@ class OutcomeTracker:
             # Auto-create tracking
             tracking = self.start_tracking(decision_id)
             tracking_id = tracking.id
-        
+
         tracking = self.trackings[tracking_id]
-        
+
         time_since = datetime.now(timezone.utc) - tracking.decision_made_at
-        
+
         measurement = OutcomeMeasurement(
             decision_id=decision_id,
             metric_name=metric_name,
@@ -137,21 +140,21 @@ class OutcomeTracker:
             unit=unit,
             time_since_decision=time_since,
         )
-        
+
         tracking.measurements.append(measurement)
         tracking.status = OutcomeStatus.IN_PROGRESS
-        
+
         logger.info(f"Added measurement {metric_name}={metric_value} for decision {decision_id}")
-        
+
         return measurement
-    
+
     def get_tracking(self, decision_id: str) -> Optional[OutcomeTracking]:
         """Get outcome tracking for a decision."""
         tracking_id = self.trackings_by_decision.get(decision_id)
         if tracking_id:
             return self.trackings.get(tracking_id)
         return None
-    
+
     def get_measurements(
         self,
         decision_id: str,
@@ -161,12 +164,12 @@ class OutcomeTracker:
         tracking = self.get_tracking(decision_id)
         if not tracking:
             return []
-        
+
         if metric_name:
             return [m for m in tracking.measurements if m.metric_name == metric_name]
-        
+
         return tracking.measurements
-    
+
     def get_outcome_trend(
         self,
         decision_id: str,
@@ -174,35 +177,35 @@ class OutcomeTracker:
     ) -> Dict[str, Any]:
         """Get the trend of a specific metric over time."""
         measurements = self.get_measurements(decision_id, metric_name)
-        
+
         if len(measurements) < 2:
             return {"error": "Not enough measurements to determine trend"}
-        
+
         # Sort by time
         measurements.sort(key=lambda m: m.measured_at)
-        
+
         values = [m.metric_value for m in measurements]
-        
+
         # Calculate trend
         first_value = values[0]
         last_value = values[-1]
-        
+
         if last_value > first_value:
             trend = "increasing"
         elif last_value < first_value:
             trend = "decreasing"
         else:
             trend = "stable"
-        
+
         # Calculate rate of change
         time_diff = (measurements[-1].measured_at - measurements[0].measured_at).total_seconds()
         value_diff = last_value - first_value
-        
+
         if time_diff > 0:
             rate = value_diff / time_diff  # per second
         else:
             rate = 0.0
-        
+
         return {
             "decision_id": decision_id,
             "metric_name": metric_name,
@@ -213,7 +216,7 @@ class OutcomeTracker:
             "rate_per_second": rate,
             "measurement_count": len(measurements),
         }
-    
+
     def finalize_tracking(
         self,
         decision_id: str,
@@ -224,42 +227,40 @@ class OutcomeTracker:
         tracking = self.get_tracking(decision_id)
         if not tracking:
             return False
-        
+
         tracking.status = OutcomeStatus.VALIDATED
         tracking.final_assessment = final_assessment
         tracking.cumulative_impact = cumulative_impact
-        
+
         logger.info(f"Finalized tracking for decision {decision_id}")
-        
+
         return True
-    
+
     def get_trackings_by_status(self, status: OutcomeStatus) -> List[OutcomeTracking]:
         """Get all trackings with a specific status."""
         return [t for t in self.trackings.values() if t.status == status]
-    
+
     def get_long_term_trackings(self, days: int = 30) -> List[OutcomeTracking]:
         """Get trackings for decisions made more than X days ago."""
         threshold = datetime.now(timezone.utc) - timedelta(days=days)
-        
-        return [
-            t for t in self.trackings.values()
-            if t.decision_made_at < threshold
-        ]
-    
+
+        return [t for t in self.trackings.values() if t.decision_made_at < threshold]
+
     def get_tracking_statistics(self) -> Dict[str, Any]:
         """Get statistics about outcome tracking."""
         total_trackings = len(self.trackings)
-        
+
         by_status = {
-            status.value: len(self.get_trackings_by_status(status))
-            for status in OutcomeStatus
+            status.value: len(self.get_trackings_by_status(status)) for status in OutcomeStatus
         }
-        
+
         total_measurements = sum(len(t.measurements) for t in self.trackings.values())
-        
+
         return {
             "total_trackings": total_trackings,
             "by_status": by_status,
             "total_measurements": total_measurements,
-            "avg_measurements_per_tracking": total_measurements / total_trackings if total_trackings > 0 else 0,
+            "avg_measurements_per_tracking": (
+                total_measurements / total_trackings if total_trackings > 0 else 0
+            ),
         }

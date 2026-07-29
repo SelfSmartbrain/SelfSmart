@@ -13,6 +13,7 @@ from .patch_generator import PatchGenerator
 
 class RepositorySize(Enum):
     """Repository size categories."""
+
     SMALL = "small"  # 1k-5k LOC
     MEDIUM = "medium"  # 10k-50k LOC
     LARGE = "large"  # 100k+ LOC
@@ -20,6 +21,7 @@ class RepositorySize(Enum):
 
 class BenchmarkTaskType(Enum):
     """Types of benchmark tasks."""
+
     BUG_FIXING = "bug_fixing"
     FEATURE_DEVELOPMENT = "feature_development"
     REFACTORING = "refactoring"
@@ -29,6 +31,7 @@ class BenchmarkTaskType(Enum):
 @dataclass
 class BenchmarkTask:
     """A single benchmark task."""
+
     task_id: str
     task_type: BenchmarkTaskType
     description: str
@@ -40,19 +43,20 @@ class BenchmarkTask:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'task_id': self.task_id,
-            'task_type': self.task_type.value,
-            'description': self.description,
-            'repository_path': self.repository_path,
-            'expected_changes': self.expected_changes,
-            'difficulty': self.difficulty,
-            'time_limit': self.time_limit
+            "task_id": self.task_id,
+            "task_type": self.task_type.value,
+            "description": self.description,
+            "repository_path": self.repository_path,
+            "expected_changes": self.expected_changes,
+            "difficulty": self.difficulty,
+            "time_limit": self.time_limit,
         }
 
 
 @dataclass
 class BenchmarkResult:
     """Result of a benchmark run."""
+
     task_id: str
     success: bool
     execution_time: float
@@ -64,19 +68,20 @@ class BenchmarkResult:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'task_id': self.task_id,
-            'success': self.success,
-            'execution_time': self.execution_time,
-            'test_result': self.test_result.to_dict() if self.test_result else None,
-            'changes_made': self.changes_made,
-            'errors': self.errors,
-            'metadata': self.metadata
+            "task_id": self.task_id,
+            "success": self.success,
+            "execution_time": self.execution_time,
+            "test_result": self.test_result.to_dict() if self.test_result else None,
+            "changes_made": self.changes_made,
+            "errors": self.errors,
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class BenchmarkSuite:
     """A collection of benchmark tasks for a repository size category."""
+
     size: RepositorySize
     loc_range: tuple
     tasks: List[BenchmarkTask] = field(default_factory=list)
@@ -93,10 +98,10 @@ class BenchmarkSuite:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'size': self.size.value,
-            'loc_range': self.loc_range,
-            'tasks': [task.to_dict() for task in self.tasks],
-            'repositories': self.repositories
+            "size": self.size.value,
+            "loc_range": self.loc_range,
+            "tasks": [task.to_dict() for task in self.tasks],
+            "repositories": self.repositories,
         }
 
 
@@ -106,7 +111,7 @@ class RepositoryBenchmark:
     SIZE_RANGES = {
         RepositorySize.SMALL: (1000, 5000),
         RepositorySize.MEDIUM: (10000, 50000),
-        RepositorySize.LARGE: (100000, float('inf'))
+        RepositorySize.LARGE: (100000, float("inf")),
     }
 
     def __init__(self, benchmark_root: str):
@@ -116,10 +121,7 @@ class RepositoryBenchmark:
 
         # Initialize suites
         for size in RepositorySize:
-            self.suites[size] = BenchmarkSuite(
-                size=size,
-                loc_range=self.SIZE_RANGES[size]
-            )
+            self.suites[size] = BenchmarkSuite(size=size, loc_range=self.SIZE_RANGES[size])
 
     def register_repository(self, repository_path: str, size: Optional[RepositorySize] = None):
         """Register a repository for benchmarking."""
@@ -149,7 +151,7 @@ class RepositoryBenchmark:
         description: str,
         repository_path: str,
         expected_changes: Optional[List[str]] = None,
-        difficulty: str = "medium"
+        difficulty: str = "medium",
     ) -> BenchmarkTask:
         """Create a benchmark task."""
         task = BenchmarkTask(
@@ -158,7 +160,7 @@ class RepositoryBenchmark:
             description=description,
             repository_path=repository_path,
             expected_changes=expected_changes or [],
-            difficulty=difficulty
+            difficulty=difficulty,
         )
 
         # Classify repository and add to appropriate suite
@@ -176,13 +178,10 @@ class RepositoryBenchmark:
     def run_benchmark_task(self, task: BenchmarkTask) -> BenchmarkResult:
         """Run a single benchmark task."""
         import time
+
         start_time = time.time()
 
-        result = BenchmarkResult(
-            task_id=task.task_id,
-            success=False,
-            execution_time=0.0
-        )
+        result = BenchmarkResult(task_id=task.task_id, success=False, execution_time=0.0)
 
         try:
             # Initialize components
@@ -194,15 +193,15 @@ class RepositoryBenchmark:
 
             # Analyze repository
             metadata = analyzer.analyze()
-            result.metadata['repository'] = metadata.to_dict()
+            result.metadata["repository"] = metadata.to_dict()
 
             # Create execution plan
             plan = planner.create_plan(task.description)
-            result.metadata['plan'] = plan.to_dict()
+            result.metadata["plan"] = plan.to_dict()
 
             # Generate patches
             patch = patch_generator.generate_patch(plan)
-            result.metadata['patch'] = patch.to_dict()
+            result.metadata["patch"] = patch.to_dict()
 
             # Apply patches
             for file_change in patch.file_changes:
@@ -210,7 +209,9 @@ class RepositoryBenchmark:
                 if edit_result.success:
                     result.changes_made.append(file_change.file_path)
                 else:
-                    result.errors.append(f"Failed to apply patch to {file_change.file_path}: {edit_result.error}")
+                    result.errors.append(
+                        f"Failed to apply patch to {file_change.file_path}: {edit_result.error}"
+                    )
 
             # Run tests
             test_result = test_runner.run_tests()
@@ -218,9 +219,7 @@ class RepositoryBenchmark:
 
             # Determine success
             result.success = (
-                len(result.errors) == 0 and
-                test_result.success and
-                test_result.pass_rate >= 0.8
+                len(result.errors) == 0 and test_result.success and test_result.pass_rate >= 0.8
             )
 
         except Exception as e:
@@ -255,30 +254,34 @@ class RepositoryBenchmark:
     def get_statistics(self) -> Dict[str, Any]:
         """Get benchmark statistics."""
         stats = {
-            'total_tasks': len(self.results),
-            'successful_tasks': sum(1 for r in self.results if r.success),
-            'failed_tasks': sum(1 for r in self.results if not r.success),
-            'average_execution_time': sum(r.execution_time for r in self.results) / len(self.results) if self.results else 0,
-            'by_size': {},
-            'by_type': {}
+            "total_tasks": len(self.results),
+            "successful_tasks": sum(1 for r in self.results if r.success),
+            "failed_tasks": sum(1 for r in self.results if not r.success),
+            "average_execution_time": (
+                sum(r.execution_time for r in self.results) / len(self.results)
+                if self.results
+                else 0
+            ),
+            "by_size": {},
+            "by_type": {},
         }
 
         # Statistics by size
         for size in RepositorySize:
             size_results = [r for r in self.results if self._get_task_size(r.task_id) == size]
-            stats['by_size'][size.value] = {
-                'total': len(size_results),
-                'successful': sum(1 for r in size_results if r.success),
-                'failed': sum(1 for r in size_results if not r.success)
+            stats["by_size"][size.value] = {
+                "total": len(size_results),
+                "successful": sum(1 for r in size_results if r.success),
+                "failed": sum(1 for r in size_results if not r.success),
             }
 
         # Statistics by task type
         for task_type in BenchmarkTaskType:
             type_results = [r for r in self.results if self._get_task_type(r.task_id) == task_type]
-            stats['by_type'][task_type.value] = {
-                'total': len(type_results),
-                'successful': sum(1 for r in type_results if r.success),
-                'failed': sum(1 for r in type_results if not r.success)
+            stats["by_type"][task_type.value] = {
+                "total": len(type_results),
+                "successful": sum(1 for r in type_results if r.success),
+                "failed": sum(1 for r in type_results if not r.success),
             }
 
         return stats
@@ -301,13 +304,14 @@ class RepositoryBenchmark:
     def export_results(self, output_path: str):
         """Export benchmark results to JSON."""
         import json
+
         output_data = {
-            'statistics': self.get_statistics(),
-            'results': [r.to_dict() for r in self.results],
-            'suites': {size.value: suite.to_dict() for size, suite in self.suites.items()}
+            "statistics": self.get_statistics(),
+            "results": [r.to_dict() for r in self.results],
+            "suites": {size.value: suite.to_dict() for size, suite in self.suites.items()},
         }
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(output_data, f, indent=2)
 
 

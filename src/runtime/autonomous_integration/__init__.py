@@ -3,7 +3,7 @@ Autonomous Cognitive Integration - Connects CognitiveKernel with Runtime for con
 
 This module implements the "heartbeat" that drives the agent's autonomous cognitive cycle:
 - Background thinking when idle
-- Memory consolidation during downtime  
+- Memory consolidation during downtime
 - Goal reflection and replanning
 - Continuous learning from experience
 """
@@ -16,7 +16,7 @@ from .memory_consolidator import MemoryConsolidator, ConsolidationConfig
 __all__ = [
     "CognitiveRuntimeBridge",
     "BridgeConfig",
-    "BackgroundThinker", 
+    "BackgroundThinker",
     "ThinkingConfig",
     "GoalReflector",
     "ReflectionConfig",

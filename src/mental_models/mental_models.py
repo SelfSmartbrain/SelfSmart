@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class ModelType(str, Enum):
     """Types of mental models."""
+
     OPTIMIZATION = "optimization"
     SCHEDULING = "scheduling"
     RESEARCH = "research"
@@ -34,6 +35,7 @@ class ModelType(str, Enum):
 @dataclass
 class MentalModel:
     """A reusable mental model for cognitive tasks."""
+
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     description: str = ""
@@ -46,7 +48,7 @@ class MentalModel:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -65,7 +67,7 @@ class MentalModel:
 
 class PrebuiltModels:
     """Collection of prebuilt mental models."""
-    
+
     @staticmethod
     def pareto_optimization() -> MentalModel:
         """Pareto Principle (80/20 Rule) for optimization."""
@@ -88,7 +90,7 @@ class PrebuiltModels:
             success_rate=0.75,
             metadata={"origin": "Vilfredo Pareto"},
         )
-    
+
     @staticmethod
     def first_things_first() -> MentalModel:
         """Eisenhower Matrix for prioritization."""
@@ -113,7 +115,7 @@ class PrebuiltModels:
             success_rate=0.80,
             metadata={"origin": "Dwight Eisenhower"},
         )
-    
+
     @staticmethod
     def scientific_method() -> MentalModel:
         """Scientific method for research."""
@@ -139,7 +141,7 @@ class PrebuiltModels:
             success_rate=0.90,
             metadata={"origin": "Francis Bacon"},
         )
-    
+
     @staticmethod
     def spaced_repetition() -> MentalModel:
         """Spaced repetition for learning."""
@@ -165,7 +167,7 @@ class PrebuiltModels:
             success_rate=0.85,
             metadata={"origin": "Hermann Ebbinghaus"},
         )
-    
+
     @staticmethod
     def critical_path() -> MentalModel:
         """Critical Path Method for scheduling."""
@@ -192,7 +194,7 @@ class PrebuiltModels:
             success_rate=0.78,
             metadata={"origin": "DuPont Corporation"},
         )
-    
+
     @staticmethod
     def first_principles() -> MentalModel:
         """First principles thinking for problem-solving."""
@@ -216,7 +218,7 @@ class PrebuiltModels:
             success_rate=0.82,
             metadata={"origin": "Aristotle"},
         )
-    
+
     @staticmethod
     def bayesian_inference() -> MentalModel:
         """Bayesian inference for prediction."""
@@ -240,7 +242,7 @@ class PrebuiltModels:
             success_rate=0.88,
             metadata={"origin": "Thomas Bayes"},
         )
-    
+
     @staticmethod
     def inversion() -> MentalModel:
         """Inversion for decision-making."""
@@ -264,7 +266,7 @@ class PrebuiltModels:
             success_rate=0.76,
             metadata={"origin": "Charlie Munger"},
         )
-    
+
     @staticmethod
     def divide_and_conquer() -> MentalModel:
         """Divide and conquer for problem-solving."""
@@ -288,7 +290,7 @@ class PrebuiltModels:
             success_rate=0.84,
             metadata={"origin": "Julius Caesar"},
         )
-    
+
     @staticmethod
     def get_all_prebuilt() -> List[MentalModel]:
         """Get all prebuilt mental models."""

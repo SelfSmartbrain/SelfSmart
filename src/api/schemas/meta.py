@@ -12,7 +12,7 @@ from src.db.enums import TaskType, StrategyStatus, MetricType, SkillStatus
 
 class StrategyResponse(BaseModel):
     """Schema for returning a Strategy."""
-    
+
     id: UUID
     task_type: TaskType
     name: str
@@ -30,7 +30,7 @@ class StrategyResponse(BaseModel):
 
 class SkillResponse(BaseModel):
     """Schema for returning a Skill."""
-    
+
     id: UUID
     name: str
     description: str
@@ -46,7 +46,7 @@ class SkillResponse(BaseModel):
 
 class PolicyResponse(BaseModel):
     """Schema for returning a Policy."""
-    
+
     id: UUID
     name: str
     description: str
@@ -61,5 +61,5 @@ class PolicyResponse(BaseModel):
 
 class MetricResponse(BaseModel):
     """Schema for returning aggregated metrics."""
-    
+
     metrics: dict[str, float]

@@ -32,7 +32,7 @@ class ContinuousLearner:
         data_dir: str = "./training_data",
         output_dir: str = "./model_updates",
         learning_interval_hours: int = 24,
-        min_new_samples: int = 100
+        min_new_samples: int = 100,
     ):
         """
         Initialize continuous learner.
@@ -62,7 +62,7 @@ class ContinuousLearner:
             "total_learning_cycles": 0,
             "total_samples_processed": 0,
             "last_learning_time": None,
-            "model_versions": []
+            "model_versions": [],
         }
 
         logger.info("Continuous learner initialized")
@@ -78,10 +78,7 @@ class ContinuousLearner:
 
         async with DataCollector(output_dir=str(self.data_dir)) as collector:
             # Collect from various sources
-            data = await collector.collect_all(
-                wikipedia_count=50,
-                hacker_news_count=50
-            )
+            data = await collector.collect_all(wikipedia_count=50, hacker_news_count=50)
 
         return data
 
@@ -95,8 +92,7 @@ class ContinuousLearner:
         logger.info("Processing new data")
 
         preprocessor = DataPreprocessor(
-            input_dir=str(self.data_dir),
-            output_dir=str(self.data_dir / "processed")
+            input_dir=str(self.data_dir), output_dir=str(self.data_dir / "processed")
         )
 
         # Process all files
@@ -109,17 +105,13 @@ class ContinuousLearner:
 
         # Save combined data
         combined_path = self.data_dir / "processed" / "combined_training_data.json"
-        with open(combined_path, 'w', encoding='utf-8') as f:
+        with open(combined_path, "w", encoding="utf-8") as f:
             json.dump(all_data, f, ensure_ascii=False, indent=2)
 
         logger.info(f"Processed {len(all_data)} samples")
         return all_data
 
-    def fine_tune_model(
-        self,
-        training_data_path: str,
-        num_epochs: int = 1
-    ):
+    def fine_tune_model(self, training_data_path: str, num_epochs: int = 1):
         """
         Fine-tune the model with new data.
 
@@ -138,14 +130,11 @@ class ContinuousLearner:
         trainer = LoRATrainer(
             model=model,
             tokenizer=tokenizer,
-            output_dir=str(self.output_dir / f"update_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            output_dir=str(self.output_dir / f"update_{datetime.now().strftime('%Y%m%d_%H%M%S')}"),
         )
 
         # Train
-        trainer.train(
-            train_data_path=training_data_path,
-            num_train_epochs=num_epochs
-        )
+        trainer.train(train_data_path=training_data_path, num_train_epochs=num_epochs)
 
         # Update statistics
         self.stats["total_learning_cycles"] += 1
@@ -155,7 +144,7 @@ class ContinuousLearner:
         model_version = {
             "timestamp": datetime.now().isoformat(),
             "samples_processed": self.stats["total_samples_processed"],
-            "cycle": self.stats["total_learning_cycles"]
+            "cycle": self.stats["total_learning_cycles"],
         }
         self.stats["model_versions"].append(model_version)
 
@@ -180,7 +169,9 @@ class ContinuousLearner:
         if self.last_learning_time:
             time_since_last = datetime.now() - self.last_learning_time
             if time_since_last < self.learning_interval:
-                logger.info(f"Learning interval not reached ({time_since_last} < {self.learning_interval})")
+                logger.info(
+                    f"Learning interval not reached ({time_since_last} < {self.learning_interval})"
+                )
                 return False
 
         return True
@@ -242,7 +233,7 @@ class ContinuousLearner:
     def save_stats(self):
         """Save learning statistics."""
         stats_path = self.output_dir / "learning_stats.json"
-        with open(stats_path, 'w', encoding='utf-8') as f:
+        with open(stats_path, "w", encoding="utf-8") as f:
             json.dump(self.stats, f, indent=2)
 
         logger.info(f"Statistics saved to {stats_path}")
@@ -252,7 +243,7 @@ class ContinuousLearner:
         stats_path = self.output_dir / "learning_stats.json"
 
         if stats_path.exists():
-            with open(stats_path, 'r', encoding='utf-8') as f:
+            with open(stats_path, "r", encoding="utf-8") as f:
                 self.stats = json.load(f)
 
             logger.info("Statistics loaded")

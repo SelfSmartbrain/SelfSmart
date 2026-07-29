@@ -4,6 +4,7 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class EvolutionValidator:
     @staticmethod
     async def validate_evolution_params(params: Dict[str, Any]) -> bool:

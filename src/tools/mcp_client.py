@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class MCPTransport(Enum):
     """MCP transport types"""
+
     STDIO = "stdio"
     SSE = "sse"
     WEBSOCKET = "websocket"
@@ -27,6 +28,7 @@ class MCPTransport(Enum):
 @dataclass
 class MCPTool:
     """MCP tool definition"""
+
     name: str
     description: str
     input_schema: Dict[str, Any]
@@ -36,6 +38,7 @@ class MCPTool:
 @dataclass
 class MCPServerConfig:
     """MCP server configuration"""
+
     name: str
     command: str
     args: List[str] = field(default_factory=list)
@@ -48,6 +51,7 @@ class MCPServerConfig:
 @dataclass
 class MCPServer:
     """Running MCP server instance"""
+
     config: MCPServerConfig
     process: Optional[asyncio.subprocess.Process] = None
     tools: List[MCPTool] = field(default_factory=list)
@@ -58,7 +62,7 @@ class MCPServer:
 class MCPClient:
     """
     Client for Model Context Protocol servers.
-    
+
     Manages server lifecycle, tool discovery, and invocation.
     Supports stdio transport for local MCP servers.
     """
@@ -71,10 +75,10 @@ class MCPClient:
     async def connect_server(self, config: MCPServerConfig) -> bool:
         """
         Connect to an MCP server.
-        
+
         Args:
             config: Server configuration
-            
+
         Returns:
             True if connected successfully
         """
@@ -94,7 +98,9 @@ class MCPClient:
             await self._initialize_server(config.name)
             await self._discover_tools(config.name)
 
-            logger.info(f"MCP server {config.name} connected with {len(self.servers[config.name].tools)} tools")
+            logger.info(
+                f"MCP server {config.name} connected with {len(self.servers[config.name].tools)} tools"
+            )
             return True
 
         except Exception as e:
@@ -190,7 +196,9 @@ class MCPClient:
 
         logger.debug(f"Unhandled MCP message from {server_name}: {data}")
 
-    async def _send_request(self, server_name: str, method: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _send_request(
+        self, server_name: str, method: str, params: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Send JSON-RPC request and wait for response"""
         server = self.servers.get(server_name)
         if not server or not server.process:
@@ -226,16 +234,20 @@ class MCPClient:
 
     async def _initialize_server(self, server_name: str) -> None:
         """Initialize MCP server connection"""
-        response = await self._send_request(server_name, "initialize", {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {
-                "tools": {},
+        response = await self._send_request(
+            server_name,
+            "initialize",
+            {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {
+                    "tools": {},
+                },
+                "clientInfo": {
+                    "name": "ModelX",
+                    "version": "1.0.0",
+                },
             },
-            "clientInfo": {
-                "name": "ModelX",
-                "version": "1.0.0",
-            },
-        })
+        )
 
         if "error" in response:
             raise RuntimeError(f"MCP initialize failed: {response['error']}")
@@ -252,12 +264,14 @@ class MCPClient:
 
         tools = []
         for tool_data in response.get("result", {}).get("tools", []):
-            tools.append(MCPTool(
-                name=tool_data["name"],
-                description=tool_data.get("description", ""),
-                input_schema=tool_data.get("inputSchema", {}),
-                server_name=server_name,
-            ))
+            tools.append(
+                MCPTool(
+                    name=tool_data["name"],
+                    description=tool_data.get("description", ""),
+                    input_schema=tool_data.get("inputSchema", {}),
+                    server_name=server_name,
+                )
+            )
 
         self.servers[server_name].tools = tools
         logger.info(f"Discovered {len(tools)} tools from {server_name}")
@@ -270,12 +284,12 @@ class MCPClient:
     ) -> Any:
         """
         Call a tool on an MCP server.
-        
+
         Args:
             server_name: Name of connected server
             tool_name: Tool to call
             arguments: Tool arguments
-            
+
         Returns:
             Tool result
         """
@@ -291,10 +305,14 @@ class MCPClient:
         if not tool:
             raise ValueError(f"Tool {tool_name} not found on server {server_name}")
 
-        response = await self._send_request(server_name, "tools/call", {
-            "name": tool_name,
-            "arguments": arguments,
-        })
+        response = await self._send_request(
+            server_name,
+            "tools/call",
+            {
+                "name": tool_name,
+                "arguments": arguments,
+            },
+        )
 
         if "error" in response:
             raise RuntimeError(f"MCP tool call failed: {response['error']}")
@@ -305,12 +323,12 @@ class MCPClient:
         """List all available tools, optionally filtered by server"""
         all_tools = []
         servers = [server_name] if server_name else list(self.servers.keys())
-        
+
         for name in servers:
             server = self.servers.get(name)
             if server:
                 all_tools.extend(server.tools)
-        
+
         return all_tools
 
     async def get_tool_schema(self, server_name: str, tool_name: str) -> Optional[MCPTool]:
@@ -399,17 +417,17 @@ class MCPToolWrapper:
 async def discover_mcp_capabilities(client: MCPClient) -> List[Dict[str, Any]]:
     """
     Discover all capabilities across connected MCP servers.
-    
+
     Returns:
         List of tool schemas compatible with ModelX tool registry
     """
     all_tools = []
-    
+
     for server_name, server in client.servers.items():
         for tool in server.tools:
             wrapper = MCPToolWrapper(client, server_name, tool)
             all_tools.append(wrapper.to_tool_schema())
-    
+
     return all_tools
 
 

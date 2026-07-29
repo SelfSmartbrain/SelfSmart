@@ -37,42 +37,48 @@ class KnowledgeGapDetector:
         """
         logger.info(f"Detecting knowledge gaps for domain: {domain or 'ALL'}")
         gaps = []
-        
+
         # 1. Graph-based gap detection
         missing_prereqs = await self.kg_reasoner.find_missing_prerequisites()
         for prereq in missing_prereqs:
-            gaps.append({
-                "domain": domain or "general",
-                "description": f"Missing prerequisite: {prereq['missing_prerequisite']} required by {prereq['dependent']}",
-                "importance": 0.85,
-                "confidence": 0.90, # We are highly confident it's missing if it's explicitly marked as stub
-                "source_context": {"type": "kg_missing_prerequisite", "data": prereq}
-            })
-            
+            gaps.append(
+                {
+                    "domain": domain or "general",
+                    "description": f"Missing prerequisite: {prereq['missing_prerequisite']} required by {prereq['dependent']}",
+                    "importance": 0.85,
+                    "confidence": 0.90,  # We are highly confident it's missing if it's explicitly marked as stub
+                    "source_context": {"type": "kg_missing_prerequisite", "data": prereq},
+                }
+            )
+
         # 2. Graph-based contradiction detection
         contradictions = await self.kg_reasoner.detect_contradictions(domain=domain)
         for contra in contradictions:
-            gaps.append({
-                "domain": domain or "general",
-                "description": f"Contradiction detected between {contra['concept_a']} and {contra['concept_b']}: {contra['reason']}",
-                "importance": 0.95,
-                "confidence": 0.80, # Confidence that this needs resolution
-                "source_context": {"type": "kg_contradiction", "data": contra}
-            })
-            
+            gaps.append(
+                {
+                    "domain": domain or "general",
+                    "description": f"Contradiction detected between {contra['concept_a']} and {contra['concept_b']}: {contra['reason']}",
+                    "importance": 0.95,
+                    "confidence": 0.80,  # Confidence that this needs resolution
+                    "source_context": {"type": "kg_contradiction", "data": contra},
+                }
+            )
+
         # 3. Weak Domain detection
         if domain:
             coverage = await self.kg_reasoner.get_domain_coverage(domain)
             if coverage["concept_count"] > 0 and coverage["density"] < 1.0:
-                gaps.append({
-                    "domain": domain,
-                    "description": f"Low concept density in domain {domain}. Only {coverage['density']:.2f} connections per concept.",
-                    "importance": 0.70,
-                    "confidence": 0.95,
-                    "source_context": {"type": "kg_weak_domain", "data": coverage}
-                })
-                
+                gaps.append(
+                    {
+                        "domain": domain,
+                        "description": f"Low concept density in domain {domain}. Only {coverage['density']:.2f} connections per concept.",
+                        "importance": 0.70,
+                        "confidence": 0.95,
+                        "source_context": {"type": "kg_weak_domain", "data": coverage},
+                    }
+                )
+
         # 4. Vector-store based low-confidence regions could be added here
         # E.g. finding clusters of memories that have negative sentiment or "failure" outcomes
-        
+
         return gaps

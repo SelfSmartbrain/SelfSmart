@@ -13,6 +13,7 @@ from src.crawler.web_crawler import CrawlResult
 
 logger = logging.getLogger(__name__)
 
+
 class FileCrawler:
     """
     Crawler for local files including PDFs, Markdown, and Text files.
@@ -30,7 +31,7 @@ class FileCrawler:
             logger.error(f"Directory not found: {directory_path}")
             return []
 
-        for file_path in path.glob('**/*'):
+        for file_path in path.glob("**/*"):
             if file_path.is_file():
                 result = await self.crawl_file(str(file_path))
                 if result:
@@ -44,9 +45,9 @@ class FileCrawler:
             path = Path(file_path)
             ext = path.suffix.lower()
 
-            if ext == '.pdf':
+            if ext == ".pdf":
                 return self._process_pdf(path)
-            elif ext in ['.md', '.txt', '.markdown']:
+            elif ext in [".md", ".txt", ".markdown"]:
                 return self._process_text(path)
             else:
                 logger.debug(f"Skipping unsupported file type: {ext}")
@@ -72,15 +73,15 @@ class FileCrawler:
                 title=path.name,
                 content=text,
                 metadata={
-                    'file_path': str(path.absolute()),
-                    'file_size': path.stat().st_size,
-                    'file_type': 'pdf',
-                    'page_count': len(reader.pages)
+                    "file_path": str(path.absolute()),
+                    "file_size": path.stat().st_size,
+                    "file_type": "pdf",
+                    "page_count": len(reader.pages),
                 },
                 timestamp=datetime.utcnow(),
-                source_type='file',
+                source_type="file",
                 quality_score=0.8,
-                language='en'
+                language="en",
             )
         except Exception as e:
             logger.error(f"Error processing PDF {path}: {e}")
@@ -89,7 +90,7 @@ class FileCrawler:
     def _process_text(self, path: Path) -> Optional[CrawlResult]:
         """Read content from text or markdown file"""
         try:
-            with open(path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             if not content.strip():
@@ -100,14 +101,14 @@ class FileCrawler:
                 title=path.name,
                 content=content,
                 metadata={
-                    'file_path': str(path.absolute()),
-                    'file_size': path.stat().st_size,
-                    'file_type': path.suffix.lower().replace('.', '')
+                    "file_path": str(path.absolute()),
+                    "file_size": path.stat().st_size,
+                    "file_type": path.suffix.lower().replace(".", ""),
                 },
                 timestamp=datetime.utcnow(),
-                source_type='file',
+                source_type="file",
                 quality_score=0.9,
-                language='en'
+                language="en",
             )
         except Exception as e:
             logger.error(f"Error processing text file {path}: {e}")

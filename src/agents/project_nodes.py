@@ -56,7 +56,7 @@ async def environment_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
             "trends": [],
             "risks": [],
             "opportunities": [],
-            "summary": "No environment analysis available"
+            "summary": "No environment analysis available",
         }
     }
     system = "You are an expert business analyst specializing in environmental scanning. Return only a JSON object."
@@ -88,7 +88,7 @@ async def opportunity_detection(state: Dict[str, Any]) -> Dict[str, Any]:
                 "title": "Generic Opportunity",
                 "description": "Opportunity detected via fallback",
                 "priority": "medium",
-                "estimated_impact": "unknown"
+                "estimated_impact": "unknown",
             }
         ]
     }
@@ -129,7 +129,7 @@ async def project_creation(state: Dict[str, Any]) -> Dict[str, Any]:
                 "name": "Default Project",
                 "description": "Project created from fallback",
                 "opportunity_id": "opp1",
-                "status": "proposed"
+                "status": "proposed",
             }
         ]
     }
@@ -171,7 +171,7 @@ async def task_decomposition(state: Dict[str, Any]) -> Dict[str, Any]:
                 "title": "Default Task",
                 "description": "Task created from fallback",
                 "estimated_effort": "unknown",
-                "dependencies": []
+                "dependencies": [],
             }
         ]
     }
@@ -210,11 +210,7 @@ async def resource_allocation(state: Dict[str, Any]) -> Dict[str, Any]:
         "allocations": [
             {
                 "task_id": "task1",
-                "resources": {
-                    "personnel": ["unassigned"],
-                    "budget": 0,
-                    "tools": []
-                }
+                "resources": {"personnel": ["unassigned"], "budget": 0, "tools": []},
             }
         ]
     }
@@ -253,7 +249,7 @@ async def execution(state: Dict[str, Any]) -> Dict[str, Any]:
                 "task_id": "task1",
                 "status": "completed",
                 "actual_effort": "unknown",
-                "notes": "Execution simulated via fallback"
+                "notes": "Execution simulated via fallback",
             }
         ]
     }
@@ -288,7 +284,7 @@ async def checkpointing(state: Dict[str, Any]) -> Dict[str, Any]:
             "id": "cp1",
             "timestamp": "unknown",
             "saved_state": {},
-            "description": "Default checkpoint"
+            "description": "Default checkpoint",
         }
     }
     system = "You are a project management expert. Return only a JSON object."
@@ -314,6 +310,7 @@ Return a JSON object with the following structure:
         result["checkpoint"]["id"] = f"cp_{hash(str(result)) % 10000}"
     if not result["checkpoint"].get("timestamp"):
         from datetime import datetime
+
         result["checkpoint"]["timestamp"] = datetime.now().isoformat()
     return result
 
@@ -325,7 +322,7 @@ async def failure_recovery(state: Dict[str, Any]) -> Dict[str, Any]:
             {
                 "action": "restart_from_last_checkpoint",
                 "details": "Recovered via fallback mechanism",
-                "success": False
+                "success": False,
             }
         ]
     }
@@ -354,10 +351,7 @@ Return a JSON object with the following structure:
 async def impact_analysis(state: Dict[str, Any]) -> Dict[str, Any]:
     """Analyze the impact of completed projects or initiatives."""
     fallback = {
-        "impact": {
-            "score": 50,
-            "details": "Impact analysis via fallback - moderate impact assumed"
-        }
+        "impact": {"score": 50, "details": "Impact analysis via fallback - moderate impact assumed"}
     }
     system = "You are an impact analysis expert. Return only a JSON object."
     prompt = f"""
@@ -384,10 +378,7 @@ Return a JSON object with the following structure:
 
 async def project_completion(state: Dict[str, Any]) -> Dict[str, Any]:
     """Mark projects as complete and capture lessons learned."""
-    fallback = {
-        "completed_projects": [],
-        "lessons_learned": ["No lessons learned - fallback used"]
-    }
+    fallback = {"completed_projects": [], "lessons_learned": ["No lessons learned - fallback used"]}
     system = "You are a project closure expert. Return only a JSON object."
     prompt = f"""
 Based on the following state, particularly finished projects and their outcomes, determine which projects are complete and capture lessons learned:

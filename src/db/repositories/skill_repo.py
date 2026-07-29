@@ -25,13 +25,13 @@ class SkillRepository(BaseRepository[Skill]):
     async def search(self, task_type: str | None = None, limit: int = 20) -> list[Skill]:
         """Search skills, optionally filtering by task_type."""
         stmt = select(Skill).where(Skill.status == "active")
-        
+
         if task_type:
             # Check if task_type is in the task_types array
             stmt = stmt.where(Skill.task_types.any(task_type))
-            
+
         stmt = stmt.order_by(Skill.usage_count.desc(), Skill.success_rate.desc()).limit(limit)
-        
+
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
@@ -54,12 +54,12 @@ class SkillRepository(BaseRepository[Skill]):
             metadata_=metadata,
         )
         self.session.add(execution)
-        
+
         skill = await self.get_by_id(skill_id)
         if skill:
             skill.usage_count += 1
             total_successes = (skill.success_rate * (skill.usage_count - 1)) + (1 if success else 0)
             skill.success_rate = total_successes / skill.usage_count
-            
+
         await self.session.flush()
         return execution

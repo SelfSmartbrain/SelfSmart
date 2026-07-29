@@ -1,11 +1,12 @@
-'''concept_merger.py
+"""concept_merger.py
 
 Merges overlapping or duplicate concepts detected by the extractor.
 Simplified implementation uses string similarity (Levenshtein distance) to decide merges.
-''' 
+"""
 
 import difflib
 from typing import List, Dict
+
 
 class ConceptMerger:
     def __init__(self, similarity_threshold: float = 0.8):
@@ -16,7 +17,7 @@ class ConceptMerger:
 
     def merge(self, concepts: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """Merge concepts list, combining scores of similar terms.
-        
+
         Returns a new list of merged concepts.
         """
         merged = []

@@ -1,13 +1,14 @@
-'''continuous_learning.py
+"""continuous_learning.py
 
 Orchestrates periodic learning cycles that update the cognitive core based on new experiences.
 The scheduler triggers encoding, consolidation, and optional model fine‑tuning.
-''' 
+"""
 
 from datetime import datetime, timedelta
 from threading import Timer
 from .experience_encoder import ExperienceEncoder
 from .learning_scheduler import LearningScheduler
+
 
 class ContinuousLearning:
     def __init__(self, db_session, semantic_mem, schedule_interval_seconds: int = 3600):

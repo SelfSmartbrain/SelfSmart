@@ -15,11 +15,7 @@ from prometheus_client import Counter
 from src.config.settings import get_settings
 
 # Metrics
-LOG_ERRORS = Counter(
-    "log_errors_total",
-    "Total log errors",
-    ["level", "module"]
-)
+LOG_ERRORS = Counter("log_errors_total", "Total log errors", ["level", "module"])
 
 
 def setup_logging(
@@ -28,14 +24,14 @@ def setup_logging(
 ) -> None:
     """Configure structured logging."""
     settings = get_settings()
-    
+
     # Configure standard logging
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
         level=getattr(logging, level.upper()),
     )
-    
+
     # Configure structlog
     if json_format:
         # JSON format for production
@@ -46,9 +42,7 @@ def setup_logging(
                 structlog.processors.TimeStamper(fmt="iso"),
                 structlog.processors.JSONRenderer(),
             ],
-            wrapper_class=structlog.make_filtering_bound_logger(
-                getattr(logging, level.upper())
-            ),
+            wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, level.upper())),
             context_class=dict,
             logger_factory=structlog.PrintLoggerFactory(),
             cache_logger_on_first_use=True,
@@ -62,9 +56,7 @@ def setup_logging(
                 structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S"),
                 structlog.dev.ConsoleRenderer(),
             ],
-            wrapper_class=structlog.make_filtering_bound_logger(
-                getattr(logging, level.upper())
-            ),
+            wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, level.upper())),
             context_class=dict,
             logger_factory=structlog.PrintLoggerFactory(),
             cache_logger_on_first_use=True,
@@ -78,24 +70,22 @@ def get_logger(name: str) -> structlog.stdlib.BoundLogger:
 
 @contextmanager
 def log_context(
-    correlation_id: Optional[str] = None,
-    user_id: Optional[str] = None,
-    **kwargs
+    correlation_id: Optional[str] = None, user_id: Optional[str] = None, **kwargs
 ) -> Generator[None, None, None]:
     """Context manager for adding log context."""
     if correlation_id is None:
         correlation_id = str(uuid.uuid4())
-    
+
     context = {
         "correlation_id": correlation_id,
         "timestamp": datetime.utcnow().isoformat(),
     }
-    
+
     if user_id:
         context["user_id"] = user_id
-    
+
     context.update(kwargs)
-    
+
     with structlog.contextvars.bind_contextvars(**context):
         try:
             yield
@@ -107,7 +97,7 @@ def log_context(
 
 class LoggerMixin:
     """Mixin for adding logging to classes."""
-    
+
     @property
     def logger(self) -> structlog.stdlib.BoundLogger:
         """Get logger for this class."""

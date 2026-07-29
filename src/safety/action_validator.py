@@ -56,7 +56,9 @@ class ActionValidator:
         normalized_payload = payload.lower()
 
         if normalized_type in self.BLOCKED_ACTION_TYPES:
-            return ValidationResult(False, f"Action type '{normalized_type}' requires explicit approval")
+            return ValidationResult(
+                False, f"Action type '{normalized_type}' requires explicit approval"
+            )
 
         if any(term in normalized_payload for term in self.BLOCKED_TERMS):
             return ValidationResult(False, "Action contains a blocked operation")

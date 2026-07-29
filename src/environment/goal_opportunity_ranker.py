@@ -8,6 +8,7 @@ from src.environment.opportunity_detector import Opportunity
 
 logger = get_logger(__name__)
 
+
 class RankedOpportunity(BaseModel):
     model_config = {"from_attributes": True}
     opportunity: Opportunity
@@ -15,10 +16,13 @@ class RankedOpportunity(BaseModel):
     rank: int
     reasoning: str
 
+
 class GoalOpportunityRanker(BaseModel):
     model_config = {"from_attributes": True}
-    
-    async def rank_opportunities(self, opportunities: List[Opportunity], goals: List[dict]) -> List[RankedOpportunity]:
+
+    async def rank_opportunities(
+        self, opportunities: List[Opportunity], goals: List[dict]
+    ) -> List[RankedOpportunity]:
         logger.info(f"Ranking {len(opportunities)} opportunities against {len(goals)} goals")
         ranked = []
         for i, opp in enumerate(opportunities):
@@ -28,7 +32,7 @@ class GoalOpportunityRanker(BaseModel):
                     opportunity=opp,
                     score=score,
                     rank=i + 1,
-                    reasoning="Aligns well with current goals."
+                    reasoning="Aligns well with current goals.",
                 )
             )
         ranked.sort(key=lambda x: x.score, reverse=True)

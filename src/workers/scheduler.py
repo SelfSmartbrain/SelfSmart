@@ -12,18 +12,47 @@ from src.workers.reporting_worker import run_reporting_cycle
 
 logger = get_logger(__name__)
 
+
 class WorkerScheduler:
     def __init__(self) -> None:
         self.scheduler = AsyncIOScheduler()
         self._register_jobs()
 
     def _register_jobs(self) -> None:
-        self.scheduler.add_job(run_research_loop_cycle, 'interval', minutes=5, id='research_loop_cycle', replace_existing=True)
-        self.scheduler.add_job(run_reflection_cycle, 'interval', hours=1, id='reflection_cycle', replace_existing=True)
-        self.scheduler.add_job(run_meta_learning_cycle, 'interval', hours=6, id='meta_learning_cycle', replace_existing=True)
-        self.scheduler.add_job(run_skill_discovery_cycle, 'interval', hours=24, id='skill_discovery_cycle', replace_existing=True)
-        self.scheduler.add_job(run_optimization_cycle, 'interval', hours=168, id='optimization_cycle', replace_existing=True)
-        self.scheduler.add_job(run_reporting_cycle, 'interval', hours=24, id='reporting_cycle', replace_existing=True)
+        self.scheduler.add_job(
+            run_research_loop_cycle,
+            "interval",
+            minutes=5,
+            id="research_loop_cycle",
+            replace_existing=True,
+        )
+        self.scheduler.add_job(
+            run_reflection_cycle, "interval", hours=1, id="reflection_cycle", replace_existing=True
+        )
+        self.scheduler.add_job(
+            run_meta_learning_cycle,
+            "interval",
+            hours=6,
+            id="meta_learning_cycle",
+            replace_existing=True,
+        )
+        self.scheduler.add_job(
+            run_skill_discovery_cycle,
+            "interval",
+            hours=24,
+            id="skill_discovery_cycle",
+            replace_existing=True,
+        )
+        self.scheduler.add_job(
+            run_optimization_cycle,
+            "interval",
+            hours=168,
+            id="optimization_cycle",
+            replace_existing=True,
+        )
+        self.scheduler.add_job(
+            run_reporting_cycle, "interval", hours=24, id="reporting_cycle", replace_existing=True
+        )
         logger.info("Registered all background worker jobs.")
 
     def start(self) -> None:
@@ -35,5 +64,6 @@ class WorkerScheduler:
         if self.scheduler.running:
             self.scheduler.shutdown()
             logger.info("Worker scheduler stopped.")
+
 
 scheduler = WorkerScheduler()

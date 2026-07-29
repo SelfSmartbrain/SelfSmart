@@ -1,2 +1,3 @@
 class CodeReviewer:
-    def review(self, patch): pass
+    def review(self, patch):
+        pass

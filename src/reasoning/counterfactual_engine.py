@@ -1,9 +1,9 @@
-'''
+"""
 counterfactual_engine.py
 
 Provides counterfactual reasoning capabilities for the ReasoningEngine.
 Given a scenario description, it generates "what‑if" statements using a language model.
-'''
+"""
 
 import asyncio
 import logging
@@ -12,6 +12,7 @@ from src.agents.world_model_nodes import _llm_json
 
 logger = logging.getLogger(__name__)
 
+
 def _run_async(coro):
     """Run an async coroutine synchronously by creating a new event loop."""
     loop = asyncio.new_event_loop()
@@ -19,6 +20,7 @@ def _run_async(coro):
         return loop.run_until_complete(coro)
     finally:
         loop.close()
+
 
 class CounterfactualEngine:
     def __init__(self, model_name: str = "gpt2"):
@@ -38,7 +40,9 @@ class CounterfactualEngine:
             # We pass the scenario as a JSON string so the LLM can easily parse it.
             # The LLM is expected to output a JSON object.
             prompt = f'{{ "scenario": "{scenario}" }}'
-            fallback = {"explanation": f"If {scenario} had been different, the outcome might change accordingly."}
+            fallback = {
+                "explanation": f"If {scenario} had been different, the outcome might change accordingly."
+            }
             result = _run_async(_llm_json(system, prompt, fallback))
             if isinstance(result, dict) and "explanation" in result:
                 explanation = result["explanation"]

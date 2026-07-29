@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 # Input schema
 # ---------------------------------------------------------------------------
 
+
 class ReportSection(BaseModel):
     """A single section of a report."""
 
@@ -76,6 +77,7 @@ class ReportGeneratorInput(BaseModel):
 # ---------------------------------------------------------------------------
 # Tool implementation
 # ---------------------------------------------------------------------------
+
 
 class ReportGeneratorTool(AgentTool):
     """Generate structured reports in Markdown or JSON format.
@@ -135,17 +137,16 @@ class ReportGeneratorTool(AgentTool):
         log.debug("report_generator.start")
 
         # Parse sections (may arrive as dicts from the LLM)
-        sections = [
-            ReportSection(**s) if isinstance(s, dict) else s
-            for s in sections_raw
-        ]
+        sections = [ReportSection(**s) if isinstance(s, dict) else s for s in sections_raw]
 
         timestamp = datetime.now(timezone.utc).isoformat()
 
         if output_format == "json":
             content = self._render_json(title, sections, timestamp, include_timestamp)
         else:
-            content = self._render_markdown(title, sections, timestamp, include_toc, include_timestamp)
+            content = self._render_markdown(
+                title, sections, timestamp, include_toc, include_timestamp
+            )
 
         result: dict[str, Any] = {
             "title": title,
@@ -204,12 +205,7 @@ class ReportGeneratorTool(AgentTool):
             lines.append("")
             for i, section in enumerate(sections, start=1):
                 # Create an anchor-safe slug
-                slug = (
-                    section.heading.lower()
-                    .replace(" ", "-")
-                    .replace(".", "")
-                    .replace(",", "")
-                )
+                slug = section.heading.lower().replace(" ", "-").replace(".", "").replace(",", "")
                 lines.append(f"{i}. [{section.heading}](#{slug})")
             lines.append("")
             lines.append("---")

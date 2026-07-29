@@ -1,4 +1,5 @@
 """Reflection agent — analyzes completed research tracks and produces structured reflections."""
+
 from __future__ import annotations
 
 import json
@@ -73,10 +74,12 @@ class CognitionReflectionAgent:
         )
 
         try:
-            response = await self.llm.ainvoke([
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=human_prompt),
-            ])
+            response = await self.llm.ainvoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=human_prompt),
+                ]
+            )
             reflection = json.loads(response.content)
             logger.info(
                 "reflection_complete",

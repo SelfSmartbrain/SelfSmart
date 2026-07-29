@@ -8,33 +8,22 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ComponentVisitor(ast.NodeVisitor):
     def __init__(self):
         self.components = []
         self.imports = []
 
     def visit_ClassDef(self, node: ast.ClassDef):
-        self.components.append({
-            "name": node.name,
-            "type": "class",
-            "lineno": node.lineno
-        })
+        self.components.append({"name": node.name, "type": "class", "lineno": node.lineno})
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
-        self.components.append({
-            "name": node.name,
-            "type": "function",
-            "lineno": node.lineno
-        })
+        self.components.append({"name": node.name, "type": "function", "lineno": node.lineno})
         self.generic_visit(node)
-        
+
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
-        self.components.append({
-            "name": node.name,
-            "type": "async_function",
-            "lineno": node.lineno
-        })
+        self.components.append({"name": node.name, "type": "async_function", "lineno": node.lineno})
         self.generic_visit(node)
 
     def visit_Import(self, node: ast.Import):
@@ -55,14 +44,7 @@ class ArchitectureMapper:
 
     async def scan(self) -> Dict[str, Any]:
         logger.info("Scanning architecture components...")
-        graph = {
-            "nodes": [],
-            "edges": [],
-            "stats": {
-                "total_files": 0,
-                "total_components": 0
-            }
-        }
+        graph = {"nodes": [], "edges": [], "stats": {"total_files": 0, "total_components": 0}}
 
         for target in self.target_dirs:
             target_path = self.root_dir / target
@@ -88,21 +70,19 @@ class ArchitectureMapper:
             visitor.visit(tree)
 
             rel_path = str(file_path.relative_to(self.root_dir))
-            
+
             for comp in visitor.components:
-                graph["nodes"].append({
-                    "id": f"{rel_path}:{comp['name']}",
-                    "file_path": rel_path,
-                    "name": comp["name"],
-                    "type": comp["type"]
-                })
-            
+                graph["nodes"].append(
+                    {
+                        "id": f"{rel_path}:{comp['name']}",
+                        "file_path": rel_path,
+                        "name": comp["name"],
+                        "type": comp["type"],
+                    }
+                )
+
             for imp in visitor.imports:
-                graph["edges"].append({
-                    "source": rel_path,
-                    "target": imp,
-                    "type": "import"
-                })
+                graph["edges"].append({"source": rel_path, "target": imp, "type": "import"})
 
             graph["stats"]["total_files"] += 1
             graph["stats"]["total_components"] += len(visitor.components)

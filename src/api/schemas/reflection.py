@@ -6,16 +6,19 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+
 class ReflectionCreate(BaseModel):
     task_id: UUID
     content: str
     score: float
     model_config = {"from_attributes": True}
 
+
 class ReflectionUpdate(BaseModel):
     content: Optional[str] = None
     score: Optional[float] = None
     model_config = {"from_attributes": True}
+
 
 class ReflectionResponse(BaseModel):
     id: UUID

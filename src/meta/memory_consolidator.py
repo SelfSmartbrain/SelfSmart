@@ -28,7 +28,9 @@ class MemoryConsolidator:
         self.embedding_service = embedding_service
         self.collection = "memory_clusters"
 
-    async def consolidate_memories(self, user_id: UUID, memories: list[dict[str, Any]]) -> MemoryCluster | None:
+    async def consolidate_memories(
+        self, user_id: UUID, memories: list[dict[str, Any]]
+    ) -> MemoryCluster | None:
         """
         Group related memories and abstract them into a single summary.
         In a full implementation, this would use K-Means clustering over embeddings
@@ -36,17 +38,17 @@ class MemoryConsolidator:
         """
         if not memories:
             return None
-            
+
         logger.info(f"Consolidating {len(memories)} memories for user {user_id}")
-        
+
         # Simplified placeholder logic:
         cluster_label = "General Abstraction"
         member_ids = [m.get("id", str(i)) for i, m in enumerate(memories)]
         summary = f"Consolidated {len(memories)} memory items into a unified abstraction."
-        
+
         embedding_content = f"{cluster_label}: {summary}"
         embedding = await self.embedding_service.embed_text(embedding_content)
-        
+
         cluster = await self.cluster_repo.create(
             user_id=user_id,
             cluster_label=cluster_label,
@@ -54,10 +56,10 @@ class MemoryConsolidator:
             summary=summary,
             member_count=len(memories),
         )
-        
+
         embedding_id = str(cluster.id)
         cluster = await self.cluster_repo.update(cluster.id, centroid_embedding_id=embedding_id)
-        
+
         if cluster and embedding:
             await self.vector_store.upsert(
                 collection=self.collection,
@@ -67,7 +69,7 @@ class MemoryConsolidator:
                     "user_id": str(user_id),
                     "cluster_label": cluster_label,
                     "summary": summary,
-                }
+                },
             )
-            
+
         return cluster

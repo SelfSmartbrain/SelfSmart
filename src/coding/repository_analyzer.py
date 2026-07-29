@@ -12,6 +12,7 @@ import subprocess
 @dataclass
 class RepositoryMetadata:
     """Metadata about a code repository."""
+
     framework: Optional[str] = None
     language: str = "Unknown"
     tests: int = 0
@@ -44,53 +45,53 @@ class RepositoryAnalyzer:
     """Analyzes code repositories to extract structure, dependencies, and metadata."""
 
     LANGUAGE_DETECTORS = {
-        'py': 'Python',
-        'js': 'JavaScript',
-        'ts': 'TypeScript',
-        'go': 'Go',
-        'rs': 'Rust',
-        'java': 'Java',
-        'cpp': 'C++',
-        'c': 'C',
-        'rb': 'Ruby',
-        'php': 'PHP',
+        "py": "Python",
+        "js": "JavaScript",
+        "ts": "TypeScript",
+        "go": "Go",
+        "rs": "Rust",
+        "java": "Java",
+        "cpp": "C++",
+        "c": "C",
+        "rb": "Ruby",
+        "php": "PHP",
     }
 
     FRAMEWORK_DETECTORS = {
-        'Python': {
-            'fastapi': ['fastapi', 'uvicorn'],
-            'flask': ['flask'],
-            'django': ['django'],
-            'pytest': ['pytest'],
+        "Python": {
+            "fastapi": ["fastapi", "uvicorn"],
+            "flask": ["flask"],
+            "django": ["django"],
+            "pytest": ["pytest"],
         },
-        'JavaScript': {
-            'express': ['express'],
-            'react': ['react', 'react-dom'],
-            'vue': ['vue'],
-            'angular': ['@angular/core'],
+        "JavaScript": {
+            "express": ["express"],
+            "react": ["react", "react-dom"],
+            "vue": ["vue"],
+            "angular": ["@angular/core"],
         },
-        'TypeScript': {
-            'express': ['express', '@types/express'],
-            'react': ['react', '@types/react'],
-            'nest': ['@nestjs/common'],
+        "TypeScript": {
+            "express": ["express", "@types/express"],
+            "react": ["react", "@types/react"],
+            "nest": ["@nestjs/common"],
         },
     }
 
     BUILD_FILES = {
-        'Python': ['pyproject.toml', 'setup.py', 'requirements.txt', 'Pipfile'],
-        'JavaScript': ['package.json', 'yarn.lock', 'package-lock.json'],
-        'TypeScript': ['package.json', 'tsconfig.json'],
-        'Go': ['go.mod', 'go.sum'],
-        'Rust': ['Cargo.toml', 'Cargo.lock'],
-        'Java': ['pom.xml', 'build.gradle'],
+        "Python": ["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"],
+        "JavaScript": ["package.json", "yarn.lock", "package-lock.json"],
+        "TypeScript": ["package.json", "tsconfig.json"],
+        "Go": ["go.mod", "go.sum"],
+        "Rust": ["Cargo.toml", "Cargo.lock"],
+        "Java": ["pom.xml", "build.gradle"],
     }
 
     TEST_PATTERNS = {
-        'Python': ['test_*.py', '*_test.py', 'tests/'],
-        'JavaScript': ['*.test.js', '*.spec.js', '__tests__/'],
-        'TypeScript': ['*.test.ts', '*.spec.ts', '__tests__/'],
-        'Go': ['*_test.go'],
-        'Rust': ['tests/', '*_test.rs'],
+        "Python": ["test_*.py", "*_test.py", "tests/"],
+        "JavaScript": ["*.test.js", "*.spec.js", "__tests__/"],
+        "TypeScript": ["*.test.ts", "*.spec.ts", "__tests__/"],
+        "Go": ["*_test.go"],
+        "Rust": ["tests/", "*_test.rs"],
     }
 
     def __init__(self, repository_path: str):
@@ -120,9 +121,9 @@ class RepositoryAnalyzer:
         """Detect primary programming language from file extensions."""
         extension_counts: Dict[str, int] = {}
 
-        for file_path in self.repository_path.rglob('*'):
+        for file_path in self.repository_path.rglob("*"):
             if file_path.is_file():
-                ext = file_path.suffix.lstrip('.')
+                ext = file_path.suffix.lstrip(".")
                 if ext in self.LANGUAGE_DETECTORS:
                     extension_counts[ext] = extension_counts.get(ext, 0) + 1
 
@@ -153,7 +154,7 @@ class RepositoryAnalyzer:
     def _has_dependency(self, dep_name: str) -> bool:
         """Check if repository has a specific dependency."""
         dep_files = self.BUILD_FILES.get(self.metadata.language, [])
-        
+
         for dep_file in dep_files:
             file_path = self.repository_path / dep_file
             if file_path.exists():
@@ -169,9 +170,9 @@ class RepositoryAnalyzer:
         self.metadata.modules = 0
 
         for item in self.repository_path.iterdir():
-            if item.is_dir() and not item.name.startswith('.'):
+            if item.is_dir() and not item.name.startswith("."):
                 structure[item.name] = self._count_files_recursive(item)
-                if item.name != 'tests' and item.name != '__pycache__':
+                if item.name != "tests" and item.name != "__pycache__":
                     self.metadata.modules += 1
 
         self.metadata.project_structure = structure
@@ -180,7 +181,7 @@ class RepositoryAnalyzer:
     def _count_files_recursive(self, path: Path) -> int:
         """Count files in a directory recursively."""
         count = 0
-        for item in path.rglob('*'):
+        for item in path.rglob("*"):
             if item.is_file():
                 count += 1
         return count
@@ -205,45 +206,48 @@ class RepositoryAnalyzer:
         dependencies = []
         content = file_path.read_text()
 
-        if language == 'Python':
-            if file_path.name == 'pyproject.toml':
+        if language == "Python":
+            if file_path.name == "pyproject.toml":
                 try:
                     import tomli
+
                     data = tomli.loads(content)
-                    deps = data.get('project', {}).get('dependencies', [])
-                    dependencies.extend([d.split('>=')[0].split('==')[0] for d in deps])
+                    deps = data.get("project", {}).get("dependencies", [])
+                    dependencies.extend([d.split(">=")[0].split("==")[0] for d in deps])
                 except ImportError:
                     pass
-            elif file_path.name == 'requirements.txt':
-                dependencies.extend([
-                    line.split('>=')[0].split('==')[0].strip()
-                    for line in content.split('\n')
-                    if line and not line.startswith('#')
-                ])
+            elif file_path.name == "requirements.txt":
+                dependencies.extend(
+                    [
+                        line.split(">=")[0].split("==")[0].strip()
+                        for line in content.split("\n")
+                        if line and not line.startswith("#")
+                    ]
+                )
 
-        elif language in ['JavaScript', 'TypeScript']:
-            if file_path.name == 'package.json':
+        elif language in ["JavaScript", "TypeScript"]:
+            if file_path.name == "package.json":
                 try:
                     data = json.loads(content)
-                    deps = data.get('dependencies', {})
-                    dev_deps = data.get('devDependencies', {})
+                    deps = data.get("dependencies", {})
+                    dev_deps = data.get("devDependencies", {})
                     dependencies.extend(list(deps.keys()) + list(dev_deps.keys()))
                 except json.JSONDecodeError:
                     pass
 
-        elif language == 'Go':
-            if file_path.name == 'go.mod':
-                for line in content.split('\n'):
-                    if line.strip().startswith('require '):
+        elif language == "Go":
+            if file_path.name == "go.mod":
+                for line in content.split("\n"):
+                    if line.strip().startswith("require "):
                         deps = line.split()[1:]
                         dependencies.extend(deps)
 
-        elif language == 'Rust':
-            if file_path.name == 'Cargo.toml':
-                for line in content.split('\n'):
-                    if '=' in line and not line.strip().startswith('#'):
-                        dep = line.split('=')[0].strip()
-                        if dep and not dep.startswith('['):
+        elif language == "Rust":
+            if file_path.name == "Cargo.toml":
+                for line in content.split("\n"):
+                    if "=" in line and not line.strip().startswith("#"):
+                        dep = line.split("=")[0].strip()
+                        if dep and not dep.startswith("["):
                             dependencies.append(dep)
 
         return dependencies
@@ -255,14 +259,14 @@ class RepositoryAnalyzer:
         test_files = []
 
         for pattern in patterns:
-            if '*' in pattern:
+            if "*" in pattern:
                 for file_path in self.repository_path.rglob(pattern):
                     if file_path.is_file():
                         test_files.append(str(file_path.relative_to(self.repository_path)))
             else:
                 test_dir = self.repository_path / pattern
                 if test_dir.exists() and test_dir.is_dir():
-                    for file_path in test_dir.rglob('*'):
+                    for file_path in test_dir.rglob("*"):
                         if file_path.is_file():
                             test_files.append(str(file_path.relative_to(self.repository_path)))
 
@@ -295,10 +299,10 @@ class RepositoryAnalyzer:
                 break
 
         if language_ext:
-            for file_path in self.repository_path.rglob(f'*.{language_ext}'):
+            for file_path in self.repository_path.rglob(f"*.{language_ext}"):
                 if file_path.is_file():
                     try:
-                        total_loc += len(file_path.read_text().split('\n'))
+                        total_loc += len(file_path.read_text().split("\n"))
                     except UnicodeDecodeError:
                         pass
 
@@ -307,14 +311,10 @@ class RepositoryAnalyzer:
 
     def _discover_architecture(self) -> Dict:
         """Discover architectural patterns and structure."""
-        architecture = {
-            'layers': [],
-            'patterns': [],
-            'components': []
-        }
+        architecture = {"layers": [], "patterns": [], "components": []}
 
         # Detect common architectural patterns
-        if self.metadata.language == 'Python':
+        if self.metadata.language == "Python":
             self._detect_python_architecture(architecture)
 
         self.metadata.architecture = architecture
@@ -322,7 +322,7 @@ class RepositoryAnalyzer:
 
     def _detect_python_architecture(self, architecture: Dict):
         """Detect Python-specific architectural patterns."""
-        src_dirs = ['src', 'app', 'lib', 'core']
+        src_dirs = ["src", "app", "lib", "core"]
         layers = []
 
         for src_dir in src_dirs:
@@ -331,13 +331,13 @@ class RepositoryAnalyzer:
                 layers.append(src_dir)
                 for item in src_path.iterdir():
                     if item.is_dir():
-                        architecture['components'].append(item.name)
+                        architecture["components"].append(item.name)
 
-        if 'api' in str(self.repository_path):
-            architecture['patterns'].append('api')
-        if 'models' in str(self.repository_path) or 'schemas' in str(self.repository_path):
-            architecture['patterns'].append('mvc')
-        if 'services' in str(self.repository_path):
-            architecture['patterns'].append('service_layer')
+        if "api" in str(self.repository_path):
+            architecture["patterns"].append("api")
+        if "models" in str(self.repository_path) or "schemas" in str(self.repository_path):
+            architecture["patterns"].append("mvc")
+        if "services" in str(self.repository_path):
+            architecture["patterns"].append("service_layer")
 
-        architecture['layers'] = layers
+        architecture["layers"] = layers

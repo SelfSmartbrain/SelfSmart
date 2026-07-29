@@ -183,7 +183,9 @@ class ReflectionAgent:
             return {
                 "successes": [],
                 "failures": [f"Reflection process itself failed: {str(e)}"],
-                "root_causes": [{"failure": "Reflection failure", "cause": str(e), "category": "execution"}],
+                "root_causes": [
+                    {"failure": "Reflection failure", "cause": str(e), "category": "execution"}
+                ],
                 "improvements": [],
                 "confidence_score": 0.0,
                 "duration_ms": int((time.monotonic() - start_time) * 1000),
@@ -198,20 +200,25 @@ class ReflectionAgent:
     ) -> dict[str, Any]:
         """Use LLM to perform deep analysis of the execution."""
         # Prepare concise summaries for the LLM
-        plan_summary = json.dumps([
-            {"id": t.get("id"), "title": t.get("title"), "agent_type": t.get("agent_type")}
-            for t in task_plan
-        ])[:2000]
+        plan_summary = json.dumps(
+            [
+                {"id": t.get("id"), "title": t.get("title"), "agent_type": t.get("agent_type")}
+                for t in task_plan
+            ]
+        )[:2000]
 
-        results_summary = json.dumps({
-            tid: {
-                "status": r.get("status"),
-                "output_preview": str(r.get("output", ""))[:300],
-                "error": r.get("error"),
-                "duration_ms": r.get("duration_ms"),
-            }
-            for tid, r in task_results.items()
-        }, default=str)[:3000]
+        results_summary = json.dumps(
+            {
+                tid: {
+                    "status": r.get("status"),
+                    "output_preview": str(r.get("output", ""))[:300],
+                    "error": r.get("error"),
+                    "duration_ms": r.get("duration_ms"),
+                }
+                for tid, r in task_results.items()
+            },
+            default=str,
+        )[:3000]
 
         errors_summary = json.dumps(errors[:10])[:1000]
 
@@ -222,10 +229,14 @@ class ReflectionAgent:
             errors=errors_summary,
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a reflection and self-improvement expert. Respond only with valid JSON."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(
+                    content="You are a reflection and self-improvement expert. Respond only with valid JSON."
+                ),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             reflection = json.loads(response.content)
@@ -330,10 +341,15 @@ class ReflectionAgent:
                     limit=5,
                 )
                 if past:
-                    past_reflections_text = json.dumps([
-                        {"content": p.get("content", ""), "importance": p.get("importance_score", 0)}
-                        for p in past
-                    ])[:2000]
+                    past_reflections_text = json.dumps(
+                        [
+                            {
+                                "content": p.get("content", ""),
+                                "importance": p.get("importance_score", 0),
+                            }
+                            for p in past
+                        ]
+                    )[:2000]
             except Exception:
                 pass
 
@@ -342,10 +358,12 @@ class ReflectionAgent:
             current_improvements=json.dumps(improvements)[:2000],
         )
 
-        response = await self.llm.ainvoke([
-            SystemMessage(content="You are a strategy expert. Respond only with valid JSON."),
-            HumanMessage(content=prompt),
-        ])
+        response = await self.llm.ainvoke(
+            [
+                SystemMessage(content="You are a strategy expert. Respond only with valid JSON."),
+                HumanMessage(content=prompt),
+            ]
+        )
 
         try:
             result = json.loads(response.content)

@@ -1,9 +1,9 @@
-'''experiment_runner.py
+"""experiment_runner.py
 
 Orchestrates long‑horizon validation experiments (30 d, 90 d, 180 d).
 Uses APScheduler to schedule periodic snapshots of system state and stores them
 in the `validation.experiment_runs` table.
-''' 
+"""
 
 import datetime
 from typing import Dict, Any
@@ -30,6 +30,7 @@ experiment_runs = Table(
 # Ensure table exists (in real code use Alembic migrations)
 metadata.create_all(engine, tables=[experiment_runs])
 
+
 class ExperimentRunner:
     def __init__(self, experiment_name: str, interval_seconds: int = 3600):
         self.name = experiment_name
@@ -43,6 +44,7 @@ class ExperimentRunner:
         """
         try:
             from ..validation.metrics import get_all_scores
+
             scores = get_all_scores()
         except Exception:
             scores = {"placeholder": True}
@@ -71,6 +73,7 @@ class ExperimentRunner:
         self.scheduler.shutdown(wait=False)
         self.session.close()
         print(f"[ExperimentRunner] Stopped {self.name}")
+
 
 # Example usage (commented out for production)
 # if __name__ == "__main__":

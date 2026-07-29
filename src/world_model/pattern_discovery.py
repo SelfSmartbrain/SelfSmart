@@ -40,7 +40,9 @@ class PatternDiscoveryEngine:
         skills: List[Dict[str, Any]],
         tools: List[Dict[str, Any]],
     ) -> List[DiscoveredPattern]:
-        logger.info("Starting pattern discovery across historical data, failures, skills, and tools.")
+        logger.info(
+            "Starting pattern discovery across historical data, failures, skills, and tools."
+        )
         try:
             patterns: List[DiscoveredPattern] = []
 
@@ -64,7 +66,7 @@ class PatternDiscoveryEngine:
         logger.debug("Scanning for recurring tool usage and execution sequences.")
         try:
             patterns: List[DiscoveredPattern] = []
-            
+
             # Extract tool usage sequences from tracks
             tool_sequences: Dict[str, int] = {}
             for track in tracks:
@@ -72,7 +74,7 @@ class PatternDiscoveryEngine:
                 if len(track_tools) >= 2:
                     sequence_key = " -> ".join(track_tools)
                     tool_sequences[sequence_key] = tool_sequences.get(sequence_key, 0) + 1
-            
+
             # Create patterns for frequent sequences
             for sequence, count in tool_sequences.items():
                 if count >= 3:  # Minimum frequency threshold
@@ -82,10 +84,10 @@ class PatternDiscoveryEngine:
                         elements=sequence.split(" -> "),
                         frequency=count,
                         confidence=min(0.9, 0.5 + (count * 0.1)),
-                        source_references=[f"track_{i}" for i in range(min(count, 5))]
+                        source_references=[f"track_{i}" for i in range(min(count, 5))],
                     )
                     patterns.append(pattern)
-            
+
             return patterns
         except Exception as e:
             logger.error(f"Error in sequence scanning: {e}")
@@ -97,13 +99,13 @@ class PatternDiscoveryEngine:
         logger.debug("Scanning for recurring facts and anti-patterns.")
         try:
             patterns: List[DiscoveredPattern] = []
-            
+
             # Extract common failure patterns
             failure_types: Dict[str, int] = {}
             for failure in failures:
                 error_type = failure.get("error_type", "unknown")
                 failure_types[error_type] = failure_types.get(error_type, 0) + 1
-            
+
             for error_type, count in failure_types.items():
                 if count >= 2:
                     pattern = DiscoveredPattern(
@@ -112,17 +114,17 @@ class PatternDiscoveryEngine:
                         elements=[error_type],
                         frequency=count,
                         confidence=min(0.85, 0.4 + (count * 0.15)),
-                        source_references=[f"failure_{i}" for i in range(min(count, 3))]
+                        source_references=[f"failure_{i}" for i in range(min(count, 3))],
                     )
                     patterns.append(pattern)
-            
+
             # Extract successful skill patterns
             skill_patterns: Dict[str, int] = {}
             for skill in skills:
                 skill_name = skill.get("name", "unknown")
                 if skill.get("success_rate", 0) > 0.8:
                     skill_patterns[skill_name] = skill_patterns.get(skill_name, 0) + 1
-            
+
             for skill_name, count in skill_patterns.items():
                 if count >= 2:
                     pattern = DiscoveredPattern(
@@ -131,10 +133,10 @@ class PatternDiscoveryEngine:
                         elements=[skill_name],
                         frequency=count,
                         confidence=min(0.9, 0.5 + (count * 0.1)),
-                        source_references=[f"skill_{i}" for i in range(min(count, 3))]
+                        source_references=[f"skill_{i}" for i in range(min(count, 3))],
                     )
                     patterns.append(pattern)
-            
+
             return patterns
         except Exception as e:
             logger.error(f"Error in fact scanning: {e}")
@@ -151,7 +153,7 @@ class PatternDiscoveryEngine:
                 data_str = str(data_point)
                 if any(element.lower() in data_str.lower() for element in pattern.elements):
                     matches += 1
-            
+
             if matches > 0:
                 # Update confidence based on validation results
                 validation_ratio = matches / len(new_data)
@@ -162,7 +164,7 @@ class PatternDiscoveryEngine:
                 # Decrease confidence if no matches found
                 pattern.confidence = max(0.1, pattern.confidence - 0.1)
                 logger.debug(f"Pattern {pattern.id} not found in new data, confidence decreased")
-            
+
             return pattern
         except Exception as e:
             logger.error(f"Error validating pattern: {e}")

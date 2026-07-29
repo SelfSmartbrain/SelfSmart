@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class RewardType(Enum):
     """Types of rewards."""
+
     TASK_COMPLETION = "task_completion"
     QUALITY_BONUS = "quality_bonus"
     INNOVATION_BONUS = "innovation_bonus"
@@ -35,6 +36,7 @@ class RewardType(Enum):
 
 class IncentiveTrigger(Enum):
     """Triggers for incentive evaluation."""
+
     ON_TASK_COMPLETE = "on_task_complete"
     ON_MILESTONE = "on_milestone"
     PERIODIC = "periodic"
@@ -46,6 +48,7 @@ class IncentiveTrigger(Enum):
 @dataclass
 class IncentiveConfig:
     """Configuration for incentive system."""
+
     base_task_reward: Decimal = Decimal("10.0")
     quality_multiplier: Decimal = Decimal("1.5")
     innovation_multiplier: Decimal = Decimal("2.0")
@@ -58,18 +61,21 @@ class IncentiveConfig:
     referral_bonus: Decimal = Decimal("20.0")
     streak_bonus_per_day: Decimal = Decimal("1.0")
     max_streak_bonus: Decimal = Decimal("100.0")
-    milestone_rewards: Dict[int, Decimal] = field(default_factory=lambda: {
-        10: Decimal("50"),
-        50: Decimal("200"),
-        100: Decimal("500"),
-        500: Decimal("2000"),
-        1000: Decimal("5000"),
-    })
+    milestone_rewards: Dict[int, Decimal] = field(
+        default_factory=lambda: {
+            10: Decimal("50"),
+            50: Decimal("200"),
+            100: Decimal("500"),
+            500: Decimal("2000"),
+            1000: Decimal("5000"),
+        }
+    )
 
 
 @dataclass
 class IncentivePolicy:
     """Policy defining when and how incentives are awarded."""
+
     policy_id: str
     name: str
     description: str
@@ -87,6 +93,7 @@ class IncentivePolicy:
 @dataclass
 class Reward:
     """An awarded reward."""
+
     reward_id: str
     agent_id: str
     policy_id: str
@@ -96,7 +103,7 @@ class Reward:
     timestamp: float = field(default_factory=lambda: datetime.now().timestamp())
     metadata: Dict[str, Any] = field(default_factory=dict)
     status: str = "pending"  # pending, confirmed, paid, revoked
-    
+
     def __post_init__(self):
         if not self.reward_id:
             self.reward_id = f"rew_{uuid.uuid4().hex[:10]}"
@@ -105,7 +112,7 @@ class Reward:
 class IncentiveSystem:
     """
     Configurable incentive system for agent motivation.
-    
+
     Features:
     - Policy-based reward rules
     - Multiple reward types and triggers
@@ -114,7 +121,7 @@ class IncentiveSystem:
     - Cooldown and rate limiting
     - Integration with token system
     """
-    
+
     def __init__(
         self,
         config: Optional[IncentiveConfig] = None,
@@ -124,19 +131,21 @@ class IncentiveSystem:
         self.config = config or IncentiveConfig()
         self.token_system = token_system
         self.reputation_system = reputation_system
-        
+
         # Policies
         self._policies: Dict[str, IncentivePolicy] = {}
-        
+
         # Reward history
         self._rewards: List[Reward] = []
         self._agent_rewards: Dict[str, List[Reward]] = defaultdict(list)
-        
+
         # Tracking
         self._task_streaks: Dict[str, int] = defaultdict(int)  # agent_id -> streak
         self._task_counts: Dict[str, int] = defaultdict(int)  # agent_id -> count
-        self._last_reward_time: Dict[str, float] = defaultdict(float)  # agent_id+policy_id -> timestamp
-        
+        self._last_reward_time: Dict[str, float] = defaultdict(
+            float
+        )  # agent_id+policy_id -> timestamp
+
         # Statistics
         self._stats = {
             "total_rewards": 0,
@@ -144,12 +153,12 @@ class IncentiveSystem:
             "by_type": defaultdict(int),
             "by_policy": defaultdict(int),
         }
-        
+
         # Initialize default policies
         self._initialize_default_policies()
-        
+
         logger.info("IncentiveSystem initialized")
-    
+
     def _initialize_default_policies(self):
         """Create default incentive policies."""
         policies = [
@@ -222,33 +231,33 @@ class IncentiveSystem:
                 reward_formula="tiered",
             ),
         ]
-        
+
         for policy in policies:
             self.add_policy(policy)
-    
+
     def add_policy(self, policy: IncentivePolicy) -> bool:
         """Add an incentive policy."""
         if policy.policy_id in self._policies:
             logger.warning(f"Policy already exists: {policy.policy_id}")
             return False
-        
+
         self._policies[policy.policy_id] = policy
         logger.info(f"Added incentive policy: {policy.policy_id} ({policy.name})")
         return True
-    
+
     def remove_policy(self, policy_id: str) -> bool:
         """Remove an incentive policy."""
         if policy_id not in self._policies:
             return False
-        
+
         del self._policies[policy_id]
         logger.info(f"Removed incentive policy: {policy_id}")
         return True
-    
+
     def get_policy(self, policy_id: str) -> Optional[IncentivePolicy]:
         """Get policy by ID."""
         return self._policies.get(policy_id)
-    
+
     async def evaluate_task_completion(
         self,
         agent_id: str,
@@ -259,11 +268,11 @@ class IncentiveSystem:
     ) -> List[Reward]:
         """Evaluate and award rewards for task completion."""
         rewards = []
-        
+
         # Update task count and streak
         self._task_counts[agent_id] += 1
         self._update_streak(agent_id)
-        
+
         # Base task completion reward
         reward = await self._evaluate_policy(
             "task_completion",
@@ -275,7 +284,7 @@ class IncentiveSystem:
         )
         if reward:
             rewards.append(reward)
-        
+
         # Quality bonus
         if quality_score >= Decimal("0.8"):
             reward = await self._evaluate_policy(
@@ -290,7 +299,7 @@ class IncentiveSystem:
             )
             if reward:
                 rewards.append(reward)
-        
+
         # Innovation bonus
         if innovation_score >= Decimal("0.7"):
             reward = await self._evaluate_policy(
@@ -305,7 +314,7 @@ class IncentiveSystem:
             )
             if reward:
                 rewards.append(reward)
-        
+
         # Collaboration bonus
         if collaboration_data and collaboration_data.get("participant_count", 1) >= 2:
             reward = await self._evaluate_policy(
@@ -320,17 +329,17 @@ class IncentiveSystem:
             )
             if reward:
                 rewards.append(reward)
-        
+
         # Milestone check
         milestone_rewards = await self._check_milestones(agent_id)
         rewards.extend(milestone_rewards)
-        
+
         return rewards
-    
+
     async def evaluate_periodic(self, agent_id: str) -> List[Reward]:
         """Evaluate periodic rewards (streaks, etc.)."""
         rewards = []
-        
+
         # Streak bonus
         streak = self._task_streaks.get(agent_id, 0)
         if streak > 0:
@@ -346,9 +355,9 @@ class IncentiveSystem:
             )
             if reward:
                 rewards.append(reward)
-        
+
         return rewards
-    
+
     async def award_manual(
         self,
         agent_id: str,
@@ -361,7 +370,7 @@ class IncentiveSystem:
         policy = self._policies.get(policy_id)
         if not policy or not policy.enabled:
             return None
-        
+
         return await self._create_reward(
             agent_id=agent_id,
             policy=policy,
@@ -369,7 +378,7 @@ class IncentiveSystem:
             trigger_event=trigger_event,
             metadata=metadata,
         )
-    
+
     async def _evaluate_policy(
         self,
         policy_id: str,
@@ -381,31 +390,32 @@ class IncentiveSystem:
         policy = self._policies.get(policy_id)
         if not policy or not policy.enabled:
             return None
-        
+
         # Check cooldown
         cooldown_key = f"{agent_id}:{policy_id}"
         last_time = self._last_reward_time.get(cooldown_key, 0)
         if datetime.now().timestamp() - last_time < policy.cooldown_hours * 3600:
             return None
-        
+
         # Check max per period
         recent_rewards = [
-            r for r in self._agent_rewards[agent_id]
-            if r.policy_id == policy_id and 
-            datetime.now().timestamp() - r.timestamp < 86400  # last 24h
+            r
+            for r in self._agent_rewards[agent_id]
+            if r.policy_id == policy_id
+            and datetime.now().timestamp() - r.timestamp < 86400  # last 24h
         ]
         if len(recent_rewards) >= policy.max_per_period:
             return None
-        
+
         # Check conditions
         if not self._check_conditions(policy.conditions, context, agent_id):
             return None
-        
+
         # Calculate reward amount
         amount = self._calculate_reward(policy, context)
         if amount <= 0:
             return None
-        
+
         # Create reward
         reward = await self._create_reward(
             agent_id=agent_id,
@@ -414,12 +424,12 @@ class IncentiveSystem:
             trigger_event=trigger_event,
             metadata=context,
         )
-        
+
         if reward:
             self._last_reward_time[cooldown_key] = datetime.now().timestamp()
-        
+
         return reward
-    
+
     def _check_conditions(
         self,
         conditions: Dict[str, Any],
@@ -437,36 +447,36 @@ class IncentiveSystem:
             elif actual_value != required_value:
                 return False
         return True
-    
+
     def _calculate_reward(self, policy: IncentivePolicy, context: Dict[str, Any]) -> Decimal:
         """Calculate reward amount based on policy formula."""
         if policy.reward_formula == "base":
             return context.get("base_amount", Decimal("0"))
-        
+
         elif policy.reward_formula == "multiplied":
             base = context.get("base_amount", Decimal("0"))
             multiplier = context.get("multiplier", Decimal("1"))
             return base * multiplier
-        
+
         elif policy.reward_formula == "fixed":
             if policy.reward_type == RewardType.MENTORSHIP_REWARD:
                 return self.config.mentorship_rate
             elif policy.reward_type == RewardType.GOVERNANCE_PARTICIPATION:
                 return self.config.governance_rate
             return Decimal("0")
-        
+
         elif policy.reward_formula == "streak":
             streak = context.get("streak", 0)
             per_day = context.get("per_day", self.config.streak_bonus_per_day)
             max_bonus = context.get("max_bonus", self.config.max_streak_bonus)
             return min(Decimal(str(streak)) * per_day, max_bonus)
-        
+
         elif policy.reward_formula == "tiered":
             # Handled in _check_milestones
             return Decimal("0")
-        
+
         return Decimal("0")
-    
+
     def _check_conditions(
         self,
         conditions: Dict[str, Any],
@@ -477,7 +487,7 @@ class IncentiveSystem:
         for key, required in conditions.items():
             if key not in context:
                 return False
-            
+
             actual = context[key]
             if isinstance(required, (int, float, Decimal)):
                 if Decimal(str(actual)) < Decimal(str(required)):
@@ -485,12 +495,12 @@ class IncentiveSystem:
             elif actual != required:
                 return False
         return True
-    
+
     def _update_streak(self, agent_id: str):
         """Update task completion streak."""
         now = datetime.now()
         today = now.date()
-        
+
         # Get last task date from rewards
         last_task_date = None
         for reward in self._agent_rewards[agent_id]:
@@ -498,7 +508,7 @@ class IncentiveSystem:
                 reward_date = datetime.fromtimestamp(reward.timestamp).date()
                 if last_task_date is None or reward_date > last_task_date:
                     last_task_date = reward_date
-        
+
         if last_task_date:
             if today == last_task_date:
                 return  # Already counted today
@@ -508,12 +518,12 @@ class IncentiveSystem:
                 self._task_streaks[agent_id] = 1
         else:
             self._task_streaks[agent_id] = 1
-    
+
     async def _check_milestones(self, agent_id: str) -> List[Reward]:
         """Check and award milestone rewards."""
         rewards = []
         task_count = self._task_counts[agent_id]
-        
+
         for milestone, reward_amount in self.config.milestone_rewards.items():
             if task_count == milestone:
                 reward = await self._create_reward(
@@ -525,9 +535,9 @@ class IncentiveSystem:
                 )
                 if reward:
                     rewards.append(reward)
-        
+
         return rewards
-    
+
     async def _create_reward(
         self,
         agent_id: str,
@@ -546,26 +556,28 @@ class IncentiveSystem:
             trigger_event=trigger_event,
             metadata=metadata or {},
         )
-        
+
         self._rewards.append(reward)
         self._agent_rewards[agent_id].append(reward)
-        
+
         self._stats["total_rewards"] += 1
         self._stats["total_amount"] += amount
         self._stats["by_type"][policy.reward_type.value] += 1
         self._stats["by_policy"][policy.policy_id] += 1
-        
+
         # Pay out if token system available
         if self.token_system:
             try:
                 await self.token_system.reward(agent_id, amount, trigger_event)
             except Exception as e:
                 logger.error(f"Failed to pay reward: {e}")
-        
+
         # Update reputation if available
         if self.reputation_system and policy.reward_type in [
-            RewardType.QUALITY_BONUS, RewardType.INNOVATION_BONUS,
-            RewardType.COLLABORATION_BONUS, RewardType.MENTORSHIP_REWARD,
+            RewardType.QUALITY_BONUS,
+            RewardType.INNOVATION_BONUS,
+            RewardType.COLLABORATION_BONUS,
+            RewardType.MENTORSHIP_REWARD,
         ]:
             try:
                 self.reputation_system.record_event(
@@ -577,10 +589,10 @@ class IncentiveSystem:
                 )
             except Exception as e:
                 logger.error(f"Failed to update reputation: {e}")
-        
+
         logger.info(f"Awarded {amount} to {agent_id} for {policy.name}")
         return reward
-    
+
     def get_agent_rewards(
         self,
         agent_id: str,
@@ -589,25 +601,25 @@ class IncentiveSystem:
     ) -> List[Reward]:
         """Get rewards for an agent."""
         rewards = self._agent_rewards.get(agent_id, [])
-        
+
         if policy_id:
             rewards = [r for r in rewards if r.policy_id == policy_id]
-        
+
         return rewards[-limit:]
-    
+
     def get_agent_stats(self, agent_id: str) -> Dict[str, Any]:
         """Get incentive statistics for an agent."""
         rewards = self._agent_rewards.get(agent_id, [])
-        
+
         by_type = defaultdict(int)
         by_policy = defaultdict(int)
         total = Decimal("0")
-        
+
         for r in rewards:
             by_type[r.reward_type.value] += 1
             by_policy[r.policy_id] += 1
             total += r.amount
-        
+
         return {
             "total_rewards": len(rewards),
             "total_amount": total,
@@ -616,7 +628,7 @@ class IncentiveSystem:
             "task_count": self._task_counts.get(agent_id, 0),
             "current_streak": self._task_streaks.get(agent_id, 0),
         }
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get system statistics."""
         return {

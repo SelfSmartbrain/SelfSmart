@@ -12,6 +12,7 @@ from src.db.enums import ResearchTrackStatus, PortfolioStatus, GoalStatus
 
 class KnowledgeGapResponse(BaseModel):
     """Schema for returning a Knowledge Gap."""
+
     id: UUID
     domain: str
     description: str
@@ -25,6 +26,7 @@ class KnowledgeGapResponse(BaseModel):
 
 class GeneratedGoalResponse(BaseModel):
     """Schema for returning a Generated Goal."""
+
     id: UUID
     gap_id: UUID | None
     title: str
@@ -38,6 +40,7 @@ class GeneratedGoalResponse(BaseModel):
 
 class ResearchTrackResponse(BaseModel):
     """Schema for returning a Research Track."""
+
     id: UUID
     goal_id: UUID
     title: str
@@ -50,6 +53,7 @@ class ResearchTrackResponse(BaseModel):
 
 class ResearchPortfolioResponse(BaseModel):
     """Schema for returning a Research Portfolio."""
+
     id: UUID
     name: str
     description: str
@@ -62,4 +66,5 @@ class ResearchPortfolioResponse(BaseModel):
 
 class GenerateGoalsRequest(BaseModel):
     """Request payload to manually trigger goal generation."""
+
     limit: int = 5

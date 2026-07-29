@@ -24,8 +24,8 @@ def setup_logging(settings):
         format=log_format,
         handlers=[
             logging.FileHandler(settings.logs_dir / "app.log"),
-            logging.StreamHandler(sys.stdout)
-        ]
+            logging.StreamHandler(sys.stdout),
+        ],
     )
 
 
@@ -46,7 +46,7 @@ async def main():
         max_concurrent_crawls=settings.max_concurrent_crawls,
         crawl_rate_limit=settings.crawl_rate_limit,
         daily_crawl_limit=settings.daily_crawl_limit,
-        min_quality_score=settings.min_quality_score
+        min_quality_score=settings.min_quality_score,
     )
 
     # Initialize continuous learner

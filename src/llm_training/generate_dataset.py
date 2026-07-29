@@ -12,11 +12,17 @@ from src.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
+
 class TrainingDataGenerator:
     """
     Extracts high-quality conversational data for fine-tuning.
     """
-    def __init__(self, conversation_manager: ConversationManager, output_dir: str = "./training_data/finetune"):
+
+    def __init__(
+        self,
+        conversation_manager: ConversationManager,
+        output_dir: str = "./training_data/finetune",
+    ):
         self.cm = conversation_manager
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -34,25 +40,29 @@ class TrainingDataGenerator:
             messages = conv_details.messages
 
             for i in range(len(messages) - 1):
-                if messages[i].role == 'user' and messages[i+1].role == 'assistant':
-                    dataset.append({
-                        "instruction": messages[i].content,
-                        "context": "", # Could be filled from RAG retrieval history
-                        "response": messages[i+1].content
-                    })
+                if messages[i].role == "user" and messages[i + 1].role == "assistant":
+                    dataset.append(
+                        {
+                            "instruction": messages[i].content,
+                            "context": "",  # Could be filled from RAG retrieval history
+                            "response": messages[i + 1].content,
+                        }
+                    )
 
         # Save to JSONL
         output_file = self.output_dir / "sft_dataset.jsonl"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             for entry in dataset:
                 f.write(json.dumps(entry) + "\n")
 
         logger.info(f"Generated SFT dataset with {len(dataset)} entries at {output_file}")
         return dataset
 
+
 if __name__ == "__main__":
     # Minimal setup to run extraction
     cm = ConversationManager()
     gen = TrainingDataGenerator(cm)
     import asyncio
+
     asyncio.run(gen.generate_dataset())

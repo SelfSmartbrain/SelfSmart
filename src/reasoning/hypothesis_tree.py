@@ -1,11 +1,12 @@
-'''hypothesis_tree.py
+"""hypothesis_tree.py
 
 Simple data structure representing a tree of hypotheses (possible reasoning paths).
 Each node holds a hypothesis string and a score. The `select_best` method returns the
 path with the highest cumulative score.
-''' 
+"""
 
 from typing import List, Tuple
+
 
 class HypothesisTree:
     def __init__(self, hypotheses: List[str]):

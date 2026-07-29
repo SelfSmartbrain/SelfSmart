@@ -9,26 +9,26 @@ from src.config.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class ImpactEvent(BaseModel):
     model_config = {"from_attributes": True}
-    
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4)
     project_id: uuid.UUID
     event_type: str
     description: str
     recorded_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class ImpactTracker:
     def __init__(self):
         self.events: List[ImpactEvent] = []
 
-    async def record_impact(self, project_id: uuid.UUID, event_type: str, description: str) -> ImpactEvent:
+    async def record_impact(
+        self, project_id: uuid.UUID, event_type: str, description: str
+    ) -> ImpactEvent:
         logger.info(f"Recording impact for project {project_id}: {event_type}")
-        event = ImpactEvent(
-            project_id=project_id,
-            event_type=event_type,
-            description=description
-        )
+        event = ImpactEvent(project_id=project_id, event_type=event_type, description=description)
         self.events.append(event)
         return event
 

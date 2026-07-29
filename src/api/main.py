@@ -14,7 +14,11 @@ from fastapi.responses import JSONResponse
 
 from src.api.middleware import setup_middleware
 from src.api.middleware_rate_limit import RateLimitMiddleware
-from src.api.middleware_security import SecurityHeadersMiddleware, RequestSizeLimitMiddleware, TimeoutMiddleware
+from src.api.middleware_security import (
+    SecurityHeadersMiddleware,
+    RequestSizeLimitMiddleware,
+    TimeoutMiddleware,
+)
 from src.api.routes import (
     autonomous,
     benchmarks,
@@ -113,9 +117,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                     )
                     for db_obj in result.scalars().all():
                         if db_obj.objective_id not in seen:
-                            runtime.objective_manager.set_objective(
-                                Objective.from_db_model(db_obj)
-                            )
+                            runtime.objective_manager.set_objective(Objective.from_db_model(db_obj))
                             seen.add(db_obj.objective_id)
                             logger.info("Loaded objective from DB", id=db_obj.objective_id)
             except asyncio.CancelledError:
@@ -167,12 +169,12 @@ def create_app() -> FastAPI:
     # Add new distributed rate limiting middleware
     setup_middleware(app, settings)
     setup_prometheus(app)
-    
+
     # Add security middleware (should be added early)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestSizeLimitMiddleware, max_size=10 * 1024 * 1024)
     app.add_middleware(TimeoutMiddleware, timeout=60.0)
-    
+
     # Add rate limiting middleware after CORS
     app.add_middleware(RateLimitMiddleware)
 
@@ -239,9 +241,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
-        logger.error(
-            "unhandled_exception", path=request.url.path, error=str(exc), exc_info=True
-        )
+        logger.error("unhandled_exception", path=request.url.path, error=str(exc), exc_info=True)
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error. Please try again later."},
