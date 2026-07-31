@@ -132,7 +132,9 @@ async def chat(
 @router.post("/chat/stream")
 @limiter.limit("20/minute")
 async def chat_stream(
-    request: StreamChatRequest, request_obj: Request, current_user: TokenData = Depends(get_current_user)
+    request: StreamChatRequest,
+    request_obj: Request,
+    current_user: TokenData = Depends(get_current_user),
 ):
     """Handle streaming chat requests."""
     try:
