@@ -12,7 +12,6 @@ import {
   ExternalLink,
   PlusCircle,
   Trash2,
-  User,
   LogOut,
   Activity,
   Clock
@@ -24,7 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -38,7 +36,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [userName, setUserName] = useState<string | null>(() => {
+  const [userName] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("userName");
     }
@@ -178,17 +176,21 @@ export function Sidebar() {
               </Avatar>
               <div className="flex flex-col items-start flex-1">
                 <span className="text-sm font-medium truncate">
-                  {userName || "User"}
+                  {userName || "Guest User"}
                 </span>
-                <span className="text-xs text-muted-foreground">Signed in</span>
+                <span className="text-xs text-muted-foreground">
+                  {userName ? "Signed in" : "Guest mode"}
+                </span>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign out
-            </DropdownMenuItem>
+            {userName && (
+              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 

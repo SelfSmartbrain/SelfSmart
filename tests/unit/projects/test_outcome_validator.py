@@ -148,7 +148,7 @@ class TestOutcomeValidator:
         # Test code type
         code_data = {
             "target_type": "code",
-            "test_coverage": 0.0.85,
+            "test_coverage": 0.85,
             "code_quality": "good",
             "performance_metrics": {"response_time": 150}
         }
