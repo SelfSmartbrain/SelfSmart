@@ -77,8 +77,13 @@ class FileCheckpointStore:
     def _read_document(self) -> dict[str, Any]:
         if not self.path.exists():
             return {"version": 1, "objectives": {}}
+        if self.path.stat().st_size == 0:
+            return {"version": 1, "objectives": {}}
         with self.path.open(encoding="utf-8") as checkpoint_file:
-            document = json.load(checkpoint_file)
+            content = checkpoint_file.read().strip()
+            if not content:
+                return {"version": 1, "objectives": {}}
+            document = json.loads(content)
         if document.get("version") != 1 or not isinstance(document.get("objectives"), dict):
             raise click.ClickException(f"Invalid checkpoint store: {self.path}")
         return document
