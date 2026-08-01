@@ -101,9 +101,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://api.selfsmart.ai" />
       </head>
       <body className="min-h-full bg-background text-foreground overflow-hidden">
         <div className="flex h-screen overflow-hidden">
