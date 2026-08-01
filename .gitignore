@@ -8,6 +8,8 @@
 # Python
 venv/
 .venv/
+.venv_local/
+.saropa/
 __pycache__/
 *.py[cod]
 *.pyo
