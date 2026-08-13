@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -27,6 +27,8 @@ class ActionValidator:
         "research",
         "memory_consolidation",
         "execute_task",
+        "weight_fine_tune",  # Allow fine-tuning with boundary checks
+        "adapter_load",      # Allow adapter loading with boundary checks
     }
     BLOCKED_ACTION_TYPES = {
         "delete_file",
@@ -37,6 +39,11 @@ class ActionValidator:
         "deploy",
     }
     BLOCKED_TERMS = ("rm -rf", "sudo", "chmod 777", "mkfs", ":(){")
+
+    # Parameter boundaries for weight fine-tuning
+    MAX_EPOCHS = 10
+    MAX_LEARNING_RATE = 1e-3
+    MAX_BATCH_SIZE = 32
 
     def validate_action(self, action: Any) -> ValidationResult:
         if action is None:
@@ -62,6 +69,31 @@ class ActionValidator:
 
         if any(term in normalized_payload for term in self.BLOCKED_TERMS):
             return ValidationResult(False, "Action contains a blocked operation")
+
+        # Parameter boundary checks for weight fine-tuning
+        if normalized_type == "weight_fine_tune" and isinstance(action, dict):
+            warnings = []
+            if "epochs" in action and action["epochs"] > self.MAX_EPOCHS:
+                return ValidationResult(
+                    False,
+                    f"Epochs {action['epochs']} exceeds maximum allowed {self.MAX_EPOCHS}"
+                )
+            if "learning_rate" in action and action["learning_rate"] > self.MAX_LEARNING_RATE:
+                return ValidationResult(
+                    False,
+                    f"Learning rate {action['learning_rate']} exceeds maximum allowed {self.MAX_LEARNING_RATE}"
+                )
+            if "batch_size" in action and action["batch_size"] > self.MAX_BATCH_SIZE:
+                return ValidationResult(
+                    False,
+                    f"Batch size {action['batch_size']} exceeds maximum allowed {self.MAX_BATCH_SIZE}"
+                )
+            if warnings:
+                return ValidationResult(
+                    True,
+                    "Action allowed with parameter warnings",
+                    warnings
+                )
 
         if normalized_type and normalized_type not in self.SAFE_ACTION_TYPES:
             return ValidationResult(

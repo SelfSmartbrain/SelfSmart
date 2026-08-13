@@ -175,7 +175,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestSizeLimitMiddleware, max_size=10 * 1024 * 1024)
     app.add_middleware(TimeoutMiddleware, timeout=60.0)
-    
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,

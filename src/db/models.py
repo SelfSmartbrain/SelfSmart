@@ -2538,14 +2538,13 @@ class SubOrchestrator(Base):
     # Relationships
     director: Mapped[DirectorAgent] = relationship(back_populates="sub_orchestrators")
     current_task: Mapped[SwarmSubTask | None] = relationship(
-        "SwarmSubTask",
-        foreign_keys=[current_task_id]
+        "SwarmSubTask", foreign_keys=[current_task_id]
     )
     assigned_tasks: Mapped[List["SwarmSubTask"]] = relationship(
         "SwarmSubTask",
         foreign_keys="[assigned_orchestrator_id]",
         back_populates="assigned_orchestrator",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:

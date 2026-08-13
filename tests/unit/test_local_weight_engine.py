@@ -208,14 +208,16 @@ class TestLocalWeightEngine:
         """Test get_model_info when model loaded"""
         engine = LocalWeightEngine()
         engine._model = Mock()
-        # Mock parameters() to return an iterator
-        mock_params = [Mock(numel=Mock(return_value=100)), Mock(numel=Mock(return_value=50))]
-        engine._model.parameters.return_value = iter(mock_params)
-        # Mock next() on the model for dtype
+        # Mock parameters() to return a fresh iterator each time
         mock_param = Mock()
+        mock_param.numel.return_value = 100
+        mock_param.requires_grad = True
         mock_param.dtype = torch.float32
-        engine._model.__iter__ = Mock(return_value=iter([mock_param]))
-        engine._model.__next__ = Mock(return_value=mock_param)
+        
+        def params_iterator():
+            return iter([mock_param])
+        
+        engine._model.parameters.side_effect = params_iterator
         engine._model.device = torch.device("cpu")
         engine._model_name = "test-model"
         engine._is_peft_model = False
@@ -225,6 +227,8 @@ class TestLocalWeightEngine:
         assert info["model_name"] == "test-model"
         assert info["device"] == "cpu"
         assert info["is_peft_model"] is False
+        assert info["total_parameters"] == 100
+        assert info["trainable_parameters"] == 100
     
     def test_enable_training_mode(self):
         """Test enabling training mode"""
