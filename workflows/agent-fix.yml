@@ -1,0 +1,64 @@
+name: Autonomous Junior Engineer Fixer
+
+on:
+  workflow_run:
+    workflows: ["CI", "Test", "Python application"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Failed CI Workflow Run ID'
+        required: true
+        type: string
+      branch:
+        description: 'Target branch name'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  auto-fix:
+    # Run only if workflow failed and the branch was NOT an agent fix branch (loop prevention)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'failure' &&
+       !startsWith(github.event.workflow_run.head_branch, 'agent/'))
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Junior Engineer Bot
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+
+      - name: Run Auto-Fixer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          USE_DOCKER: "false"
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            RUN_ID="${{ inputs.run_id }}"
+            BRANCH="${{ inputs.branch }}"
+          else
+            RUN_ID="${{ github.event.workflow_run.id }}"
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+          fi
+          
+          junior-engineer-bot fix \
+            --repo "${{ github.repository }}" \
+            --run-id "$RUN_ID" \
+            --branch "$BRANCH"

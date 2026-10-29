@@ -35,7 +35,12 @@ def installation_token(repo):
 class GH:
     def __init__(self, repo, token=None):
         self.repo = repo
-        self.token = token if token is not None else installation_token(repo)
+        if token is not None:
+            self.token = token
+        elif getattr(config, 'GITHUB_TOKEN', ''):
+            self.token = config.GITHUB_TOKEN
+        else:
+            self.token = installation_token(repo)
         self.h = {
             'Authorization': 'Bearer ' + self.token,
             'Accept': 'application/vnd.github+json',

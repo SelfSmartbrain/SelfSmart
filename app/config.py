@@ -8,6 +8,7 @@ import os
 APP_ID = os.environ.get('GITHUB_APP_ID', '123456')
 PRIVATE_KEY = os.environ.get('GITHUB_PRIVATE_KEY', '')
 WEBHOOK_SECRET = os.environ.get('GITHUB_WEBHOOK_SECRET', 'test-secret')
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN', '')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 MODEL = os.environ.get('MODEL', 'claude-3-5-sonnet-20241022')
 

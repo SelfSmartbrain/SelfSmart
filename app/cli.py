@@ -82,5 +82,32 @@ def audit(target_path: str, min_severity: str, output: str):
     console.print(f"\n[bold green]✓ Full Audit Report written to:[/bold green] {output}\n")
 
 
+@cli.command()
+@click.option("--repo", "-r", envvar="GITHUB_REPOSITORY", help="GitHub repository name (owner/repo).")
+@click.option("--run-id", type=int, help="GitHub Actions run ID of failing CI.")
+@click.option("--branch", "-b", default="main", help="Target branch name.")
+@click.option("--issue-number", type=int, default=0, help="Issue number if triggered from an issue.")
+@click.option("--issue-text", default="", help="Error description or issue body.")
+def fix(repo: str, run_id: int | None, branch: str, issue_number: int, issue_text: str):
+    """Run the automated bug fixer on a failing CI run or issue (serverless mode)."""
+    try:
+        from app.orchestrator import run_job
+    except ImportError:
+        from orchestrator import run_job
+
+    if not repo:
+        console.print("[bold red]Error:[/bold red] --repo (or GITHUB_REPOSITORY env var) is required.")
+        sys.exit(1)
+
+    if run_id:
+        job = {"kind": "ci", "repo": repo, "run_id": run_id, "branch": branch}
+    else:
+        job = {"kind": "issue", "repo": repo, "number": issue_number, "text": issue_text}
+
+    console.print(f"[bold green]🚀 Running autonomous fixer for:[/bold green] {repo} (kind={job['kind']})")
+    run_job(job)
+    console.print("[bold green]✓ Pipeline finished execution.[/bold green]")
+
+
 if __name__ == "__main__":
     cli()
