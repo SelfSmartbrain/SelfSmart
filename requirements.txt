@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+httpx
+pyjwt
+cryptography
+anthropic
+pytest
